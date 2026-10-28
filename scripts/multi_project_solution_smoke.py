@@ -193,6 +193,23 @@ namespace Synthetic.Tests {
                         for i in rejected["issues"]),
                 "references to NUnit test assemblies must be blocked")
 
+            # A source library depending on a vendor NuGet package is not
+            # silently copied into a target SDK library without its dependency.
+            put("TestsTwo/TestsTwo.csproj", project_template)
+            shared_project = (source / "Shared/Shared.csproj").read_text(
+                encoding="utf-8")
+            put("Shared/Shared.csproj", shared_project.replace(
+                "</Project>",
+                '<ItemGroup><PackageReference Include="Synthetic.Optional" '
+                'Version="1.0.0" /></ItemGroup></Project>'))
+            unsafe_library = value(call(proc, 9, "plan_target_solution",
+                {"source": "source", "config": "adapter.json"}))
+            expect(unsafe_library["status"] == "blocked"
+                and any(i["code"] == "SOLUTION_LIBRARY_PACKAGE_UNSUPPORTED"
+                        for i in unsafe_library["issues"]),
+                "MCP cannot report a package-dependent source library as buildable")
+            put("Shared/Shared.csproj", shared_project)
+
             print("Multi-project MCP plan + Core CLI NUnit 2/2 runtime passed", flush=True)
         finally:
             proc.terminate()
