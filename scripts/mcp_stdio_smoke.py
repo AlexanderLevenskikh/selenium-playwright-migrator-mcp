@@ -385,6 +385,53 @@ public class LocalStorage {
             outside_evidence = call(proc, 28, "inspect_pom_sources",
                                     {"sourceDirectory": "../"})
             expect(outside_evidence.get("isError"), "Inspector escaped the workspace")
+
+            # A table-row Click changes application state. A passive locator
+            # declaration must not be accepted as equivalent. Unsupported
+            # assertion tails must become visible TODOs, not pass silently.
+            row_dir = product / "table-action-evidence"
+            row_dir.mkdir()
+            (row_dir / "TableFixture.cs").write_text("""
+using NUnit.Framework;
+[TestFixture] public class TableFixture {
+    [Test] public void MustPreserveClick() {
+        var page = Navigation.OpenCatalogPage();
+        page.Table.Items.ElementAt(0).Click();
+        page.Table.Items.ElementAt(3).Should().NotBe("row");
+    }
+}
+""", encoding="utf-8")
+            row_config = product / "table-action-config.json"
+            row_config.write_text(json.dumps({
+                "SourceProjectName": "Synthetic",
+                "Methods": [{
+                    "SourceMethod": "Navigation.OpenCatalogPage()",
+                    "TargetStatements": [
+                        'await Page.GotoAsync("https://example.invalid/table");',
+                        "var {result} = Page;"
+                    ],
+                    "RequiresReview": True
+                }],
+                "UiTargets": [{
+                    "SourceExpression": "page.Table.Items",
+                    "TargetExpression": 'Page.Locator("[data-test=\\\"row\\\"]")',
+                    "TargetKind": "RawExpression"
+                }]
+            }), encoding="utf-8")
+            pilot_analysis = value(call(proc, 29, "analyze_migration",
+                                        {"source": "table-action-evidence/TableFixture.cs",
+                                         "config": "table-action-config.json"}))
+            pilot = value(call(proc, 30, "preview_migration",
+                               {"source": "table-action-evidence/TableFixture.cs",
+                                "config": "table-action-config.json",
+                                "expectedAnalysisId": pilot_analysis["analysisId"]}))
+            rendered = pilot["files"][0]["content"]
+            expect(".Nth(0).ClickAsync();" in rendered,
+                   "A real table row click was lost during rendering")
+            expect("[MIGRATOR:TABLE_ROW_OPERATION_REQUIRES_MAPPING]" in rendered,
+                   "Unsupported row assertion was silently replaced by a locator")
+            expect(pilot["files"][0]["fullyConvertedTests"] == 0,
+                   "Lost assertion was counted as fully converted")
             print("MCP stdio integration smoke passed", flush=True)
         finally:
             proc.terminate()
