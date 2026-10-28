@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: e6de7b9262ee12339189e8b7d6b30c43bae9faef
+          ref: b0bde62986fc8c4dd8bfcb1b516be70c30e2807a
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -52,6 +52,10 @@ jobs:
         run: python3 scripts/inherited_nunit_lifecycle_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: Namespace and assembly scoped NUnit setup protocol
         run: python3 scripts/scoped_setupfixture_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
+      - name: Build Core project assembly CLI (test-only)
+        run: dotnet build core/Migrator.AssemblyCli/Migrator.AssemblyCli.csproj -c Release
+      - name: Project assembly MCP + CLI + real dotnet build and NUnit tests
+        run: python3 scripts/target_assembly_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll core/Migrator.AssemblyCli/bin/Release/net10.0/Migrator.AssemblyCli.dll
 
       - name: Pack MCP as a versioned dotnet tool
         run: |
@@ -59,7 +63,7 @@ jobs:
           dotnet pack Migrator.Mcp/Migrator.Mcp.csproj --no-restore -c Release -o artifacts/mcp
       - name: Install packaged tool from local NuGet feed
         run: |
-          dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.16 --tool-path "$PWD/artifacts/tool" --add-source "$PWD/artifacts/mcp" --add-source "$PWD/artifacts/nuget" --add-source https://api.nuget.org/v3/index.json
+          dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.17 --tool-path "$PWD/artifacts/tool" --add-source "$PWD/artifacts/mcp" --add-source "$PWD/artifacts/nuget" --add-source https://api.nuget.org/v3/index.json
       - name: Exercise installed MCP tool over stdio
         run: python3 scripts/mcp_stdio_smoke.py artifacts/tool/selenium-pw-migrator-mcp
       - uses: actions/upload-artifact@v4
@@ -92,7 +96,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: e6de7b9262ee12339189e8b7d6b30c43bae9faef
+          ref: b0bde62986fc8c4dd8bfcb1b516be70c30e2807a
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -149,6 +153,12 @@ jobs:
       - name: Namespace and assembly scoped NUnit setup Windows protocol
         shell: pwsh
         run: python scripts/scoped_setupfixture_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
+      - name: Build Core project assembly CLI (test-only, Windows)
+        shell: pwsh
+        run: dotnet build core/Migrator.AssemblyCli/Migrator.AssemblyCli.csproj -c Release
+      - name: Project assembly MCP + CLI + real Windows NUnit test runtime
+        shell: pwsh
+        run: python scripts/target_assembly_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe core/Migrator.AssemblyCli/bin/Release/net10.0/Migrator.AssemblyCli.dll
       - name: Archive Windows distribution
         shell: pwsh
         run: Compress-Archive -Path artifacts/standalone/win-x64/* -DestinationPath artifacts/standalone/selenium-playwright-migrator-mcp-win-x64.zip -Force
