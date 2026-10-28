@@ -58,7 +58,6 @@ public class Combobox {
                               'await Page.Locator("#accept").ClickAsync();'])))
         expect(full["status"]=="requires_review" and not full["behaviorallyVerified"],
                "Never approve category-matched mapping as behaviorally verified")
-        (root/"Combobox.cs").write_text((root/"Combobox.cs").read_text()+"\n// edited")
 
         filtered = dict(options, sourceMethod="InputAndSelectFiltered")
         lost_filter = value(call(proc,6,"review_pom_mapping",
@@ -86,6 +85,7 @@ public class Combobox {
                and with_filter["parameterFlows"][0]["targetArgumentUses"] >= 2
                and not with_filter["behaviorallyVerified"],
                "Complete parameter flow must still need DOM review")
+        (root/"Combobox.cs").write_text((root/"Combobox.cs").read_text()+"\n// edited")
         stale = call(proc,8,"review_pom_mapping",
                      dict(options,targetStatements=['await Page.ClickAsync();']))
         expect(stale.get("isError"),"Stale mapping review accepted")
