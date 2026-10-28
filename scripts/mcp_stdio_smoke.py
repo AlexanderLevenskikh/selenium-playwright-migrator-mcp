@@ -97,7 +97,7 @@ using NUnit.Framework;
             send(proc, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
             listing = receive(proc, 2)
             names = {tool["name"] for tool in listing.get("tools", [])}
-            expect({"analyze_migration", "preview_migration", "explain_finding", "verify_artifact", "inspect_pom_sources"} <= names,
+            expect({"analyze_migration", "preview_migration", "explain_finding", "verify_artifact", "inspect_pom_sources", "review_pom_mapping"} <= names,
                    f"Missing MCP tools: {names}")
             report = value(call(proc, 3, "analyze_migration", {"source": "."}))
             expect(report["discoveryStatus"] == "complete", f"Incorrect discovery: {report}")
