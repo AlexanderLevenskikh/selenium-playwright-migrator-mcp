@@ -44,3 +44,7 @@ When `POM_NAVIGATION_REQUIRES_MAPPING`, `UNRESOLVED_SYMBOL` or table/selector TO
 Only transfer `proposedPlaywrightExpression` into an explicit `UiTargets` mapping after checking source selector extension semantics, the actual DOM, the relevant Page Object's context, locator uniqueness and the downstream control method's side effects. Keep `requires_review` proposals out of generated executable tests until validated. For `LocalStorage`, verify origin and pre-navigation timing; discovering a key name does not prove a safe browser-storage rewrite.
 
 This tool never applies mappings, compiles a project or executes test/browser behavior.
+
+## Table operations
+
+For source `Items.ElementAt(N).Click()`, check that a reviewed locator mapping produces a real `ClickAsync()` in the target, not only a locator variable. For a `TABLE_ROW_OPERATION_REQUIRES_MAPPING` finding, inspect the complete source chain (including assertions and terminal operations) before proposing a target statement. Never delete the assertion or count the method as fully converted because the generated test compiles.
