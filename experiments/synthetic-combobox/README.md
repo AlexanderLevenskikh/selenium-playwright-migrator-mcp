@@ -15,3 +15,8 @@ The workflow requires **five executed NUnit tests total** (three ComboBox and tw
 ### Evidence boundary
 
 The loader synthetic test uses `System.TimeoutException` from `Locator.WaitForAsync` and an explicit exhaustion exception in the negative control so NUnit does not internally register an expected `Assert.Fail` as a failed test. This is a test-harness choice, not a claim that it reproduces the original Selenium assertion framework exception semantics.
+
+
+## Preview.12 — negative assertion controls
+
+Three additional Chromium/NUnit tests deliberately use wrong expectations against correctly loaded synthetic table rows and verify that equality, substring and negated substring assertions throw. The positive scenario also checks the non-inclusion of an absent substring. The workflow now fails unless all **eight** browser tests execute and pass. This provides independent mechanics only; no ArBilling DOM, origin, auth, retries or business assertions are validated.
