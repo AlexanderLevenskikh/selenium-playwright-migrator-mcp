@@ -82,7 +82,7 @@ public sealed class LoaderTableBehaviorTests : PageTest
                 });
                 break;
             }
-            catch (Microsoft.Playwright.TimeoutException)
+            catch (System.TimeoutException)
             {
                 attempts++;
                 if (attempts == 2)
