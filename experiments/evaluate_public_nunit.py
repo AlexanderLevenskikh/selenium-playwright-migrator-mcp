@@ -33,7 +33,7 @@ def command(args, directory, log_path, timeout=210):
     log_path.write_text(output[:100000], encoding="utf-8")
     errors = [line.strip()[:300] for line in output.splitlines()
               if " error CS" in line or " error NU" in line or "error :" in line]
-    summary = re.search(r"Failed:\\s*(\\d+),\\s*Passed:\\s*(\\d+),\\s*Skipped:\\s*(\\d+),\\s*Total:\\s*(\\d+)", output)
+    summary = re.search(r"Failed:\s*(\d+),\s*Passed:\s*(\d+),\s*Skipped:\s*(\d+),\s*Total:\s*(\d+)", output)
     test_counts = ({"failed":int(summary.group(1)), "passed":int(summary.group(2)),
                     "skipped":int(summary.group(3)), "total":int(summary.group(4))}
                    if summary else None)
