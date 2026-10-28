@@ -119,3 +119,9 @@ Every locator with `proposedPlaywrightExpression` is explicitly tagged `requires
 ## Table-row action preservation (preview.7)
 
 Core now treats source `Items.ElementAt(N).Click()` as a side-effecting click and generates `await locator.Nth(N).ClickAsync()` when the row locator is explicitly and correctly mapped. Unsupported chains such as `Items.ElementAt(N).Should().NotBe(...)` produce `TABLE_ROW_OPERATION_REQUIRES_MAPPING` rather than an inert locator variable. The real MCP stdio smoke checks both cases. A successful syntax or build step is not behavioral equivalence.
+
+## Multi-step POM lineage (preview.8)
+
+The read-only `inspect_pom_sources` response now includes `helpers[].orderedCalls`, `controlFlow`, `methodSha256`, `reviewFlags` and bounded same-class private-helper implementations. `storageAndNavigationFlows` records NUnit test/setup storage operations relative to first in-method navigation, but **does not infer runtime browser origin**. The evidence schema is now `migrator-pom-evidence/v1alpha2`. Source order is not execution order through loops/exception branches.
+
+This intentionally creates **no executable mapping**. Use the evidence to prepare explicit reviewed `Methods` and `UiTargets` mappings with source semantics preserved; green build and reduced TODO counts alone are not acceptance.

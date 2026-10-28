@@ -48,3 +48,9 @@ This tool never applies mappings, compiles a project or executes test/browser be
 ## Table operations
 
 For source `Items.ElementAt(N).Click()`, check that a reviewed locator mapping produces a real `ClickAsync()` in the target, not only a locator variable. For a `TABLE_ROW_OPERATION_REQUIRES_MAPPING` finding, inspect the complete source chain (including assertions and terminal operations) before proposing a target statement. Never delete the assertion or count the method as fully converted because the generated test compiles.
+
+## Complex POM and storage call paths
+
+Before mapping `InputAndSelect`, `ValidateLoading`, `SetBeginDate` or similar helpers, inspect `helpers[].orderedCalls` and `controlFlow`: preserve all clicks, inputs, confirmations, waits and assertion/failure paths. Follow any `isReachablePrivateHelper` records (for example a blur helper). Never replace retry-and-reload with one wait merely because the method contains a visibility check.
+
+Review `storageAndNavigationFlows`: `before_first_navigation` and `setup_before_test` storage writes require explicit browser-origin planning. No automatic `Page.EvaluateAsync` or `AddInitScriptAsync` substitution is authorized by lexical source evidence alone. Reinspect if `sourceTreeHash` changed.
