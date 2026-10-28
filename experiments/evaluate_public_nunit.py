@@ -21,6 +21,8 @@ def command(args, directory, log_path, timeout=210):
                               errors="replace", timeout=timeout)
         status = "passed" if done.returncode == 0 else "failed"
         output = done.stdout + "\n" + done.stderr
+        if status == "failed" and "Testhost process" in output and "was not found" in output and ".deps.json" in output:
+            status = "blocked"  # test host failed before any test started
         code = done.returncode
     except subprocess.TimeoutExpired:
         status, code, output = "blocked", None, "PROCESS_TIMEOUT"
@@ -100,11 +102,16 @@ def evaluate(proc, root, out, source, label, index):
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <IsTestProject>true</IsTestProject>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Playwright.NUnit" Version="1.63.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
+    <PackageReference Include="NUnit" Version="3.14.0" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
   </ItemGroup>
 </Project>
 """, encoding="utf-8")
