@@ -90,6 +90,27 @@ public static class MigrationTools
         return json;
     }
 
+
+    [McpServerTool(Name = "review_pom_mapping")]
+    [Description("Compare a proposed target method mapping with source operation coverage. This does not approve or execute the mapping.")]
+    public static string ReviewPomMapping(
+        PomMappingReviewer reviewer,
+        WorkspacePaths workspace,
+        string sourceDirectory,
+        string sourceType,
+        string sourceMethod,
+        string expectedSourceTreeHash,
+        string[] targetStatements,
+        int sourceLine = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var result = reviewer.Review(
+            workspace.ResolveSourceScope(sourceDirectory, cancellationToken),
+            sourceType, sourceMethod, sourceLine, expectedSourceTreeHash,
+            targetStatements, cancellationToken);
+        return JsonSerializer.Serialize(result, JsonOptions);
+    }
+
     static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = false

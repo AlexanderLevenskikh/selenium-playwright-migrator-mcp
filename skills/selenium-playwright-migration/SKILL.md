@@ -56,3 +56,9 @@ Before mapping `InputAndSelect`, `ValidateLoading`, `SetBeginDate` or similar he
 Review `storageAndNavigationFlows`: `before_first_navigation` and `setup_before_test` storage writes require explicit browser-origin planning. No automatic `Page.EvaluateAsync` or `AddInitScriptAsync` substitution is authorized by lexical source evidence alone. Reinspect if `sourceTreeHash` changed.
 
 Source `ExecuteJs`/`ExecuteJavaScript` and `EvaluateAsync` calls inside reachable private helpers now carry the `javascript_source_execution` review flag. Inspect the actual script and origin; do not silently replace or drop side effects because the public helper name sounds like a simple blur.
+
+## Review candidate POM Methods mappings
+
+For a selected source POM method, obtain its source hash and line from `inspect_pom_sources`. Draft **all** required target C# actions/expectations, then call `review_pom_mapping` with the unchanged hash and proposed concrete statements. Resolve every `missingObligations` finding; do not delete source assertions, retries, input steps or storage writes to get a shorter template.
+
+`rejected_incomplete` means the candidate is missing a required effect/order; `blocked` means invalid/TODO target or ambiguous source. `requires_review` only means the obvious operation-category omissions were not detected. It NEVER authorizes skipping DOM locator, argument matching, browser origin, authentication or runtime observable checks. After any source change, rerun `inspect_pom_sources`; evidence is stale.
