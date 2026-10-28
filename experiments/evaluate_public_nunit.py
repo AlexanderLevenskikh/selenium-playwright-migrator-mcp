@@ -5,6 +5,7 @@ No external source or generated C# is included in uploaded evidence.
 import collections
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -32,9 +33,14 @@ def command(args, directory, log_path, timeout=210):
     log_path.write_text(output[:100000], encoding="utf-8")
     errors = [line.strip()[:300] for line in output.splitlines()
               if " error CS" in line or " error NU" in line or "error :" in line]
+    summary = re.search(r"Failed:\\s*(\\d+),\\s*Passed:\\s*(\\d+),\\s*Skipped:\\s*(\\d+),\\s*Total:\\s*(\\d+)", output)
+    test_counts = ({"failed":int(summary.group(1)), "passed":int(summary.group(2)),
+                    "skipped":int(summary.group(3)), "total":int(summary.group(4))}
+                   if summary else None)
     return {"status": status, "exitCode": code,
             "seconds": round(time.monotonic()-started, 2),
-            "log": log_path.name, "diagnostics": errors[:15]}
+            "log": log_path.name, "diagnostics": errors[:15],
+            "testCounts": test_counts}
 
 def rpc(proc, counter, name, arguments):
     return value(call(proc, counter, name, arguments))
@@ -63,6 +69,12 @@ def evaluate(proc, root, out, source, label, index):
             "fullyConverted":sum(f["fullyConvertedTests"] for f in gen),
             "todo":sum(f["todoComments"] for f in gen),
             "findings":count_findings(p["findings"])}
+        if p["transformationStatus"] != "complete" or item["preview"]["todo"] > 0 or item["preview"]["fullyConverted"] < a["declaredTests"]:
+            item["migrationAcceptance"] = {"status":"rejected_incomplete",
+                "reason":"Partial transformation / TODOs / unconverted test declarations. Green tests cannot override this gate."}
+        else:
+            item["migrationAcceptance"] = {"status":"not_verified",
+                "reason":"Independent behavioral equivalence has not been established."}
         if a["findings"]:
             e = rpc(proc,index+2,"explain_finding",
                     {"source":source, "findingId":a["findings"][0]["id"],
@@ -119,6 +131,20 @@ def evaluate(proc, root, out, source, label, index):
                                       "--nologo","-v:q"],
                                      target,out/(label+"-target-build.log"))
         if item["targetBuild"]["status"]=="passed":
+            # A second independent Roslyn check with the actual target-side
+            # references distinguishes a missing compile profile from broken code.
+            binary_dir=target/"bin"/"Release"/"net10.0"
+            assemblies=[p for p in sorted(binary_dir.glob("*.dll"))
+                        if p.name!="GeneratedSmoke.dll"][:64]
+            if assemblies:
+                with_dependencies=rpc(proc,index+4,"verify_artifact",
+                    {"source":source,"expectedAnalysisId":a["analysisId"],
+                     "candidateId":p["candidateId"],"runCompile":True,
+                     "referenceDlls":[f.relative_to(root).as_posix() for f in assemblies]})
+                item["compileWithProjectReferences"]={
+                    "status":with_dependencies["compile"]["status"],
+                    "referenceContextHash":with_dependencies["referenceContextHash"],
+                    "diagnosticCodes":[x["code"] for x in with_dependencies["compile"]["diagnostics"][:12]]}
             installer=target/"bin"/"Release"/"net10.0"/"playwright.ps1"
             if installer.exists():
                 install=command(["pwsh",str(installer),"install","chromium"],
@@ -148,10 +174,15 @@ def main():
         "cases":[]}
     proc=None
     try:
+        source_project=str(root/"AssignmentProject"/"CSE2522_Selenium_NUnit.csproj")
         result["originalBuild"]=command(
-            ["dotnet","build",str(root/"AssignmentProject"/"CSE2522_Selenium_NUnit.csproj"),
-             "-c","Release","--nologo","-v:q"],
+            ["dotnet","build",source_project,"-c","Release","--nologo","-v:q"],
             root,out/"original-build.log")
+        if result["originalBuild"]["status"]=="passed":
+            result["originalTestDiscovery"]=command(
+                ["dotnet","test",source_project,"--no-build","--list-tests",
+                 "-c","Release","--nologo"],
+                root,out/"original-test-inventory.log",90)
         env=dict(os.environ,MIGRATOR_WORKSPACE=str(root))
         proc=subprocess.Popen(["dotnet",str(dll)],stdin=subprocess.PIPE,
                               stdout=subprocess.PIPE,stderr=subprocess.PIPE,env=env)
@@ -190,6 +221,8 @@ def main():
                            "roslynCompile":c["verification"].get("compileFrameworkOnly"),
                            "dotnetBuild":c["targetBuild"].get("status"),
                            "runtime":c["runtime"].get("status"),
+                           "testCounts":c["runtime"].get("testCounts"),
+                           "acceptance":c.get("migrationAcceptance",{}).get("status"),
                            "harnessError":c.get("harnessError")} for c in result["cases"]]}
         print(json.dumps(public,indent=2,ensure_ascii=False),flush=True)
     if result.get("harnessError") or not result["cases"] or all("harnessError" in c for c in result["cases"]):
