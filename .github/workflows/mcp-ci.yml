@@ -1,0 +1,42 @@
+name: MCP CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-protocol-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Core for local NuGet feed
+        uses: actions/checkout@v4
+        with:
+          repository: AlexanderLevenskikh/selenium-playwright-migrator-core
+          ref: 8e2e0a450497440960496338ebdd0b1f2e93e4e5
+          path: core
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build Core NuGet feed
+        run: |
+          mkdir -p artifacts/nuget
+          for project in Migrator.Core Migrator.Roslyn Migrator.SeleniumCSharp Migrator.PlaywrightDotNet Migrator.Application; do
+            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget
+          done
+      - name: Restore MCP from packages, not ProjectReference
+        run: |
+          if grep -q 'ProjectReference' Migrator.Mcp/Migrator.Mcp.csproj; then
+            echo 'MCP may not reference Core source projects' >&2
+            exit 1
+          fi
+          dotnet restore Migrator.Mcp/Migrator.Mcp.csproj --source "$PWD/artifacts/nuget" --source https://api.nuget.org/v3/index.json
+      - name: Build MCP independently of Core source paths
+        run: dotnet build Migrator.Mcp/Migrator.Mcp.csproj --no-restore -c Release
+      - name: Real MCP stdio protocol smoke
+        run: python3 scripts/mcp_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
