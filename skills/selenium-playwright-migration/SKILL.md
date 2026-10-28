@@ -83,3 +83,9 @@ For `Loader.ValidateLoading()`, inspect source control flow and only supply an e
 ## Source-backed retry evidence (preview.13)
 
 For Loader/retry POM helpers, compare immutable literal numeric limit declarations, the actual failure guard, conditional navigation side effects including literal JavaScript `window.location.reload()`, and every explicit `Visible.Wait().EqualTo(true/false)` expectation. A target `WaitForSelectorState.Visible` never preserves a source `EqualTo(false)`; mapping review rejects inversions. Treat an unspecified target wait state as unproven, even when action counts match. Run `inspect_pom_sources` and `review_pom_mapping` on the exact private source tree, not just a synthetic fixture. The protocol's `requires_review` means the structural ledger is a candidate, **not** accepted behavior.
+
+## Fixture Page Object alias / lifecycle policy (preview.14)
+
+For source `[SetUp]` patterns such as `var pagef = Navigation.OpenCatalogPage(); ...; page = pagef;`, the migrator can preserve the source Page Object identity relationship without creating a fake target Page Object. The navigation must have an explicit mapping that actually navigates `Page`, and all intervening source operations using the result must also be mapped. The renderer allows only separately grounded `Page.Locator(...)` / `Page.GetBy...` actions through a fixture alias. An unknown `page.*` helper stays blocked.
+
+Every such alias has `FIXTURE_PAGE_ALIAS_REQUIRES_REVIEW` until the actual target setup, navigation, browser state and source POM lifetime are verified. Extra `SetUp`, `OneTimeSetUp`, `TearDown`, and `OneTimeTearDown` hooks are surfaced as unsupported instead of ignored; do not delete these TODOs to improve completion. Inherited lifecycle hooks remain a separate review boundary. Run actual target `dotnet build` and E2E after generated/edited source verification; static success cannot establish behavior.
