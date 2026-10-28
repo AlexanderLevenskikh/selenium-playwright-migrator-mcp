@@ -20,6 +20,13 @@ public class Combobox {
         input.ClearAndInputText(value);
         accept.Click();
     }
+    public void InputAndSelectFiltered(string value) {
+        Click();
+        input.Visible().Wait().EqualTo(true);
+        input.ClearAndInputText(value);
+        menuItems.Wait().Single(x => x.Text, Contains.Substring(value)).Click();
+        accept.Click();
+    }
 }
 """, encoding="utf-8")
     command = ["dotnet", str(binary)] if binary.suffix == ".dll" else [str(binary)]
@@ -52,7 +59,34 @@ public class Combobox {
         expect(full["status"]=="requires_review" and not full["behaviorallyVerified"],
                "Never approve category-matched mapping as behaviorally verified")
         (root/"Combobox.cs").write_text((root/"Combobox.cs").read_text()+"\n// edited")
-        stale = call(proc,5,"review_pom_mapping",
+
+        filtered = dict(options, sourceMethod="InputAndSelectFiltered")
+        lost_filter = value(call(proc,6,"review_pom_mapping",
+                            dict(filtered,targetStatements=[
+                                'await Page.Locator("#combo").ClickAsync();',
+                                'await Page.Locator("#input").WaitForAsync();',
+                                'await Page.Locator("#input").FillAsync(value);',
+                                'await Page.Locator("#menu").WaitForAsync();',
+                                'await Page.Locator("#option").ClickAsync();',
+                                'await Page.Locator("#accept").ClickAsync();'])))
+        expect(lost_filter["status"]=="rejected_incomplete"
+               and "source_parameter_usage_not_preserved" in lost_filter["reviewFlags"]
+               and lost_filter["parameterFlows"][0]["sourceArgumentUses"] == 2,
+               "Full action count with missing menu argument must be rejected")
+        with_filter = value(call(proc,7,"review_pom_mapping",
+                           dict(filtered,targetStatements=[
+                               'await Page.Locator("#combo").ClickAsync();',
+                               'await Page.Locator("#input").WaitForAsync();',
+                               'await Page.Locator("#input").FillAsync(value);',
+                               'var options = Page.Locator("#menu").Filter(new() { HasTextString = value });',
+                               'await options.WaitForAsync();',
+                               'await options.ClickAsync();',
+                               'await Page.Locator("#accept").ClickAsync();'])))
+        expect(with_filter["status"]=="requires_review"
+               and with_filter["parameterFlows"][0]["targetArgumentUses"] >= 2
+               and not with_filter["behaviorallyVerified"],
+               "Complete parameter flow must still need DOM review")
+        stale = call(proc,8,"review_pom_mapping",
                      dict(options,targetStatements=['await Page.ClickAsync();']))
         expect(stale.get("isError"),"Stale mapping review accepted")
         print("POM mapping MCP protocol passed",flush=True)
