@@ -40,3 +40,18 @@ jobs:
         run: dotnet build Migrator.Mcp/Migrator.Mcp.csproj --no-restore -c Release
       - name: Real MCP stdio protocol smoke
         run: python3 scripts/mcp_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
+
+      - name: Pack MCP as a versioned dotnet tool
+        run: |
+          mkdir -p artifacts/mcp
+          dotnet pack Migrator.Mcp/Migrator.Mcp.csproj --no-restore -c Release -o artifacts/mcp
+      - name: Install packaged tool from local NuGet feed
+        run: |
+          dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.1 --tool-path "$PWD/artifacts/tool" --add-source "$PWD/artifacts/mcp" --add-source "$PWD/artifacts/nuget" --add-source https://api.nuget.org/v3/index.json
+      - name: Exercise installed MCP tool over stdio
+        run: python3 scripts/mcp_stdio_smoke.py artifacts/tool/selenium-pw-migrator-mcp
+      - uses: actions/upload-artifact@v4
+        with:
+          name: selenium-playwright-migrator-mcp-preview-tool
+          path: artifacts/mcp/*.nupkg
+          if-no-files-found: error

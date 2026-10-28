@@ -30,6 +30,20 @@ MIGRATOR_WORKSPACE=/absolute/path/to/selenium-tests dotnet run --project Migrato
 
 Core packages are **preview build artifacts**, not yet published to public NuGet.
 
+## Install MCP as a dotnet tool (preview)
+
+The MCP CI now packs `SeleniumPlaywrightMigrator.Mcp` as a versioned .NET tool and validates the **installed executable** with the same MCP protocol smoke. Until public NuGet publication, download the MCP package artifact from CI and provide the Core package feed if required:
+
+```bash
+dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.1 \
+  --tool-path ./.tools --add-source ./artifacts/mcp --add-source ./artifacts/nuget \
+  --add-source https://api.nuget.org/v3/index.json
+MIGRATOR_WORKSPACE=/absolute/path/to/selenium-tests \
+  ./.tools/selenium-pw-migrator-mcp
+```
+
+The `MIGRATOR_WORKSPACE` environment variable is mandatory. For an MCP client, set `command` to the absolute path of the installed `selenium-pw-migrator-mcp` executable and `args` to an empty list. No prebuilt public distribution is claimed until release.
+
 ## MCP client configuration
 
 ```json

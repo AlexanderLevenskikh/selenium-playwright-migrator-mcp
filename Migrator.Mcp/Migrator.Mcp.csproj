@@ -4,12 +4,22 @@
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <IsPackable>false</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>selenium-pw-migrator-mcp</ToolCommandName>
+    <IsPackable>true</IsPackable>
+    <PackageId>SeleniumPlaywrightMigrator.Mcp</PackageId>
+    <Version>0.1.0-preview.1</Version>
+    <Authors>Selenium Playwright Migrator Contributors</Authors>
+    <Description>MCP stdio server for agent-assisted Selenium C# to Playwright .NET AST migration.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/AlexanderLevenskikh/selenium-playwright-migrator-mcp</RepositoryUrl>
+    <PackageTags>mcp;selenium;playwright;migration;dotnet-tool;agent</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" Version="2.3.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" />
-    <!-- Real package boundary; no Core source project reference. -->
+    <!-- Standalone project: Core is consumed only through a versioned NuGet package. -->
     <PackageReference Include="SeleniumPlaywrightMigrator.Application" Version="0.1.0-preview.1" />
   </ItemGroup>
 </Project>

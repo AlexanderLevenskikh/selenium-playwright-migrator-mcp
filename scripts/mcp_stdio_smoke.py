@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Exercise actual MCP stdio JSON-RPC, not only compilation.
-Requires a previously built Migrator.Mcp.dll and Python 3 on Linux.
+Requires a compiled Migrator.Mcp.dll OR an installed dotnet-tool executable, and Python 3 on Linux.
 """
 import json
 import os
@@ -56,7 +56,7 @@ def value(result):
 
 def main():
     if len(sys.argv) != 2:
-        raise SystemExit("Usage: mcp_stdio_smoke.py <compiled Migrator.Mcp.dll>")
+        raise SystemExit("Usage: mcp_stdio_smoke.py <compiled Migrator.Mcp.dll|installed tool>")
     dll = str(pathlib.Path(sys.argv[1]).resolve())
     expect(pathlib.Path(dll).exists(), "MCP dll does not exist: " + dll)
     with tempfile.TemporaryDirectory(prefix="mcp-stdio-smoke-") as root:
@@ -71,7 +71,8 @@ using NUnit.Framework;
 }
 """, encoding="utf-8")
         env = dict(os.environ, MIGRATOR_WORKSPACE=str(product))
-        proc = subprocess.Popen(["dotnet", dll], stdin=subprocess.PIPE,
+        command = ["dotnet", dll] if dll.endswith(".dll") else [dll]
+        proc = subprocess.Popen(command, stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         try:
             send(proc, {"jsonrpc": "2.0", "id": 1, "method": "initialize",
