@@ -207,3 +207,9 @@ dotnet run --project Migrator.AssemblyCli -- solution-verify ./solution ./fresh-
 ```
 
 CI performs a real MCP stdio plan, separately runs Core CLI to generate a synthetic 3-project graph (two independent NUnit assemblies and a shared library), executes `dotnet build` and requires two passing NUnit TRX reports (1/1 per assembly), then uses MCP to verify hash-locked contents without claiming it ran the tests. Negative MCP checks reject stale source SHA, missing `SetUpFixture`, unexpected C# file and an NUnit test-project-to-test-project reference. Full Core smoke additionally checks transitive shared libraries and multi-project cycles. All source is fictional. Real ArBilling .NET solution compilation/browser/observables remain unrun.
+
+## preview.19 — fail-closed NUnit Ignore/Explicit safety
+
+MCP now consumes Core `0.1.0-preview.19` from pinned Core revision `461436a5c1fcedae99ee4efada8329add07ba0a4` through versioned NuGet packages (no source ProjectReference). An original fixture or test with `[Ignore]`, `[Explicit]` or an `Ignore`/`Explicit` named argument on NUnit case/fixture attributes is inventory-counted but blocked with `NUNIT_EXECUTION_GATE_REQUIRES_REVIEW`. This prevents a skipped/opt-in source test from becoming a runnable Playwright test merely because the renderer dropped its execution gate. Do not override it with mapping shortcuts; preserve and independently verify the original NUnit execution selection first.
+
+Synthetic MCP stdio regression tests both an ignored fixture and an explicit data case on the packaged Linux and Windows tools. No customer source or private selector/configuration is included in GitHub or CI.
