@@ -128,6 +128,56 @@ public static class MigrationTools
         return JsonSerializer.Serialize(result, JsonOptions);
     }
 
+    [McpServerTool(Name = "plan_target_solution")]
+    [Description("Read-only source-bound multi-csproj graph plan: separate NUnit assemblies, ProjectReference libraries, per-assembly SetUpFixture boundaries, SHA-256 file inventory and exact .slnx. No source code bodies, file writes or command execution.")]
+    public static string PlanTargetSolution(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Multi-project SDK-style source solution directory within workspace")] string source,
+        [Description("Optional workspace-relative adapter JSON")] string? config = null,
+        [Description("Optional exact sourceTreeHash from a previous solution plan")] string? expectedSourceTreeHash = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = engine.PlanTargetSolution(
+            workspace.ResolveSourceScope(source, cancellationToken),
+            config == null ? null : workspace.Resolve(config),
+            expectedSourceTreeHash, cancellationToken);
+        var json = JsonSerializer.Serialize(new
+        {
+            result.SchemaVersion, result.SourceTreeHash,
+            result.ConfigurationHash, result.PlanId, result.TargetTreeHash,
+            result.SolutionFile, result.ManifestFile, result.Status,
+            result.Projects,
+            files = result.Files.Select(file => new
+                { file.RelativePath, file.Sha256, file.SourcePath }),
+            result.Issues, result.Limitations, execution = "read_only_not_run"
+        }, JsonOptions);
+        if (json.Length > 300_000)
+            throw new InvalidOperationException(
+                "SOLUTION_PLAN_TOO_LARGE: narrow the multi-project source graph.");
+        return json;
+    }
+
+    [McpServerTool(Name = "verify_target_solution")]
+    [Description("Read-only byte/graph verification of all generated NUnit project assemblies, libraries, .slnx, manifests and ProjectReference/Compile closure. Never executes MSBuild, dotnet test or application code.")]
+    public static string VerifyTargetSolution(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Multi-project source solution root within workspace")] string source,
+        [Description("Existing generated target solution directory within workspace, separate from source")] string targetRoot,
+        [Description("Expected exact sourceTreeHash")] string expectedSourceTreeHash,
+        [Description("Expected exact planId")] string expectedPlanId,
+        [Description("Optional workspace-relative adapter JSON")] string? config = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = engine.VerifyTargetSolution(
+            workspace.ResolveSourceScope(source, cancellationToken),
+            workspace.Resolve(targetRoot),
+            expectedSourceTreeHash, expectedPlanId,
+            config == null ? null : workspace.Resolve(config),
+            runBuild: false, runNUnit: false,
+            cancellationToken: cancellationToken);
+        return JsonSerializer.Serialize(result, JsonOptions);
+    }
+
     [McpServerTool(Name = "inspect_pom_sources")]
     [Description("Inspect in-scope C# Page Object source and selector helper implementations with Roslyn. Returns source-lined, review-required Playwright locator proposals and LocalStorage helper evidence. Never applies mappings or runs tests.")]
     public static string InspectPomSources(PomSourceInspector inspector, WorkspacePaths workspace,
