@@ -190,3 +190,20 @@ The new read-only tools are:
 To actually create, compile or run a generated test assembly, use the **explicit Core CLI** with `plan`, `generate --build --test`, and `verify --build`. For safety MCP remains read-only and never executes MSBuild or application tests on its own.
 
 The Linux/Windows MCP CI regression uses a **separate, trusted Core AssemblyCli** to materialize one public synthetic target project, then runs real `dotnet build` and two NUnit tests. MCP verifies the same generated content hash without inheriting CLI runtime claims, rejects a missing namespace `SetUpFixture`, and rejects injected `Unlisted.cs`. The existing 13 + 3 synthetic Chromium/NUnit workflows remain independent. This is synthetic framework validation; private ArBilling builds and business observables are not run.
+
+## Preview.18 — multi-project NUnit solutions
+
+MCP consumes versioned Core `0.1.0-preview.18` pinned to merged Core main SHA `793c19e2f24190d0c255cfa85d72ef630a91810f`, on Linux and Windows; no source `ProjectReference` into Core.
+
+Read-only tools:
+- `plan_target_solution(source, config?, expectedSourceTreeHash?)`: returns the complete source-backed multi-project graph, target `Migrator.Generated.slnx`, per-project target `.csproj` paths, distinct NUnit assembly and `SetUpFixture` inventories, original/rewritten library `ProjectReference` edges, per-file SHA-256 and a content-addressed manifest. Does not send generated C# source bodies or execute commands.
+- `verify_target_solution(source, targetRoot, expectedSourceTreeHash, expectedPlanId, config?)`: verifies exact target files, hashes, `.slnx` membership, explicit `Compile Include` inventory and `ProjectReference` graph, including per-test-assembly `SetUpFixture` closure. Build/NUnit status remains `not_run`.
+
+For actual materialization and test execution, use the separate **trusted Core CLI**:
+```bash
+dotnet run --project Migrator.AssemblyCli -- solution-plan ./solution --config ./adapter.json
+dotnet run --project Migrator.AssemblyCli -- solution-generate ./solution ./fresh-target --config ./adapter.json --build --test
+dotnet run --project Migrator.AssemblyCli -- solution-verify ./solution ./fresh-target --config ./adapter.json --build
+```
+
+CI performs a real MCP stdio plan, separately runs Core CLI to generate a synthetic 3-project graph (two independent NUnit assemblies and a shared library), executes `dotnet build` and requires two passing NUnit TRX reports (1/1 per assembly), then uses MCP to verify hash-locked contents without claiming it ran the tests. Negative MCP checks reject stale source SHA, missing `SetUpFixture`, unexpected C# file and an NUnit test-project-to-test-project reference. Full Core smoke additionally checks transitive shared libraries and multi-project cycles. All source is fictional. Real ArBilling .NET solution compilation/browser/observables remain unrun.
