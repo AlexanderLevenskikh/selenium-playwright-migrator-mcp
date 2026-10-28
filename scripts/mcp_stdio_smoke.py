@@ -361,7 +361,7 @@ public class LocalStorage {
             evidence = value(call(proc, 26, "inspect_pom_sources",
                                   {"sourceDirectory": "pom-evidence", "pageTypes": ["CatalogPage"],
                                    "pageVariable": "page"}))
-            expect(evidence["schemaVersion"] == "migrator-pom-evidence/v1alpha1",
+            expect(evidence["schemaVersion"] == "migrator-pom-evidence/v1alpha2",
                    "Inspector contract mismatch")
             expect(evidence["inspectedFiles"] == 4 and len(evidence["sourceTreeHash"]) == 64,
                    "Inspector did not bind evidence to four source files")
@@ -385,6 +385,88 @@ public class LocalStorage {
             outside_evidence = call(proc, 28, "inspect_pom_sources",
                                     {"sourceDirectory": "../"})
             expect(outside_evidence.get("isError"), "Inspector escaped the workspace")
+
+
+            # Source-method lineage: a single-looking Page Object call may
+            # include several operations, hidden private helpers, retry loops,
+            # and storage mutations before navigation. Synthetic source only.
+            (evidence_root / "ControlMethods.cs").write_text("""
+public class ScCombobox {
+    public void InputAndSelect(string value) {
+        Click();
+        accept.Visible().Wait().EqualTo(true);
+        input.ClearAndInputText(value);
+        items.Wait().Single(x => x.Text, Contains.Substring(value)).Click();
+        accept.Click();
+    }
+}
+public class Loader {
+    public void ValidateLoading() {
+        var retry = 0;
+        while (retry < 2) try {
+            if (error.Displayed().Get()) Reload();
+            loading.Visible.Wait().EqualTo(false);
+            break;
+        } catch (WebDriverTimeoutException) {
+            retry++;
+            if (retry >= 2) Assert.Fail("not ready");
+        }
+    }
+}
+public class DatePicker {
+    public void SetBeginDate(string value) {
+        Click();
+        input.SendKeys(value);
+        Blur();
+    }
+    private void Blur() { input.ExecuteJs("x.blur();"); }
+}
+""", encoding="utf-8")
+            (evidence_root / "StorageTests.cs").write_text("""
+using NUnit.Framework;
+[TestFixture] public class StorageTests {
+    [SetUp] public void Prepare() { LocalStorage.Clear(); }
+    [Test] public void PreAndPostNavigation() {
+        LocalStorage.SettingPeriod("1");
+        var page = Navigation.OpenCatalogPage();
+        LocalStorage.RemoveItem("period-month");
+    }
+}
+""", encoding="utf-8")
+            lineage = value(call(proc, 31, "inspect_pom_sources",
+                                 {"sourceDirectory": "pom-evidence",
+                                  "pageTypes": ["ScCombobox", "Loader", "DatePicker"]}))
+            expect(lineage["schemaVersion"] == "migrator-pom-evidence/v1alpha2"
+                   and lineage["inspectedFiles"] == 6, "POM lineage contract/source snapshot")
+            helpers = {(h["sourceType"], h["method"]): h for h in lineage["helpers"]}
+            combo = helpers[("ScCombobox", "InputAndSelect")]
+            expect(len(combo["orderedCalls"]) >= 5
+                   and any("ClearAndInputText" in item["sourceText"]
+                           for item in combo["orderedCalls"]), "Lost multi-step combobox actions")
+            loader = helpers[("Loader", "ValidateLoading")]
+            kinds = {item["kind"] for item in loader["controlFlow"]}
+            expect({"while", "try", "catch"} <= kinds
+                   and "loop_or_retry" in loader["reviewFlags"], "Loader retry semantics were dropped")
+            picker = helpers[("DatePicker", "SetBeginDate")]
+            expect(any(c["method"] == "Blur" for c in picker["orderedCalls"]),
+                   "Reachable private helper reference missing")
+            expect(helpers[("DatePicker", "Blur")]["isReachablePrivateHelper"],
+                   "Private helper implementation not discovered")
+            flows = {x["method"]: x for x in lineage["storageAndNavigationFlows"]}
+            expect(flows["Prepare"]["storageOperations"][0]["relativeToNavigation"]
+                   == "setup_before_test", "NUnit storage setup timing was lost")
+            op = flows["PreAndPostNavigation"]["storageOperations"]
+            expect([x["relativeToNavigation"] for x in op]
+                   == ["before_first_navigation", "after_first_navigation"],
+                   "Storage calls before/after navigation were collapsed")
+            (evidence_root / "ControlMethods.cs").write_text(
+                (evidence_root / "ControlMethods.cs").read_text(encoding="utf-8") + "\n// source changed",
+                encoding="utf-8")
+            changed_lineage = value(call(proc, 32, "inspect_pom_sources",
+                                         {"sourceDirectory": "pom-evidence",
+                                          "pageTypes": ["ScCombobox"]}))
+            expect(changed_lineage["sourceTreeHash"] != lineage["sourceTreeHash"],
+                   "Method evidence was reused after source bytes changed")
 
             # A table-row Click changes application state. A passive locator
             # declaration must not be accepted as equivalent. Unsupported
