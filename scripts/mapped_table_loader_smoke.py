@@ -89,9 +89,10 @@ using FluentAssertions;
                    and 'ToContainTextAsync("region")' in text
                    and '.Not.ToContainTextAsync("deprecated")' in text,
                    "Table equality, substring and negated substring assertions must be executable")
-            expect(text.count("[MIGRATOR:TABLE_ASSERTION_REQUIRES_SETUP_REVIEW]") == 3
+            expect(text.count("[MIGRATOR:TABLE_ASSERTION_REQUIRES_SETUP_REVIEW]") == 0
+                   and text.count("[MIGRATOR:FIXTURE_PAGE_ALIAS_REQUIRES_REVIEW]") == 1
                    and p["files"][0]["fullyConvertedTests"] == 0,
-                   "Unverified fixture setup was falsely accepted")
+                   "Aliased fixture must carry one lifecycle blocker without accepting equivalence")
             verified = value(call(proc, 4, "verify_artifact", {
                 "source": "CatalogFixture.cs", "config": "config.json",
                 "expectedAnalysisId": a["analysisId"], "candidateId": p["candidateId"]
