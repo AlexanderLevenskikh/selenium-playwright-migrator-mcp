@@ -120,6 +120,30 @@ public sealed class SyntheticFixture {
                    and 'await Page.Locator("#save").ClickAsync();' not in rejected
                    and new_preview["files"][0]["fullyConvertedTests"] == 0,
                    "Unmapped Loader must not activate source Page Object alias")
+            # A later SetUp reassignment must revoke a previously established
+            # alias. This protects against stale success after page = null.
+            cfg["Methods"] = [
+                cfg["Methods"][0],
+                {"SourceMethod": "pagef.Loader.ValidateLoading()",
+                 "TargetStatements": ['await Expect(Page.Locator("#loader")).ToBeHiddenAsync();'],
+                 "RequiresReview": True}
+            ]
+            (root / "config.json").write_text(json.dumps(cfg), encoding="utf-8")
+            source_file = root / "SyntheticFixture.cs"
+            source_file.write_text(
+                source_file.read_text(encoding="utf-8").replace(
+                    "page = pagef;", "page = pagef;\n        page = null;"),
+                encoding="utf-8")
+            reset_analysis = value(call(proc, 7, "analyze_migration",
+                                        {"source": "SyntheticFixture.cs", "config": "config.json"}))
+            reset_preview = value(call(proc, 8, "preview_migration",
+                                       {"source": "SyntheticFixture.cs", "config": "config.json",
+                                        "expectedAnalysisId": reset_analysis["analysisId"]}))
+            reset_body = reset_preview["files"][0]["content"]
+            expect('await Page.Locator("#save").ClickAsync();' not in reset_body
+                   and reset_preview["files"][0]["fullyConvertedTests"] == 0,
+                   "Source Page Object reset must revoke a previously valid fixture alias")
+
             print("Fixture Page Object lifecycle MCP protocol passed", flush=True)
         finally:
             proc.terminate()
