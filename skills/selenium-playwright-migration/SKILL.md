@@ -30,3 +30,9 @@ An edited candidate never inherits a previous successful syntax or compilation r
 ## Existing Playwright NUnit input (preview.3)
 
 When analysis returns `ALREADY_PLAYWRIGHT_SOURCE`, treat the project as **already in the target format**. Do not call migration preview expecting translated code, do not apply synthesized edits, and do not count this as a failed Selenium migration. Recommend independent target-project build/test and source-focused code review. `MIXED_SELENIUM_PLAYWRIGHT_SOURCE` requires choosing a Selenium-only source scope before migration. These are conservative source-framework findings, not build or browser verifications.
+
+## POM navigation and LocalStorage mapping (preview.5)
+
+- `POM_NAVIGATION_REQUIRES_MAPPING` means the source `Navigation.Open*Page()` returns a Selenium Page Object. Inspect its implementation (including URL and factory) before adding an explicit `Methods` mapping. The parser now retains the assignment result variable; only an explicit target declaration will bind it. Mapping a URL alone must NOT unblock downstream project-specific POM members.
+- `LOCAL_STORAGE_REQUIRES_MAPPING` means a source storage helper (Clear/SetItem/RemoveItem/SettingPeriod) needs a verified Playwright equivalent. Check browser origin, pre-navigation ordering, state lifetime and value serialization before choosing `Page.EvaluateAsync`, `Page.AddInitScriptAsync` or context storage state. Do not blindly map a Selenium JavaScript helper to a Playwright call.
+- A preview with rendered TODOs must have `FullyConvertedTests` reduced accordingly. Build/test passes never override incomplete transformation status or missing runtime observables.
