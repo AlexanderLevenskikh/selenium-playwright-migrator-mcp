@@ -226,6 +226,39 @@ using NUnit.Framework;
             escaped_dir = call(proc, 20, "analyze_migration", {"source": "."})
             expect(escaped_dir.get("isError"), "Recursive source inventory followed a symlink directory")
             dir_link.unlink()
+
+            # Synthetic already-Playwright NUnit source. This is intentionally
+            # generic: no external/private project code is copied into CI.
+            already = product / "existing-target"
+            already.mkdir()
+            (already / "Existing.Tests.csproj").write_text("""
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net8.0</TargetFramework></PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Playwright.NUnit" Version="1.55.0" />
+  </ItemGroup>
+</Project>
+""", encoding="utf-8")
+            (already / "ExistingTests.cs").write_text("""
+using NUnit.Framework;
+[TestFixture] public class ExistingTests : ExistingPageBase {
+    [Test] public async System.Threading.Tasks.Task ShouldBeAlreadyPlaywright() {
+        await Expect(Page.GetByTestId("example")).ToHaveTextAsync("example");
+    }
+}
+""", encoding="utf-8")
+            known = value(call(proc, 21, "analyze_migration", {"source": "existing-target"}))
+            expect(known["discoveryStatus"] == "partial" and known["declaredTests"] == 1,
+                   "Already-Playwright NUnit input must be counted but blocked")
+            expect(known["files"][0]["disposition"] == "already_playwright",
+                   "Already-Playwright source was mistaken for Selenium")
+            expect(any(f["code"] == "ALREADY_PLAYWRIGHT_SOURCE" for f in known["findings"]),
+                   "Playwright source blocker evidence missing")
+            rejected = value(call(proc, 22, "preview_migration",
+                                  {"source": "existing-target",
+                                   "expectedAnalysisId": known["analysisId"]}))
+            expect(rejected["transformationStatus"] == "blocked" and not rejected["files"],
+                   "Already-Playwright code was destructively regenerated")
             print("MCP stdio integration smoke passed", flush=True)
         finally:
             proc.terminate()
