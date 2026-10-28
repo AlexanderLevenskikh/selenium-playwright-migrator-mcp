@@ -74,6 +74,60 @@ public static class MigrationTools
     }
 
 
+    [McpServerTool(Name = "plan_target_assembly")]
+    [Description("Read-only, source-bound project-level NUnit assembly manifest. Lists every explicit generated Compile item and standalone SetUpFixture scope without writing files or invoking dotnet. No source code bodies are returned.")]
+    public static string PlanTargetAssembly(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("One source SDK-style C# project root directory within workspace")] string source,
+        [Description("Optional workspace-relative adapter JSON")] string? config = null,
+        [Description("Current analysisId; stale source/config is rejected if supplied")] string? expectedAnalysisId = null,
+        [Description("Current candidateId; stale preview is rejected if supplied")] string? expectedCandidateId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var plan = engine.PlanTargetAssembly(
+            workspace.ResolveSourceScope(source, cancellationToken),
+            config == null ? null : workspace.Resolve(config),
+            expectedAnalysisId, expectedCandidateId, cancellationToken);
+        var summary = new
+        {
+            plan.SchemaVersion, plan.AnalysisId, plan.CandidateId,
+            plan.SourceTreeHash, plan.PreviewTargetTreeHash, plan.TargetTreeHash,
+            plan.ProjectFile, plan.ManifestFile, plan.Status,
+            plan.DeclaredTests, plan.ScopedSetUpFixtures,
+            files = plan.Files.Select(file => new
+            {
+                file.RelativePath, file.Sha256, file.SourcePath
+            }),
+            plan.Issues, plan.Limitations,
+            execution = "read_only_not_run"
+        };
+        var json = JsonSerializer.Serialize(summary, JsonOptions);
+        if (json.Length > 200_000)
+            throw new InvalidOperationException(
+                "TARGET_ASSEMBLY_PLAN_TOO_LARGE: narrow the source project.");
+        return json;
+    }
+
+    [McpServerTool(Name = "verify_target_assembly")]
+    [Description("Read-only verification of the exact generated SDK NUnit project tree, project Compile list, sha256 manifest and SetUpFixture closure. Does NOT run dotnet build/test. Use Core AssemblyCli for opt-in build or NUnit execution.")]
+    public static string VerifyTargetAssembly(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("One source SDK-style C# project root within workspace")] string source,
+        [Description("Existing generated target assembly directory within workspace, outside source scope")] string targetRoot,
+        [Description("Expected current source analysisId")] string expectedAnalysisId,
+        [Description("Expected parent preview candidateId")] string candidateId,
+        [Description("Optional workspace-relative adapter JSON")] string? config = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = engine.VerifyTargetAssembly(
+            workspace.ResolveSourceScope(source, cancellationToken),
+            workspace.Resolve(targetRoot), expectedAnalysisId, candidateId,
+            config == null ? null : workspace.Resolve(config),
+            runBuild: false, runNUnit: false,
+            cancellationToken: cancellationToken);
+        return JsonSerializer.Serialize(result, JsonOptions);
+    }
+
     [McpServerTool(Name = "inspect_pom_sources")]
     [Description("Inspect in-scope C# Page Object source and selector helper implementations with Roslyn. Returns source-lined, review-required Playwright locator proposals and LocalStorage helper evidence. Never applies mappings or runs tests.")]
     public static string InspectPomSources(PomSourceInspector inspector, WorkspacePaths workspace,
