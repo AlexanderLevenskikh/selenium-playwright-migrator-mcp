@@ -1,0 +1,60 @@
+name: External NUnit Migration Evaluation
+on:
+  pull_request:
+    paths:
+      - experiments/evaluate_public_nunit.py
+      - experiments/README.md
+      - .github/workflows/external-nunit-evaluation.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  external-nunit-evaluation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout exact Core revision
+        uses: actions/checkout@v4
+        with:
+          repository: AlexanderLevenskikh/selenium-playwright-migrator-core
+          ref: 3c4bf137a39f42da5e481b5a33edc718954ee0cd
+          path: core
+          persist-credentials: false
+      - name: Checkout external Selenium NUnit source read-only
+        uses: actions/checkout@v4
+        with:
+          repository: desh2001/Selenium-NUnit-Automation
+          ref: edacb9feb41a7e21d9b6bf6924f24c11698a4427
+          path: sample
+          persist-credentials: false
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build Core NuGet preview package feed
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/nuget
+          for project in Migrator.Core Migrator.Roslyn Migrator.SeleniumCSharp Migrator.PlaywrightDotNet Migrator.Application; do
+            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget
+          done
+      - name: Build MCP against Core package boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet restore Migrator.Mcp/Migrator.Mcp.csproj --source "$PWD/artifacts/nuget" --source https://api.nuget.org/v3/index.json
+          dotnet build Migrator.Mcp/Migrator.Mcp.csproj -c Release --no-restore
+      - name: Run external migration, verification and compilation evaluation
+        shell: bash
+        run: |
+          python3 -m py_compile experiments/evaluate_public_nunit.py
+          python3 experiments/evaluate_public_nunit.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll sample reports
+      - name: Upload stage evidence (no external source or generated C#)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-nunit-migration-evidence
+          path: reports/
+          retention-days: 30
+          if-no-files-found: warn
