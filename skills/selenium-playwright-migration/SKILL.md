@@ -66,3 +66,9 @@ For a selected source POM method, obtain its source hash and line from `inspect_
 ## Preserve source argument uses
 
 When mapping multi-action helpers, the same parameter may feed both `FillAsync` and menu selection. Review `parameterFlows` to ensure every meaningful source argument occurrence is represented in target effect/filter calls. A hardcoded filter or a C# string with double-escaped CSS attribute quotes must not be accepted simply because syntax and click counts pass. DOM and timing still require independent verification.
+
+## Preserve table assertions and custom Loader retry paths
+
+For table sources `Items.ElementAt(N).Text.Get().Should().Be` and `Contain`, use inspected and reviewed root/row selectors via `UiTargets`; confirm emitted `ToHaveTextAsync` versus `ToContainTextAsync` semantics. If `TABLE_ASSERTION_REQUIRES_SETUP_REVIEW` appears, the test is incomplete despite its assertions being executable: complete the original fixture navigation, Page Object initialization and Loader paths separately.
+
+For `Loader.ValidateLoading()`, inspect source control flow and only supply an exact zero-argument `Methods` mapping that preserves the bounded retries, reload side effects, visible/hidden state checks and failure path. The exact mapping overrides the generic wait fallback, but a green syntax test does not establish timeout equivalence. Use `System.TimeoutException` for Playwright .NET wait timeouts; verify the compiled target. Do not map the source retry loop to one happy-path wait and call the migration complete.

@@ -137,3 +137,11 @@ Use an exact sourceLine when a Page Object class overloads a method name. This t
 ## Synthetic ComboBox runtime and source-argument safety (preview.10)
 
 Core now keeps authored C# quote escapes intact when substituting a `ParameterizedMethods` argument and rejects incomplete source parameter propagation through `review_pom_mapping.parameterFlows`. A separate synthetic HTML/Playwright NUnit experiment checks a real click–wait–fill–select–confirm flow in Chromium, including a negative case without the final confirmation. It is deliberately **not** an ArBilling business-backend test.
+
+## Reviewed Loader and table assertions (Core preview.11)
+
+Source `page.Table.Items.ElementAt(N).Text.Get().Should().Be/Contain` can now be preserved as executable `ToHaveTextAsync` or `ToContainTextAsync` when an explicit, grounded `UiTargets` row locator is present. If the Selenium fixture setup still blocks the source Page Object alias, the emitted assertion carries `TABLE_ASSERTION_REQUIRES_SETUP_REVIEW` and does **not** increase `FullyConvertedTests`. Never remove the marker merely to obtain passing NUnit tests.
+
+When a project-specific zero-argument `Loader.ValidateLoading()` is parsed as a generic wait, an exact `Methods.SourceMethod` mapping now takes precedence. A reviewed mapping may preserve its loop, conditional reload, state waits and catch path, but must retain `RequiresReview` until actual source/timeouts/DOM are checked. In Playwright .NET, wait operations throw `System.TimeoutException`, not `Microsoft.Playwright.TimeoutException`. Run `verify_artifact` for exact C# syntax and independently compile/test the configured target project.
+
+The synthetic browser experiment exercises both positive retry recovery and an exhausted-retry negative control, with two separate table text assertions. These artificial tests cannot certify the private ArBilling browser/backend.
