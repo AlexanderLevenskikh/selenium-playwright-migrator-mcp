@@ -29,6 +29,7 @@ using FluentAssertions;
         page.Loader.ValidateLoading();
         page.Table.Items.ElementAt(0).Text.Get().Should().Be("code");
         page.Table.Items.ElementAt(1).Text.Get().Should().Contain("region");
+        page.Table.Items.ElementAt(1).Text.Get().Should().NotContain("deprecated");
     }
 }
 """, encoding="utf-8")
@@ -85,9 +86,10 @@ using FluentAssertions;
                    and text.count("catch (System.TimeoutException)") == 2,
                    "Exact source helper mapping did not override generic wait fallback")
             expect('ToHaveTextAsync("code")' in text
-                   and 'ToContainTextAsync("region")' in text,
-                   "Distinct table equality/substring assertions were lost")
-            expect(text.count("[MIGRATOR:TABLE_ASSERTION_REQUIRES_SETUP_REVIEW]") == 2
+                   and 'ToContainTextAsync("region")' in text
+                   and '.Not.ToContainTextAsync("deprecated")' in text,
+                   "Table equality, substring and negated substring assertions must be executable")
+            expect(text.count("[MIGRATOR:TABLE_ASSERTION_REQUIRES_SETUP_REVIEW]") == 3
                    and p["files"][0]["fullyConvertedTests"] == 0,
                    "Unverified fixture setup was falsely accepted")
             verified = value(call(proc, 4, "verify_artifact", {
@@ -107,7 +109,8 @@ using FluentAssertions;
                 "expectedAnalysisId": changed["analysisId"]}))
             body = blocked["files"][0]["content"]
             expect('ToHaveTextAsync("code")' not in body
-                   and 'ToContainTextAsync("region")' not in body,
+                   and 'ToContainTextAsync("region")' not in body
+                   and '.Not.ToContainTextAsync("deprecated")' not in body,
                    "Table assertions without explicit UiTargets were activated")
             print("Mapped Loader and table assertions MCP protocol passed", flush=True)
         finally:
