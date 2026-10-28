@@ -45,10 +45,20 @@ namespace Sample.Nested {
     }
 }
 """, encoding="utf-8")
+        # Inherited per-test SetUp must remain after all scoped one-time
+        # setups without being copied into each SetUpFixture artifact.
+        (root / "FixtureBase.cs").write_text("""
+using NUnit.Framework;
+namespace Sample.Nested {
+    public class FixtureBase {
+        [SetUp] public void BeforeEach() { Recorder.Mark("base-before"); }
+    }
+}
+""", encoding="utf-8")
         (root / "MainFixture.cs").write_text("""
 using NUnit.Framework;
 namespace Sample.Nested {
-    [TestFixture] public class MainFixture {
+    [TestFixture] public class MainFixture : FixtureBase {
         [Test] public void One() { Recorder.Mark("test"); }
     }
 }
@@ -63,7 +73,7 @@ namespace SampleElse {
 """, encoding="utf-8")
 
         labels = ("global-before", "global-after", "parent-before",
-                  "parent-after", "nested-before", "nested-after", "test")
+                  "parent-after", "nested-before", "nested-after", "base-before", "test")
         config = {
             "SourceProjectName": "Synthetic",
             "Methods": [
@@ -120,6 +130,9 @@ namespace SampleElse {
                    and "namespace Sample.Nested.Playwright;" not in files["MainFixture.cs"],
                    "Namespace containment must survive source-to-target translation")
             main = files["MainFixture.cs"]
+            expect('System.Console.WriteLine("base-before");' in main
+                   and "[MIGRATOR:NUNIT_LIFECYCLE_REQUIRES_REVIEW]" in main,
+                   "Inherited per-test SetUp must survive alongside scoped one-time dependencies")
             expect(main.count("[MIGRATOR:NUNIT_SETUPFIXTURE_DEPENDENCY_REQUIRES_REVIEW]") == 3,
                    "A nested fixture must retain global, parent and child scope dependencies")
             expect(files["SiblingFixture.cs"].count(
