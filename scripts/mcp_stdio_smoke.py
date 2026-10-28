@@ -97,7 +97,7 @@ using NUnit.Framework;
             send(proc, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
             listing = receive(proc, 2)
             names = {tool["name"] for tool in listing.get("tools", [])}
-            expect({"analyze_migration", "preview_migration", "explain_finding", "verify_artifact"} <= names,
+            expect({"analyze_migration", "preview_migration", "explain_finding", "verify_artifact", "inspect_pom_sources"} <= names,
                    f"Missing MCP tools: {names}")
             report = value(call(proc, 3, "analyze_migration", {"source": "."}))
             expect(report["discoveryStatus"] == "complete", f"Incorrect discovery: {report}")
@@ -311,6 +311,80 @@ using NUnit.Framework;
                    "Explicit source-backed URL mapping did not reach renderer")
             expect(mapped["files"][0]["fullyConvertedTests"] == 0,
                    "A mapped URL alone cannot prove Page Object, storage and assertions migrated")
+
+            # Generic synthetic selector extension implementations and Page Objects:
+            # no private application source is copied into this protocol regression.
+            evidence_root = product / "pom-evidence"
+            evidence_root.mkdir()
+            (evidence_root / "SelectorExtensions.cs").write_text("""
+public static class SelectorExtensions {
+    public static XPathBy WithTid(this ByDummy value, string tid) {
+        return value.WithAttribute("data-tid", tid);
+    }
+    public static XPathBy WithDataTest(this ByDummy value, string tid) {
+        return value.WithAttribute("data-test", tid);
+    }
+    public static XPathBy WithDataTestId(this ByDummy value, string tid) {
+        return value.WithAttribute("data-test-id", tid);
+    }
+}
+""", encoding="utf-8")
+            (evidence_root / "TableItem.cs").write_text("""
+public class TableItem {
+    public ElementsCollection<Label> Items { get; }
+    public TableItem(IContextBy container, ControlFactory factory) {
+        Items = factory.CreateElementsCollection<Label>(container,
+            x => x.WithDataTest("row").FixedByIndex());
+    }
+}
+""", encoding="utf-8")
+            (evidence_root / "CatalogPage.cs").write_text("""
+public class CatalogPage {
+    public TableItem Table { get; }
+    public ScCombo Code { get; }
+    public Button Unmapped { get; }
+    public CatalogPage(IWebDriver webDriver, ControlFactory factory) {
+        Table = factory.CreateControl<TableItem>(webDriver.Search(x => x.WithDataTest("table")));
+        Code = factory.CreateControl<ScCombo>(webDriver.Search(
+            x => x.WithDataTestId("project-code").WithTid("caption")));
+        Unmapped = factory.CreateControl<Button>(webDriver.Search(
+            x => x.WithUnsupported("mystery")));
+    }
+}
+""", encoding="utf-8")
+            (evidence_root / "LocalStorage.cs").write_text("""
+public class LocalStorage {
+    public void Clear() { RunScript("localStorage.clear();"); }
+    public void SettingPeriod(string month) { SetItem("period-month", month); }
+}
+""", encoding="utf-8")
+            evidence = value(call(proc, 26, "inspect_pom_sources",
+                                  {"sourceDirectory": "pom-evidence", "pageTypes": ["CatalogPage"],
+                                   "pageVariable": "page"}))
+            expect(evidence["schemaVersion"] == "migrator-pom-evidence/v1alpha1",
+                   "Inspector contract mismatch")
+            expect(evidence["inspectedFiles"] == 4 and len(evidence["sourceTreeHash"]) == 64,
+                   "Inspector did not bind evidence to four source files")
+            by_member = {entry["sourceMemberPath"]: entry for entry in evidence["locators"]}
+            expect(len(by_member["page.Code"]["predicates"]) == 2,
+                   "Compound selector attributes not preserved")
+            expect(len(by_member["page.Table.Items"]["predicates"]) == 2,
+                   "Nested table collection evidence missing")
+            expect(by_member["page.Unmapped"]["proposedPlaywrightExpression"] is None,
+                   "Unknown selector helper must never produce a target mapping")
+            expect(all(e["proposalStatus"] == "requires_review" for e in evidence["locators"]
+                       if e["proposedPlaywrightExpression"] is not None),
+                   "A locator was automatically marked safe without DOM review")
+            expect(any(h["sourceType"] == "LocalStorage" and "period-month" in h["literalStorageKeys"]
+                       for h in evidence["helpers"]), "Storage source method evidence missing")
+            alias_evidence = value(call(proc, 27, "inspect_pom_sources",
+                                        {"sourceDirectory": "pom-evidence", "pageTypes": ["CatalogPage"],
+                                         "pageVariable": "otherPage"}))
+            expect(any(e["sourceMemberPath"] == "otherPage.Table.Items"
+                       for e in alias_evidence["locators"]), "Caller alias was not respected")
+            outside_evidence = call(proc, 28, "inspect_pom_sources",
+                                    {"sourceDirectory": "../"})
+            expect(outside_evidence.get("isError"), "Inspector escaped the workspace")
             print("MCP stdio integration smoke passed", flush=True)
         finally:
             proc.terminate()
