@@ -5,7 +5,8 @@ Requires a compiled Migrator.Mcp.dll OR an installed dotnet-tool executable, and
 import json
 import os
 import pathlib
-import select
+import queue
+import threading
 import subprocess
 import sys
 import tempfile
@@ -17,14 +18,26 @@ def expect(condition, message):
         raise AssertionError(message)
 
 
+def start_reader(proc):
+    """Portable stdout pump: Windows select() does not support pipe handles."""
+    proc.rpc_lines = queue.Queue()
+
+    def pump():
+        for line in proc.stdout:
+            proc.rpc_lines.put(line)
+        proc.rpc_lines.put(None)
+
+    threading.Thread(target=pump, daemon=True, name="mcp-stdout-reader").start()
+
+
 def receive(proc, message_id, timeout=30):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        readable, _, _ = select.select([proc.stdout], [], [], max(0, deadline - time.monotonic()))
-        if not readable:
+        try:
+            line = proc.rpc_lines.get(timeout=max(0.0, deadline - time.monotonic()))
+        except queue.Empty:
             break
-        line = proc.stdout.readline()
-        if not line:
+        if line is None:
             raise AssertionError("MCP process terminated before response (exit=%s)" % proc.poll())
         try:
             payload = json.loads(line)
@@ -34,7 +47,6 @@ def receive(proc, message_id, timeout=30):
             expect("error" not in payload, f"JSON-RPC error for {message_id}: {payload}")
             return payload["result"]
     raise TimeoutError(f"Timed out waiting for MCP response {message_id}")
-
 
 def send(proc, payload):
     proc.stdin.write((json.dumps(payload, separators=(",", ":")) + "\n").encode("utf-8"))
@@ -74,6 +86,7 @@ using NUnit.Framework;
         command = ["dotnet", dll] if dll.endswith(".dll") else [dll]
         proc = subprocess.Popen(command, stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
+        start_reader(proc)
         try:
             send(proc, {"jsonrpc": "2.0", "id": 1, "method": "initialize",
                         "params": {"protocolVersion": "2025-06-18", "capabilities": {},
