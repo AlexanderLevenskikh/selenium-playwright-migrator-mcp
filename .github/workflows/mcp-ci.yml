@@ -40,6 +40,8 @@ jobs:
         run: dotnet build Migrator.Mcp/Migrator.Mcp.csproj --no-restore -c Release
       - name: Real MCP stdio protocol smoke
         run: python3 scripts/mcp_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
+      - name: Review source-backed POM mappings over stdio
+        run: python3 scripts/pom_mapping_review_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
 
       - name: Pack MCP as a versioned dotnet tool
         run: |
@@ -119,6 +121,9 @@ jobs:
       - name: Protocol smoke against self-contained Windows executable
         shell: pwsh
         run: python scripts/mcp_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
+      - name: Review POM mapping through Windows executable
+        shell: pwsh
+        run: python scripts/pom_mapping_review_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
       - name: Archive Windows distribution
         shell: pwsh
         run: Compress-Archive -Path artifacts/standalone/win-x64/* -DestinationPath artifacts/standalone/selenium-playwright-migrator-mcp-win-x64.zip -Force
