@@ -60,7 +60,7 @@ jobs:
         run: dotnet restore Migrator.Mcp/Migrator.Mcp.csproj -r linux-x64 --source "$PWD/artifacts/nuget" --source https://api.nuget.org/v3/index.json
       - name: Publish self-contained Linux x64 executable
         run: |
-          dotnet publish Migrator.Mcp/Migrator.Mcp.csproj -c Release -r linux-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:PublishTrimmed=false -o artifacts/standalone/linux-x64
+          dotnet publish Migrator.Mcp/Migrator.Mcp.csproj -c Release -r linux-x64 --self-contained true --no-restore -p:PublishSingleFile=false -p:PublishTrimmed=false -o artifacts/standalone/linux-x64
           test -x artifacts/standalone/linux-x64/Migrator.Mcp
       - name: Protocol smoke against self-contained Linux executable
         run: python3 scripts/mcp_stdio_smoke.py artifacts/standalone/linux-x64/Migrator.Mcp
@@ -95,11 +95,25 @@ jobs:
           }
       - name: Restore runtime-specific Windows x64 tool dependencies
         shell: pwsh
-        run: dotnet restore Migrator.Mcp/Migrator.Mcp.csproj -r win-x64 --source "$PWD/artifacts/nuget" --source https://api.nuget.org/v3/index.json
+        run: |
+          $feed = (Resolve-Path artifacts/nuget).Path
+          $config = @"
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="local" value="$feed" />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          "@
+          $config | Set-Content -Path artifacts/NuGet.Config -Encoding utf8
+          dotnet restore Migrator.Mcp/Migrator.Mcp.csproj -r win-x64 --configfile artifacts/NuGet.Config
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Publish self-contained Windows x64 executable
         shell: pwsh
         run: |
-          dotnet publish Migrator.Mcp/Migrator.Mcp.csproj -c Release -r win-x64 --self-contained true --no-restore -p:PublishSingleFile=true -p:PublishTrimmed=false -o artifacts/standalone/win-x64
+          dotnet publish Migrator.Mcp/Migrator.Mcp.csproj -c Release -r win-x64 --self-contained true --no-restore -p:PublishSingleFile=false -p:PublishTrimmed=false -o artifacts/standalone/win-x64
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           if (-not (Test-Path artifacts/standalone/win-x64/Migrator.Mcp.exe)) { throw 'Windows MCP executable missing' }
       - name: Protocol smoke against self-contained Windows executable
