@@ -26,3 +26,7 @@ Use for C# NUnit test suites. Do not claim xUnit source, Python, Java or full be
 `syntax` means an AST match, `recognized` means a parser/adapter finding, and `diagnostic` means an error observed by tooling. None is itself a behavioral proof.
 
 An edited candidate never inherits a previous successful syntax or compilation result. Runtime and observables always remain `not_run` in this MCP alpha.\n\nNever suppress unsupported actions just to improve completion metrics. Do not turn TODO-only generated files into successes. Do not fabricate JSON PASS results or reuse evidence after any source/config/target change.
+
+## Existing Playwright NUnit input (preview.3)
+
+When analysis returns `ALREADY_PLAYWRIGHT_SOURCE`, treat the project as **already in the target format**. Do not call migration preview expecting translated code, do not apply synthesized edits, and do not count this as a failed Selenium migration. Recommend independent target-project build/test and source-focused code review. `MIXED_SELENIUM_PLAYWRIGHT_SOURCE` requires choosing a Selenium-only source scope before migration. These are conservative source-framework findings, not build or browser verifications.
