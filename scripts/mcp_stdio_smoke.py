@@ -259,6 +259,58 @@ using NUnit.Framework;
                                    "expectedAnalysisId": known["analysisId"]}))
             expect(rejected["transformationStatus"] == "blocked" and not rejected["files"],
                    "Already-Playwright code was destructively regenerated")
+
+            # Synthetic proprietary-style navigation and storage calls.
+            # Keep this sample generic; no customer code enters public CI.
+            source = product / "navigation-sample"
+            source.mkdir()
+            (source / "TestFixture.cs").write_text("""
+using NUnit.Framework;
+[TestFixture] public class SyntheticFixture {
+    [SetUp] public void SetUp() { LocalStorage.Clear(); }
+    [Test] public void VerifyBusinessNavigation() {
+        var targetPage = Navigation.OpenDashboardPage();
+        targetPage.Save.Click();
+    }
+    [Test] public void VerifyStorage() {
+        LocalStorage.SetItem("key", "value");
+    }
+}
+""", encoding="utf-8")
+            discovered = value(call(proc, 23, "analyze_migration", {"source": "navigation-sample"}))
+            expect(discovered["discoveryStatus"] == "complete"
+                   and discovered["declaredTests"] == 2, "Synthetic Selenium input not discovered")
+            candidate = value(call(proc, 24, "preview_migration",
+                                  {"source": "navigation-sample",
+                                   "expectedAnalysisId": discovered["analysisId"]}))
+            expect(candidate["transformationStatus"] == "partial" and len(candidate["files"]) == 1,
+                   "Unmapped business calls must not be full migration")
+            expect(candidate["files"][0]["fullyConvertedTests"] == 0,
+                   "Renderer TODO debt must prevent inflated fully converted metric")
+            codes = {x["code"] for x in candidate["findings"]}
+            expect({"POM_NAVIGATION_REQUIRES_MAPPING", "LOCAL_STORAGE_REQUIRES_MAPPING"} <= codes,
+                   "Actionable navigation and LocalStorage findings missing")
+            src_code = candidate["files"][0]["content"]
+            expect("MIGRATOR:POM_NAVIGATION_REQUIRES_MAPPING" in src_code
+                   and "MIGRATOR:LOCAL_STORAGE_REQUIRES_MAPPING" in src_code,
+                   "Source helper debt markers missing from rendered output")
+            conf = product / "navigation-mapping.json"
+            conf.write_text(json.dumps({
+                "SourceProjectName": "Synthetic",
+                "Methods": [{
+                    "SourceMethod": "Navigation.OpenDashboardPage()",
+                    "TargetStatements": ['await Page.GotoAsync("https://example.invalid/dashboard");'],
+                    "RequiresReview": True
+                }]
+            }), encoding="utf-8")
+            mapped = value(call(proc, 25, "preview_migration",
+                                {"source": "navigation-sample",
+                                 "config": "navigation-mapping.json"}))
+            expect('await Page.GotoAsync("https://example.invalid/dashboard");'
+                   in mapped["files"][0]["content"],
+                   "Explicit source-backed URL mapping did not reach renderer")
+            expect(mapped["files"][0]["fullyConvertedTests"] == 0,
+                   "A mapped URL alone cannot prove Page Object, storage and assertions migrated")
             print("MCP stdio integration smoke passed", flush=True)
         finally:
             proc.terminate()

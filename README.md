@@ -15,11 +15,11 @@ The server **never applies edits**. No compile/run/behavior claims are made for 
 
 ## Local build before Core is published to NuGet
 
-CI uses Core commit `c5b898a79c312ff11349a4fe32590cdb1b281833` for the local package feed, verified independently in its own repository. To reproduce the build:
+CI uses Core commit `660a3ecd60b32d2091759ac93f9ea871cf46c309` for the local package feed, verified independently in its own repository. To reproduce the build:
 
 ```bash
 git clone https://github.com/AlexanderLevenskikh/selenium-playwright-migrator-core.git core
-git -C core checkout c5b898a79c312ff11349a4fe32590cdb1b281833
+git -C core checkout 660a3ecd60b32d2091759ac93f9ea871cf46c309
 mkdir -p artifacts/nuget
 for project in Migrator.Core Migrator.Roslyn Migrator.SeleniumCSharp Migrator.PlaywrightDotNet Migrator.Application; do
   dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget
@@ -36,7 +36,7 @@ Core packages are **preview build artifacts**, not yet published to public NuGet
 The MCP CI now packs `SeleniumPlaywrightMigrator.Mcp` as a versioned .NET tool and validates the **installed executable** with the same MCP protocol smoke. Until public NuGet publication, download the MCP package artifact from CI and provide the Core package feed if required:
 
 ```bash
-dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.3 \
+dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.5 \
   --tool-path ./.tools --add-source ./artifacts/mcp --add-source ./artifacts/nuget \
   --add-source https://api.nuget.org/v3/index.json
 MIGRATOR_WORKSPACE=/absolute/path/to/selenium-tests \
@@ -103,3 +103,9 @@ These are **CI preview artifacts**, not signed releases or public NuGet publicat
 The engine supports **Selenium C# NUnit → Playwright .NET**, not Playwright → Playwright migration. `analyze_migration` now reports `ALREADY_PLAYWRIGHT_SOURCE` and counts tests without converting them if existing Playwright project references or strong Playwright assertions are detected. `MIXED_SELENIUM_PLAYWRIGHT_SOURCE` blocks ambiguous mixed test suites. `preview_migration` returns `blocked` and no target files for these inputs. MCP protocol smoke covers a synthetic existing Playwright NUnit project without copying private user files.
 
 This is a fail-closed source guard, **not a project build/test/behavior verification**. Use a separate target-project verification workflow to evaluate existing Playwright code.
+
+## Core preview.5 migration-quality safeguards
+
+The source parser preserves result-producing `Navigation.Open*Page()` calls as structured invocations. Without a verified adapter mapping the generated output is blocked with `POM_NAVIGATION_REQUIRES_MAPPING` and source-line evidence. `LocalStorage.SetItem/RemoveItem/Clear/SettingPeriod` emits `LOCAL_STORAGE_REQUIRES_MAPPING`, not an assumed browser-storage translation.
+
+`FullyConvertedTests` now incorporates renderer-emitted TODOs per test method and shared setup, correcting a false-green case found in a private Selenium/NUnit pilot. The private project is never uploaded to GitHub; a synthetic equivalent is tested through real MCP stdio and self-contained Windows/Linux distributions.
