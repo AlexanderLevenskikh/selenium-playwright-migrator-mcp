@@ -86,7 +86,7 @@ public sealed class LoaderTableBehaviorTests : PageTest
             {
                 attempts++;
                 if (attempts == 2)
-                    Assert.Fail("Synthetic page never became ready");
+                    throw new InvalidOperationException("Synthetic page never became ready");
             }
         }
     }
@@ -112,7 +112,7 @@ public sealed class LoaderTableBehaviorTests : PageTest
         {
             await ValidateLoaderWithRetryAsync();
         }
-        catch (AssertionException)
+        catch (InvalidOperationException)
         {
             failed = true;
         }
