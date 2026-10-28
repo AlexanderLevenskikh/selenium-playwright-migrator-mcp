@@ -178,3 +178,15 @@ Lifecycle methods on unavailable source bases, overrides, hidden methods, unpair
 MCP now consumes versioned Core `0.1.0-preview.16` pinned to main commit `e6de7b9262ee12339189e8b7d6b30c43bae9faef` on both Linux and Windows. The `scoped_setupfixture_smoke.py` real JSON-RPC stdio test uses three independent, fictional `SetUpFixture` source files (assembly-global, parent namespace, nested namespace), two test fixtures and a synthetic adapter. It checks `analyze_migration`, `preview_migration`, `verify_artifact`, distinct generated scope artifacts, target namespace containment, one-time action nonduplication, and source-backed dependency TODOs. Same-scope duplicates and a lost OneTimeTearDown must block before suite setup effects run.
 
 An independent synthetic NUnit/Playwright .NET test project in `experiments/synthetic-setupfixture` executes three real Chromium tests with assembly, parent and nested namespace `SetUpFixture` hooks and a similarly prefixed sibling namespace. It verifies one-time setup, inverse cleanup and actual browser interactions without a customer backend. The existing synthetic ComboBox 13/13 test suite remains separate. Real ArBilling compilation, browser execution and observables remain `not_run` for this milestone.
+
+## Preview.17 — complete generated NUnit target assembly
+
+MCP consumes the **versioned Core `0.1.0-preview.17`** package from pinned Core main SHA `b0bde62986fc8c4dd8bfcb1b516be70c30e2807a`, never from an MCP `ProjectReference`.
+
+The new read-only tools are:
+- `plan_target_assembly(source, config?, expectedAnalysisId?, expectedCandidateId?)`: returns an exact content-addressed source/target assembly manifest with generated fixture and SetUpFixture paths, CSProj path and SHA-256 hashes, source scope diagnostics, and `ready_for_build` vs `blocked`. It does **not** dump private generated source, write files or run code.
+- `verify_target_assembly(source, targetRoot, expectedAnalysisId, candidateId, config?)`: checks every target `.cs`, the generated `.csproj`, SHA manifest, explicit MSBuild `Compile Include` closure and scoped fixture dependencies in an existing workspace target directory. Missing/extra or modified files are rejected. `build` and `nUnitRuntime` remain `not_run`.
+
+To actually create, compile or run a generated test assembly, use the **explicit Core CLI** with `plan`, `generate --build --test`, and `verify --build`. For safety MCP remains read-only and never executes MSBuild or application tests on its own.
+
+The Linux/Windows MCP CI regression uses a **separate, trusted Core AssemblyCli** to materialize one public synthetic target project, then runs real `dotnet build` and two NUnit tests. MCP verifies the same generated content hash without inheriting CLI runtime claims, rejects a missing namespace `SetUpFixture`, and rejects injected `Unlisted.cs`. The existing 13 + 3 synthetic Chromium/NUnit workflows remain independent. This is synthetic framework validation; private ArBilling builds and business observables are not run.
