@@ -72,3 +72,10 @@ When mapping multi-action helpers, the same parameter may feed both `FillAsync` 
 For table sources `Items.ElementAt(N).Text.Get().Should().Be` and `Contain`, use inspected and reviewed root/row selectors via `UiTargets`; confirm emitted `ToHaveTextAsync` versus `ToContainTextAsync` semantics. If `TABLE_ASSERTION_REQUIRES_SETUP_REVIEW` appears, the test is incomplete despite its assertions being executable: complete the original fixture navigation, Page Object initialization and Loader paths separately.
 
 For `Loader.ValidateLoading()`, inspect source control flow and only supply an exact zero-argument `Methods` mapping that preserves the bounded retries, reload side effects, visible/hidden state checks and failure path. The exact mapping overrides the generic wait fallback, but a green syntax test does not establish timeout equivalence. Use `System.TimeoutException` for Playwright .NET wait timeouts; verify the compiled target. Do not map the source retry loop to one happy-path wait and call the migration complete.
+
+
+## Review retry and negation before accepting the test (preview.12)
+
+- Never map source `Should().NotContain(expected)` into `ToHaveTextAsync` or a positive `ToContainTextAsync`. With an explicitly reviewed row mapping, retain index `Nth(N)` and use `Expect(locator).Not.ToContainTextAsync(expected)`; if source setup is not resolved keep `TABLE_ASSERTION_REQUIRES_SETUP_REVIEW`.
+- For `Loader.ValidateLoading()`, inspect the actual source implementation and its reachable private helpers, not the name. `review_pom_mapping` counts state getter calls, loop exit, retry count updates, and checks for broadened catches, changed numerical retry-guard operators and conditional reload placement. A review that returns `requires_review` still does **not** establish matching exception types, timeouts, DOM state, backend recovery or browser behavior.
+- Check wrong-value behavior in synthetic Chromium tests as separate negative controls. Preserve four evidence dimensions (`syntax`, `compile`, `runtime`, `observables`) and mark each `not_run` where applicable. Never suppress TODO to inflate `FullyConvertedTests`.
