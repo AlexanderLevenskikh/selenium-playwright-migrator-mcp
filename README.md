@@ -109,3 +109,9 @@ This is a fail-closed source guard, **not a project build/test/behavior verifica
 The source parser preserves result-producing `Navigation.Open*Page()` calls as structured invocations. Without a verified adapter mapping the generated output is blocked with `POM_NAVIGATION_REQUIRES_MAPPING` and source-line evidence. `LocalStorage.SetItem/RemoveItem/Clear/SettingPeriod` emits `LOCAL_STORAGE_REQUIRES_MAPPING`, not an assumed browser-storage translation.
 
 `FullyConvertedTests` now incorporates renderer-emitted TODOs per test method and shared setup, correcting a false-green case found in a private Selenium/NUnit pilot. The private project is never uploaded to GitHub; a synthetic equivalent is tested through real MCP stdio and self-contained Windows/Linux distributions.
+
+## POM selector inspection (preview.6)
+
+`inspect_pom_sources(sourceDirectory, pageTypes?, pageVariable?)` inspects local Page Object classes and the actual selector-extension implementations using Roslyn. Returns source path/line evidence, proven HTML attributes, direct and one-level nested locator candidates and source-derived LocalStorage helper method evidence. Restrict `pageTypes` to a few relevant Page Object type names to keep the output concise.
+
+Every locator with `proposedPlaywrightExpression` is explicitly tagged `requires_review`. Missing or conflicting selector helpers return `insufficient_evidence`; no unapproved selectors are added to `adapter-config.json` or code. A human/agent must verify the DOM and helper semantics before copying a proposed mapping to `UiTargets` and re-running `preview_migration`. Source hashes invalidate evidence after file edits. Private project code is never shipped with the tool.
