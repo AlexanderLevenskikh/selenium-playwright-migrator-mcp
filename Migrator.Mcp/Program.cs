@@ -9,6 +9,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Logging.ClearProviders(); // stdout is reserved for MCP JSON-RPC
 builder.Services.AddSingleton<MigrationEngine>();
 builder.Services.AddSingleton<PomSourceInspector>();
+builder.Services.AddSingleton<PomMappingReviewer>();
 builder.Services.AddSingleton<WorkspacePaths>();
 builder.Services.AddMcpServer()
     .WithStdioServerTransport()
