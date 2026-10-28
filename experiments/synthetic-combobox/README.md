@@ -20,3 +20,7 @@ The loader synthetic test uses `System.TimeoutException` from `Locator.WaitForAs
 ## Preview.12 — negative assertion controls
 
 Three additional Chromium/NUnit tests deliberately use wrong expectations against correctly loaded synthetic table rows and verify that equality, substring and negated substring assertions throw. The positive scenario also checks the non-inclusion of an absent substring. The workflow now fails unless all **eight** browser tests execute and pass. This provides independent mechanics only; no ArBilling DOM, origin, auth, retries or business assertions are validated.
+
+## Preview.14 — per-test fixture lifecycle
+
+Three additional Chromium/NUnit tests exercise a real `[SetUp]` navigation into artificial HTML, verify page state and a row/click/assertion flow, and intentionally navigate away to confirm a required ready element assertion fails. Eleven real browser tests are now required. These tests do not execute a customer's Page Objects or prove production browser behavior.
