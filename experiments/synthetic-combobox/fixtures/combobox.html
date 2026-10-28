@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Synthetic combo-box workflow</title>
+<style>
+  body { font-family: sans-serif; padding: 24px }
+  [data-tid="caption"] { display:block; width:320px; min-height:40px; padding:10px; border:1px solid #ccc; cursor:pointer }
+  #panel[hidden] { display:none }
+  #panel { margin-top:12px; padding:12px; background:#fafafa }
+  button { display:block; width:120px; margin-top:8px; cursor:pointer }
+  output { display:block; margin-top:24px }
+</style>
+</head>
+<body>
+<div data-test-id="synthetic-combo">
+  <section data-tid="caption" id="combo-root">
+    <strong>Select a value</strong>
+    <div id="panel" hidden>
+      <label>Search <input data-test="headbox-search" type="text" /></label>
+      <button data-test="menu-item" data-choice="alpha">alpha</button>
+      <button data-test="menu-item" data-choice="beta">beta</button>
+      <button data-test="apply-button">Apply</button>
+    </div>
+  </section>
+</div>
+<output id="selection">none</output>
+<script>
+(() => {
+  const root = document.querySelector("#combo-root");
+  const panel = document.querySelector("#panel");
+  let pending = null;
+  root.addEventListener("click", () => { panel.hidden = false; });
+  document.querySelectorAll("[data-test='menu-item']").forEach(button => {
+    button.addEventListener("click", event => {
+      pending = event.currentTarget.dataset.choice;
+    });
+  });
+  document.querySelector("[data-test='apply-button']").addEventListener("click", () => {
+    if (pending !== null) document.querySelector("#selection").textContent = pending;
+  });
+})();
+</script>
+</body>
+</html>

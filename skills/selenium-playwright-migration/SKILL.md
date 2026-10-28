@@ -62,3 +62,7 @@ Source `ExecuteJs`/`ExecuteJavaScript` and `EvaluateAsync` calls inside reachabl
 For a selected source POM method, obtain its source hash and line from `inspect_pom_sources`. Draft **all** required target C# actions/expectations, then call `review_pom_mapping` with the unchanged hash and proposed concrete statements. Resolve every `missingObligations` finding; do not delete source assertions, retries, input steps or storage writes to get a shorter template.
 
 `rejected_incomplete` means the candidate is missing a required effect/order; `blocked` means invalid/TODO target or ambiguous source. `requires_review` only means the obvious operation-category omissions were not detected. It NEVER authorizes skipping DOM locator, argument matching, browser origin, authentication or runtime observable checks. After any source change, rerun `inspect_pom_sources`; evidence is stale.
+
+## Preserve source argument uses
+
+When mapping multi-action helpers, the same parameter may feed both `FillAsync` and menu selection. Review `parameterFlows` to ensure every meaningful source argument occurrence is represented in target effect/filter calls. A hardcoded filter or a C# string with double-escaped CSS attribute quotes must not be accepted simply because syntax and click counts pass. DOM and timing still require independent verification.

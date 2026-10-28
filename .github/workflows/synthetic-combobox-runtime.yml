@@ -1,0 +1,50 @@
+name: Synthetic ComboBox browser behavior
+
+on:
+  pull_request:
+    paths:
+      - experiments/synthetic-combobox/**
+      - .github/workflows/synthetic-combobox-runtime.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-combobox-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Restore and compile synthetic NUnit target
+        run: |
+          dotnet restore experiments/synthetic-combobox/SyntheticCombobox.Tests.csproj
+          dotnet build experiments/synthetic-combobox/SyntheticCombobox.Tests.csproj -c Release --no-restore
+      - name: Install Playwright Chromium for the test package version
+        run: pwsh experiments/synthetic-combobox/bin/Release/net10.0/playwright.ps1 install chromium
+      - name: Run real Chromium synthetic observable tests
+        run: |
+          mkdir -p evidence
+          dotnet test experiments/synthetic-combobox/SyntheticCombobox.Tests.csproj             -c Release --no-build --nologo             --results-directory evidence             --logger "trx;LogFileName=synthetic-combobox.trx"
+      - name: Require three executed, passing tests
+        run: |
+          python3 - <<'PY'
+          import pathlib, xml.etree.ElementTree as et
+          path = pathlib.Path("evidence/synthetic-combobox.trx")
+          root = et.parse(path).getroot()
+          counters = next(el for el in root.iter() if el.tag.endswith("Counters"))
+          counts = {key: int(value) for key, value in counters.attrib.items() if value.isdigit()}
+          print(counts)
+          assert counts.get("total", 0) == 3, "Expected two confirmed cases and one negative control"
+          assert counts.get("passed", 0) == 3 and counts.get("failed", 0) == 0, "Synthetic browser test failed"
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synthetic-combobox-browser-evidence
+          path: evidence/*.trx
+          retention-days: 30
+          if-no-files-found: warn

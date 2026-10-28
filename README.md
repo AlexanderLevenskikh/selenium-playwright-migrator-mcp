@@ -133,3 +133,7 @@ After `inspect_pom_sources`, call `review_pom_mapping(sourceDirectory, sourceTyp
 The tool rejects source actions missing from the proposed target (`rejected_incomplete`), syntax-invalid drafts and TODO placeholders (`blocked`), and stale hashes. Even a category-complete mapping is only `requires_review`: no assertion about selector equality, argument values, application state, browser origin or behavioral equivalence is made. The tool never saves/applies the statements. It prevents shrinking a five-step ComboBox to one FillAsync, dropping DatePicker's JavaScript blur, replacing a Loader retry loop with one wait, or writing only one of five LocalStorage keys.
 
 Use an exact sourceLine when a Page Object class overloads a method name. This tool is a conservative validation gate before adding a reviewed Methods config, not automatic generation or acceptance.
+
+## Synthetic ComboBox runtime and source-argument safety (preview.10)
+
+Core now keeps authored C# quote escapes intact when substituting a `ParameterizedMethods` argument and rejects incomplete source parameter propagation through `review_pom_mapping.parameterFlows`. A separate synthetic HTML/Playwright NUnit experiment checks a real click–wait–fill–select–confirm flow in Chromium, including a negative case without the final confirmation. It is deliberately **not** an ArBilling business-backend test.
