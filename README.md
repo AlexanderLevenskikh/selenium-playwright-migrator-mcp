@@ -172,3 +172,9 @@ Core `0.1.0-preview.15` is consumed exclusively through versioned NuGet packages
 The synthetic Chromium workflow requires **13 real NUnit tests**: eleven existing ComboBox/Loader/fixture tests plus two that exercise genuine NUnit inherited hooks and reverse teardown. Real browser execution here proves only the framework mechanics on synthetic fixtures; it is not an ArBilling E2E or source/target equivalence check.
 
 Lifecycle methods on unavailable source bases, overrides, hidden methods, unpaired cleanup and conflicting target host configuration are conservatively blocked by Core. Exact NUnit failure paths, namespace SetUpFixtures and external app state still require target-specific review.
+
+## Preview.16 — NUnit assembly and namespace SetUpFixture
+
+MCP now consumes versioned Core `0.1.0-preview.16` pinned to main commit `e6de7b9262ee12339189e8b7d6b30c43bae9faef` on both Linux and Windows. The `scoped_setupfixture_smoke.py` real JSON-RPC stdio test uses three independent, fictional `SetUpFixture` source files (assembly-global, parent namespace, nested namespace), two test fixtures and a synthetic adapter. It checks `analyze_migration`, `preview_migration`, `verify_artifact`, distinct generated scope artifacts, target namespace containment, one-time action nonduplication, and source-backed dependency TODOs. Same-scope duplicates and a lost OneTimeTearDown must block before suite setup effects run.
+
+An independent synthetic NUnit/Playwright .NET test project in `experiments/synthetic-setupfixture` executes three real Chromium tests with assembly, parent and nested namespace `SetUpFixture` hooks and a similarly prefixed sibling namespace. It verifies one-time setup, inverse cleanup and actual browser interactions without a customer backend. The existing synthetic ComboBox 13/13 test suite remains separate. Real ArBilling compilation, browser execution and observables remain `not_run` for this milestone.
