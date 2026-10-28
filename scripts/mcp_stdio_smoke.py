@@ -452,6 +452,8 @@ using NUnit.Framework;
                    "Reachable private helper reference missing")
             expect(helpers[("DatePicker", "Blur")]["isReachablePrivateHelper"],
                    "Private helper implementation not discovered")
+            expect("javascript_source_execution" in helpers[("DatePicker", "Blur")]["reviewFlags"],
+                   "Private ExecuteJs must be recognized as script execution requiring review")
             flows = {x["method"]: x for x in lineage["storageAndNavigationFlows"]}
             expect(flows["Prepare"]["storageOperations"][0]["relativeToNavigation"]
                    == "setup_before_test", "NUnit storage setup timing was lost")

@@ -54,3 +54,5 @@ For source `Items.ElementAt(N).Click()`, check that a reviewed locator mapping p
 Before mapping `InputAndSelect`, `ValidateLoading`, `SetBeginDate` or similar helpers, inspect `helpers[].orderedCalls` and `controlFlow`: preserve all clicks, inputs, confirmations, waits and assertion/failure paths. Follow any `isReachablePrivateHelper` records (for example a blur helper). Never replace retry-and-reload with one wait merely because the method contains a visibility check.
 
 Review `storageAndNavigationFlows`: `before_first_navigation` and `setup_before_test` storage writes require explicit browser-origin planning. No automatic `Page.EvaluateAsync` or `AddInitScriptAsync` substitution is authorized by lexical source evidence alone. Reinspect if `sourceTreeHash` changed.
+
+Source `ExecuteJs`/`ExecuteJavaScript` and `EvaluateAsync` calls inside reachable private helpers now carry the `javascript_source_execution` review flag. Inspect the actual script and origin; do not silently replace or drop side effects because the public helper name sounds like a simple blur.
