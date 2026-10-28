@@ -145,3 +145,10 @@ Source `page.Table.Items.ElementAt(N).Text.Get().Should().Be/Contain` can now be
 When a project-specific zero-argument `Loader.ValidateLoading()` is parsed as a generic wait, an exact `Methods.SourceMethod` mapping now takes precedence. A reviewed mapping may preserve its loop, conditional reload, state waits and catch path, but must retain `RequiresReview` until actual source/timeouts/DOM are checked. In Playwright .NET, wait operations throw `System.TimeoutException`, not `Microsoft.Playwright.TimeoutException`. Run `verify_artifact` for exact C# syntax and independently compile/test the configured target project.
 
 The synthetic browser experiment exercises both positive retry recovery and an exhausted-retry negative control, with two separate table text assertions. These artificial tests cannot certify the private ArBilling browser/backend.
+
+
+## Preview.12 — conservative Loader review and negated table checks
+
+Core is consumed from the versioned `0.1.0-preview.12` NuGet package, built from an exact pinned Core commit in CI. A `Should().NotContain(value)` table-row assertion now keeps its negative semantics in executable Playwright assertions. The source-backed reviewer tracks conditional state checks, retry counter increments and loop exits; it rejects altered numeric retry guards, broadened catch-all handlers and conditional reloads moved out of their branch. Typed Selenium-to-Playwright timeout exception translation still requires review.
+
+Eight real Chromium synthetic tests (3 ComboBox, 5 Loader/table) are required: three new negative assertion controls confirm that intentionally wrong equality, substring and negated-substring expectations fail. MCP stdio also checks that an unmigrated fixture setup remains partial and that the generated assertions retain explicit review markers. These public fixtures **do not certify ArBilling**; target project build, authenticated browser execution and observable equivalence remain separate.

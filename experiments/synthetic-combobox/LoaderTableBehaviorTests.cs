@@ -101,6 +101,62 @@ public sealed class LoaderTableBehaviorTests : PageTest
         var rows = Page.Locator("[data-test=\"table\"] [data-test=\"row\"]");
         await Expect(rows.Nth(0)).ToHaveTextAsync("synthetic-100");
         await Expect(rows.Nth(1)).ToContainTextAsync("General projects");
+        await Expect(rows.Nth(1)).Not.ToContainTextAsync("deprecated");
+    }
+
+    // Each negative control first asserts the real row text positively.
+    // Then it deliberately supplies a mismatching expectation. We require
+    // a failure mentioning that exact mismatched value, not a generic error.
+    private static async Task RequireAssertionFailure(Func<Task> assertion, string expectedText)
+    {
+        Exception? failure = null;
+        try
+        {
+            await assertion();
+        }
+        catch (Exception ex)
+        {
+            failure = ex;
+        }
+        Assert.That(failure, Is.Not.Null, "A mismatching table assertion cannot silently pass");
+        Assert.That(failure!.Message, Does.Contain(expectedText),
+            "The assertion must fail for the intended expected text, not an unrelated error");
+    }
+
+    [Test]
+    public async Task WrongExactRowValueFailsTextEqualityAssertion()
+    {
+        await RouteSyntheticPage(recoverOnReload: true);
+        await ValidateLoaderWithRetryAsync();
+        var row = Page.Locator("[data-test=\"table\"] [data-test=\"row\"]").Nth(0);
+        await Expect(row).ToHaveTextAsync("synthetic-100");
+        await RequireAssertionFailure(
+            () => Expect(row).ToHaveTextAsync("synthetic-999", new() { Timeout = 350 }),
+            "synthetic-999");
+    }
+
+    [Test]
+    public async Task MissingSubstringFailsTableContainsAssertion()
+    {
+        await RouteSyntheticPage(recoverOnReload: true);
+        await ValidateLoaderWithRetryAsync();
+        var row = Page.Locator("[data-test=\"table\"] [data-test=\"row\"]").Nth(1);
+        await Expect(row).ToContainTextAsync("General projects");
+        await RequireAssertionFailure(
+            () => Expect(row).ToContainTextAsync("Nonexistent project", new() { Timeout = 350 }),
+            "Nonexistent project");
+    }
+
+    [Test]
+    public async Task PresentSubstringFailsNegatedTableContainsAssertion()
+    {
+        await RouteSyntheticPage(recoverOnReload: true);
+        await ValidateLoaderWithRetryAsync();
+        var row = Page.Locator("[data-test=\"table\"] [data-test=\"row\"]").Nth(1);
+        await Expect(row).ToContainTextAsync("General projects");
+        await RequireAssertionFailure(
+            () => Expect(row).Not.ToContainTextAsync("General projects", new() { Timeout = 350 }),
+            "General projects");
     }
 
     [Test]

@@ -29,6 +29,23 @@ public class Combobox {
     }
 }
 """, encoding="utf-8")
+    (root / "Loader.cs").write_text("""
+public sealed class Loader {
+    public void ValidateLoading() {
+        var attempt = 0;
+        while (attempt < 2) {
+            try {
+                if (error.Displayed().Get()) Reload();
+                marker.Visible().Wait().EqualTo(true);
+                break;
+            } catch (WebDriverTimeoutException) {
+                attempt++;
+                if (attempt == 2) Assert.Fail("exhausted");
+            }
+        }
+    }
+}
+""", encoding="utf-8")
     command = ["dotnet", str(binary)] if binary.suffix == ".dll" else [str(binary)]
     proc = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
@@ -85,6 +102,45 @@ public class Combobox {
                and with_filter["parameterFlows"][0]["targetArgumentUses"] >= 2
                and not with_filter["behaviorallyVerified"],
                "Complete parameter flow must still need DOM review")
+        loader = value(call(proc, 9, "inspect_pom_sources",
+                            {"sourceDirectory": ".", "pageTypes": ["Loader"]}))
+        loader_params = {"sourceDirectory": ".", "sourceType": "Loader",
+                         "sourceMethod": "ValidateLoading",
+                         "expectedSourceTreeHash": loader["sourceTreeHash"]}
+        steps = [
+            "var attempt = 0;",
+            "while (attempt < 2) {",
+            "try {",
+            'if (await Page.Locator("#error").IsVisibleAsync()) await Page.ReloadAsync();',
+            'await Page.Locator("#ready").WaitForAsync();',
+            "break;",
+            "} catch (System.TimeoutException) {",
+            "attempt++;",
+            'if (attempt == 2) Assert.Fail("exhausted");',
+            "}",
+            "}"
+        ]
+        good_loader = value(call(proc, 10, "review_pom_mapping",
+                                 dict(loader_params, targetStatements=steps)))
+        expect(good_loader["status"] == "requires_review"
+               and not good_loader["missingObligations"],
+               "Structurally reviewed Loader may not be promoted to passed")
+        bad_catch = value(call(proc, 11, "review_pom_mapping",
+                               dict(loader_params, targetStatements=[
+                                   line.replace("System.TimeoutException", "System.Exception")
+                                   for line in steps])))
+        expect(bad_catch["status"] == "rejected_incomplete"
+               and "typed_source_catch_widened" in bad_catch["reviewFlags"],
+               "Broadened target exception handling must be rejected")
+        bad_reload = value(call(proc, 12, "review_pom_mapping",
+                                dict(loader_params, targetStatements=[
+                                    line.replace(
+                                        'if (await Page.Locator("#error").IsVisibleAsync()) await Page.ReloadAsync();',
+                                        'if (await Page.Locator("#error").IsVisibleAsync()) { } await Page.ReloadAsync();')
+                                    for line in steps])))
+        expect(bad_reload["status"] == "rejected_incomplete"
+               and "conditional_reload_moved_outside_branch" in bad_reload["reviewFlags"],
+               "Moving conditional reload outside guard must be rejected")
         (root/"Combobox.cs").write_text((root/"Combobox.cs").read_text()+"\n// edited")
         stale = call(proc,8,"review_pom_mapping",
                      dict(options,targetStatements=['await Page.ClickAsync();']))
