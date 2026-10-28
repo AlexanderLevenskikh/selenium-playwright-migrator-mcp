@@ -516,6 +516,54 @@ using NUnit.Framework;
                    "Unsupported row assertion was silently replaced by a locator")
             expect(pilot["files"][0]["fullyConvertedTests"] == 0,
                    "Lost assertion was counted as fully converted")
+            # NUnit execution gates are a source execution contract. An
+            # ignored/explicit fixture must not become an executable target.
+            gated_dir = product / "nunit-gates-evidence"
+            gated_dir.mkdir()
+            gated_fixture = gated_dir / "FictionalCase.cs"
+            gated_fixture.write_text("""
+using NUnit.Framework;
+[Ignore("disabled by design")]
+[TestFixture] public class FictionalCase {
+    [Test] public void Example() {}
+}
+""", encoding="utf-8")
+            ignored = value(call(proc, 81, "analyze_migration",
+                {"source": "nunit-gates-evidence/FictionalCase.cs"}))
+            expect(ignored["discoveryStatus"] == "partial"
+                and ignored["declaredTests"] == 1
+                and ignored["parsedTests"] == 0
+                and any(f["code"] == "NUNIT_EXECUTION_GATE_REQUIRES_REVIEW"
+                        and f["line"] > 0 for f in ignored["findings"]),
+                "NUnit Ignore must be counted but blocked with source evidence")
+            ignored_preview = value(call(proc, 82, "preview_migration", {
+                "source": "nunit-gates-evidence/FictionalCase.cs",
+                "expectedAnalysisId": ignored["analysisId"]}))
+            expect(ignored_preview["transformationStatus"] == "blocked"
+                and len(ignored_preview["files"]) == 0,
+                "Ignored fixture must never turn into a runnable Playwright test")
+
+            gated_fixture.write_text("""
+using NUnit.Framework;
+[TestFixture] public class FictionalCase {
+    [TestCase(42, Explicit = true)]
+    public void Example(int value) {}
+}
+""", encoding="utf-8")
+            explicit = value(call(proc, 83, "analyze_migration",
+                {"source": "nunit-gates-evidence/FictionalCase.cs"}))
+            expect(explicit["discoveryStatus"] == "partial"
+                and explicit["declaredTests"] == 1
+                and any(f["code"] == "NUNIT_EXECUTION_GATE_REQUIRES_REVIEW"
+                        for f in explicit["findings"]),
+                "Explicit case metadata must not be silently dropped")
+            explicit_preview = value(call(proc, 84, "preview_migration", {
+                "source": "nunit-gates-evidence/FictionalCase.cs",
+                "expectedAnalysisId": explicit["analysisId"]}))
+            expect(explicit_preview["transformationStatus"] == "blocked"
+                and len(explicit_preview["files"]) == 0,
+                "Explicit case must not become an unconditional test")
+
             print("MCP stdio integration smoke passed", flush=True)
         finally:
             proc.terminate()
