@@ -50,6 +50,29 @@ public static class MigrationTools
         return json;
     }
 
+
+    [McpServerTool(Name = "verify_artifact")]
+    [Description("Verify exact generated or agent-edited C# target bytes. Requires current analysis and parent candidate IDs. Returns independent syntax/compile/runtime/observables statuses; never executes tests, applies edits, or invokes MSBuild.")]
+    public static string VerifyArtifact(MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Source .cs file or directory inside the workspace")] string source,
+        [Description("Current analysisId returned by analyze_migration / preview_migration")] string expectedAnalysisId,
+        [Description("Current parent candidateId returned by preview_migration")] string candidateId,
+        [Description("Optional directory containing the exact C# target files edited by the agent. Omit to verify generated preview bytes.")] string? targetRoot = null,
+        [Description("Optional adapter config path within workspace")] string? config = null,
+        [Description("Request in-memory Roslyn compilation in addition to syntax parsing")] bool runCompile = false,
+        [Description("Optional DLL paths relative to the workspace. Required (may be empty) when runCompile=true. No MSBuild project evaluation.")] string[]? referenceDlls = null,
+        CancellationToken cancellationToken = default)
+    {
+        var references = referenceDlls?.Select(workspace.Resolve).ToArray();
+        var result = engine.VerifyArtifact(
+            workspace.Resolve(source), expectedAnalysisId, candidateId,
+            targetDirectory: targetRoot == null ? null : workspace.Resolve(targetRoot),
+            configPath: config == null ? null : workspace.Resolve(config),
+            runCompile: runCompile, compilationReferencePaths: references,
+            cancellationToken: cancellationToken);
+        return JsonSerializer.Serialize(result, JsonOptions);
+    }
+
     static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = false

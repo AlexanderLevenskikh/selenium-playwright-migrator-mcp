@@ -84,7 +84,7 @@ using NUnit.Framework;
             send(proc, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
             listing = receive(proc, 2)
             names = {tool["name"] for tool in listing.get("tools", [])}
-            expect({"analyze_migration", "preview_migration", "explain_finding"} <= names,
+            expect({"analyze_migration", "preview_migration", "explain_finding", "verify_artifact"} <= names,
                    f"Missing MCP tools: {names}")
             report = value(call(proc, 3, "analyze_migration", {"source": "."}))
             expect(report["discoveryStatus"] == "complete", f"Incorrect discovery: {report}")
@@ -96,6 +96,80 @@ using NUnit.Framework;
             expect(len(preview["files"]) == 1, f"Missing generated file: {preview}")
             expect(len(preview["targetTreeHash"]) == 64, "Target hash missing")
             expect(preview["analysisId"] == expected_id, "Preview analysis mismatch")
+
+            # Generated candidate: syntax-only does not secretly claim compile/runtime.
+            generated = value(call(proc, 10, "verify_artifact",
+                                   {"source": ".", "expectedAnalysisId": expected_id,
+                                    "candidateId": preview["candidateId"]}))
+            expect(generated["candidate"]["candidateId"] == preview["candidateId"],
+                   "Generated candidate must retain parent ID")
+            expect(generated["candidate"]["targetTreeHash"] == preview["targetTreeHash"],
+                   "Generated candidate target hash differs")
+            expect(generated["candidate"]["origin"] == "generated", "Wrong generated origin")
+            expect(generated["compile"]["status"] == "not_run", "Compile status was invented")
+            expect(generated["runtime"]["status"] == "not_run"
+                   and generated["observables"]["status"] == "not_run",
+                   "Runtime/observable evidence was invented")
+
+            # Single-file source scope permits an edited target directory next to source,
+            # without changing the source snapshot on target edits.
+            single = value(call(proc, 11, "analyze_migration", {"source": "Tests.cs"}))
+            one = value(call(proc, 12, "preview_migration",
+                             {"source": "Tests.cs", "expectedAnalysisId": single["analysisId"]}))
+            target_root = product / "agent-target"
+            target_root.mkdir()
+            target_file = target_root / one["files"][0]["relativePath"]
+            target_file.parent.mkdir(parents=True, exist_ok=True)
+            target_file.write_text("public sealed class Edited { public int Value => 123; }",
+                                   encoding="utf-8")
+            options = {"source": "Tests.cs", "expectedAnalysisId": single["analysisId"],
+                       "candidateId": one["candidateId"], "targetRoot": "agent-target",
+                       "runCompile": True, "referenceDlls": []}
+            edited = value(call(proc, 13, "verify_artifact", options))
+            expect(edited["candidate"]["origin"] == "agent-edited", "Edited origin was lost")
+            expect(edited["candidate"]["parentCandidateId"] == one["candidateId"],
+                   "Edited candidate lost its parent")
+            expect(edited["candidate"]["candidateId"] != one["candidateId"],
+                   "Edited code reused generated candidate identity")
+            expect(edited["syntax"]["status"] == "passed", "Simple edited C# syntax did not pass")
+            expect(edited["compile"]["status"] == "passed", "Self-contained candidate did not compile")
+            expect(edited["runtime"]["status"] == "not_run", "Compile incorrectly marked runtime passed")
+
+            target_file.write_text("public sealed class Edited { public int Value => UnknownName; }",
+                                   encoding="utf-8")
+            compile_error = value(call(proc, 14, "verify_artifact", options))
+            expect(compile_error["syntax"]["status"] == "passed"
+                   and compile_error["compile"]["status"] == "failed",
+                   "A compiler error was mistaken for syntax or success")
+            expect(compile_error["candidate"]["candidateId"] != edited["candidate"]["candidateId"],
+                   "Old successful candidate reused after semantic error")
+
+            target_file.write_text("public sealed class Broken {", encoding="utf-8")
+            syntax_error = value(call(proc, 15, "verify_artifact", options))
+            expect(syntax_error["syntax"]["status"] == "failed"
+                   and syntax_error["compile"]["status"] == "blocked",
+                   "Invalid syntax did not block compilation")
+
+            target_file.write_text("public sealed class Edited {}", encoding="utf-8")
+            no_profile = dict(options)
+            del no_profile["referenceDlls"]
+            blocked = value(call(proc, 16, "verify_artifact", no_profile))
+            expect(blocked["compile"]["status"] == "blocked",
+                   "Missing reference context must not become compile success")
+
+            wrong_parent = dict(options)
+            wrong_parent["candidateId"] = "wrong-parent"
+            invalid = call(proc, 17, "verify_artifact", wrong_parent)
+            expect(invalid.get("isError"), "Unknown parent candidate was accepted")
+
+            extra_file = target_root / "Extra.cs"
+            extra_file.write_text("public class Extra {}", encoding="utf-8")
+            extra = call(proc, 18, "verify_artifact", options)
+            expect(extra.get("isError"), "Unexpected C# target file was accepted")
+            extra_file.unlink()
+            import shutil
+            shutil.rmtree(target_root)
+
             outside = call(proc, 5, "analyze_migration", {"source": "../"})
             expect(outside.get("isError"), "Parent directory traversal was accepted")
             absolute = call(proc, 6, "analyze_migration", {"source": str(product)})
