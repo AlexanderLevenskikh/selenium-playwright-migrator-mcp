@@ -195,6 +195,24 @@ using NUnit.Framework;
             expect(explanation["code"] == "MULTIPLE_FIXTURES", "Wrong finding explanation")
             expect("Split fixtures" in explanation["suggestedNextAction"],
                    "Explanation lacks a grounded next action")
+
+            # The source root was checked, but a nested symlink could still
+            # leak an outside file through recursive inventory without preflight.
+            outside_source = pathlib.Path(root) / "private.cs"
+            outside_source.write_text("public class Private {}", encoding="utf-8")
+            source_link = product / "shortcut.cs"
+            source_link.symlink_to(outside_source)
+            escaped = call(proc, 19, "analyze_migration", {"source": "."})
+            expect(escaped.get("isError"), "Recursive source inventory followed an external symlink")
+            source_link.unlink()
+            source_dir = pathlib.Path(root) / "private-directory"
+            source_dir.mkdir()
+            (source_dir / "private.cs").write_text("public class Private {}", encoding="utf-8")
+            dir_link = product / "linked-directory"
+            dir_link.symlink_to(source_dir, target_is_directory=True)
+            escaped_dir = call(proc, 20, "analyze_migration", {"source": "."})
+            expect(escaped_dir.get("isError"), "Recursive source inventory followed a symlink directory")
+            dir_link.unlink()
             print("MCP stdio integration smoke passed", flush=True)
         finally:
             proc.terminate()

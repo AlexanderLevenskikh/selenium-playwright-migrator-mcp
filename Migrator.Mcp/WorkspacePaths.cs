@@ -20,6 +20,46 @@ public sealed class WorkspacePaths
             throw new DirectoryNotFoundException("MIGRATOR_WORKSPACE does not exist.");
     }
 
+
+    /// <summary>
+    /// Preflight recursive source scopes. Core's directory inventory is recursive;
+    /// checking just its starting directory could follow a nested link outside the
+    /// configured workspace. Reject *all* links in a source directory, including
+    /// links whose final targets happen to be within the root.
+    /// </summary>
+    public string ResolveSourceScope(string relativePath, CancellationToken cancellationToken = default)
+    {
+        var full = Resolve(relativePath);
+        if (!Directory.Exists(full))
+            return full; // a single file was already checked by Resolve()
+
+        var checkedEntries = 0;
+        Scan(full, 0);
+        return full;
+
+        void Scan(string directory, int depth)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (depth > 40)
+                throw new InvalidOperationException("SOURCE_SCOPE_TOO_DEEP: use a narrower source root.");
+            if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) != 0)
+                throw new UnauthorizedAccessException("SOURCE_SYMLINK_REJECTED: recursive analysis cannot follow symlink directories.");
+
+            foreach (var entry in Directory.EnumerateFileSystemEntries(directory))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                checkedEntries++;
+                if (checkedEntries > 100_000)
+                    throw new InvalidOperationException("SOURCE_SCOPE_TOO_LARGE: analyze a narrower directory.");
+                var attrs = File.GetAttributes(entry);
+                if ((attrs & FileAttributes.ReparsePoint) != 0)
+                    throw new UnauthorizedAccessException("SOURCE_SYMLINK_REJECTED: linked input may escape the workspace.");
+                if ((attrs & FileAttributes.Directory) != 0)
+                    Scan(entry, depth + 1);
+            }
+        }
+    }
+
     public string Resolve(string path)
     {
         if (string.IsNullOrWhiteSpace(path))

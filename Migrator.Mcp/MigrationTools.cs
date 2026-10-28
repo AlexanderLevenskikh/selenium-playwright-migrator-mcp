@@ -15,7 +15,7 @@ public static class MigrationTools
         [Description("Optional JSON adapter config path within workspace")] string? config = null,
         CancellationToken cancellationToken = default)
     {
-        var result = engine.Analyze(workspace.Resolve(source), config == null ? null : workspace.Resolve(config),
+        var result = engine.Analyze(workspace.ResolveSourceScope(source, cancellationToken), config == null ? null : workspace.Resolve(config),
             cancellationToken);
         return JsonSerializer.Serialize(result, JsonOptions);
     }
@@ -29,7 +29,7 @@ public static class MigrationTools
         [Description("Expected analysis ID to reject stale source/config")] string? expectedAnalysisId = null,
         CancellationToken cancellationToken = default)
     {
-        var result = engine.Explain(workspace.Resolve(source), findingId,
+        var result = engine.Explain(workspace.ResolveSourceScope(source, cancellationToken), findingId,
             config == null ? null : workspace.Resolve(config), expectedAnalysisId, cancellationToken);
         return JsonSerializer.Serialize(result, JsonOptions);
     }
@@ -42,7 +42,7 @@ public static class MigrationTools
         [Description("Expected analysisId from analyze_migration. Stale input is rejected.")] string? expectedAnalysisId = null,
         CancellationToken cancellationToken = default)
     {
-        var result = engine.Preview(workspace.Resolve(source),
+        var result = engine.Preview(workspace.ResolveSourceScope(source, cancellationToken),
             config == null ? null : workspace.Resolve(config), expectedAnalysisId, cancellationToken);
         var json = JsonSerializer.Serialize(result, JsonOptions);
         if (json.Length > 1_000_000)
@@ -65,7 +65,7 @@ public static class MigrationTools
     {
         var references = referenceDlls?.Select(workspace.Resolve).ToArray();
         var result = engine.VerifyArtifact(
-            workspace.Resolve(source), expectedAnalysisId, candidateId,
+            workspace.ResolveSourceScope(source, cancellationToken), expectedAnalysisId, candidateId,
             targetDirectory: targetRoot == null ? null : workspace.Resolve(targetRoot),
             configPath: config == null ? null : workspace.Resolve(config),
             runCompile: runCompile, compilationReferencePaths: references,
