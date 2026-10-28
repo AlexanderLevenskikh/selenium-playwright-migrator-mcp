@@ -157,7 +157,7 @@ namespace Synthetic.Tests {
                 "read-only MCP verification cannot inherit Core CLI runtime success")
 
             target = workspace / "generated"
-            required = target / "TestsOne/GlobalPlaywright.cs"
+            required = target / "TestsOne/RootHookPlaywright.cs"
             saved = required.read_bytes()
             required.unlink()
             damaged = value(call(proc, 6, "verify_target_solution", {
