@@ -36,3 +36,11 @@ When analysis returns `ALREADY_PLAYWRIGHT_SOURCE`, treat the project as **alread
 - `POM_NAVIGATION_REQUIRES_MAPPING` means the source `Navigation.Open*Page()` returns a Selenium Page Object. Inspect its implementation (including URL and factory) before adding an explicit `Methods` mapping. The parser now retains the assignment result variable; only an explicit target declaration will bind it. Mapping a URL alone must NOT unblock downstream project-specific POM members.
 - `LOCAL_STORAGE_REQUIRES_MAPPING` means a source storage helper (Clear/SetItem/RemoveItem/SettingPeriod) needs a verified Playwright equivalent. Check browser origin, pre-navigation ordering, state lifetime and value serialization before choosing `Page.EvaluateAsync`, `Page.AddInitScriptAsync` or context storage state. Do not blindly map a Selenium JavaScript helper to a Playwright call.
 - A preview with rendered TODOs must have `FullyConvertedTests` reduced accordingly. Build/test passes never override incomplete transformation status or missing runtime observables.
+
+## Grounded selector mapping
+
+When `POM_NAVIGATION_REQUIRES_MAPPING`, `UNRESOLVED_SYMBOL` or table/selector TODOs dominate, call `inspect_pom_sources` on the explicit source directory, with relevant `pageTypes`. Examine the returned `predicates`, `helperSourcePath`, `sourceLine` and `sourceTreeHash`.
+
+Only transfer `proposedPlaywrightExpression` into an explicit `UiTargets` mapping after checking source selector extension semantics, the actual DOM, the relevant Page Object's context, locator uniqueness and the downstream control method's side effects. Keep `requires_review` proposals out of generated executable tests until validated. For `LocalStorage`, verify origin and pre-navigation timing; discovering a key name does not prove a safe browser-storage rewrite.
+
+This tool never applies mappings, compiles a project or executes test/browser behavior.
