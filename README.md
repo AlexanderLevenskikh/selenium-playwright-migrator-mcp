@@ -125,3 +125,11 @@ Core now treats source `Items.ElementAt(N).Click()` as a side-effecting click an
 The read-only `inspect_pom_sources` response now includes `helpers[].orderedCalls`, `controlFlow`, `methodSha256`, `reviewFlags` and bounded same-class private-helper implementations. `storageAndNavigationFlows` records NUnit test/setup storage operations relative to first in-method navigation, but **does not infer runtime browser origin**. The evidence schema is now `migrator-pom-evidence/v1alpha2`. Source order is not execution order through loops/exception branches.
 
 This intentionally creates **no executable mapping**. Use the evidence to prepare explicit reviewed `Methods` and `UiTargets` mappings with source semantics preserved; green build and reduced TODO counts alone are not acceptance.
+
+## Review proposed POM Methods mappings (preview.9)
+
+After `inspect_pom_sources`, call `review_pom_mapping(sourceDirectory, sourceType, sourceMethod, expectedSourceTreeHash, targetStatements, sourceLine?)` with **concrete candidate C# statements**. The tool walks the source-backed method ledger, follows same-class helpers and checks whether clicks, inputs, waits, assertions, script/storage effects and control-flow constructs remain represented **in order**.
+
+The tool rejects source actions missing from the proposed target (`rejected_incomplete`), syntax-invalid drafts and TODO placeholders (`blocked`), and stale hashes. Even a category-complete mapping is only `requires_review`: no assertion about selector equality, argument values, application state, browser origin or behavioral equivalence is made. The tool never saves/applies the statements. It prevents shrinking a five-step ComboBox to one FillAsync, dropping DatePicker's JavaScript blur, replacing a Loader retry loop with one wait, or writing only one of five LocalStorage keys.
+
+Use an exact sourceLine when a Page Object class overloads a method name. This tool is a conservative validation gate before adding a reviewed Methods config, not automatic generation or acceptance.
