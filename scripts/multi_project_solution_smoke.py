@@ -363,7 +363,7 @@ public class Container {
             tests_one = next(p for p in nested["projects"]
                              if p["sourceProject"] == "TestsOne/TestsOne.csproj")
             expect(nested["status"] == "blocked"
-                and nested["schemaVersion"] == "migrator-target-solution/v1alpha3"
+                and nested["schemaVersion"] == "migrator-target-solution/v1alpha4"
                 and tests_one["declaredTests"] == 2
                 and tests_one["candidateId"] is None
                 and any(i["code"] == "SOLUTION_NESTED_SETUPFIXTURE_UNSUPPORTED"
