@@ -210,6 +210,60 @@ namespace Synthetic.Tests {
                 "MCP cannot report a package-dependent source library as buildable")
             put("Shared/Shared.csproj", shared_project)
 
+            # A graph with unreviewed packages must fail quickly without
+            # launching the expensive NUnit/Roslyn assembly candidates.
+            put("TestsTwo/TestsTwo.csproj", project_template)
+            reviewed_source = (source / "Shared/Shared.csproj").read_text(
+                encoding="utf-8")
+            package_project = reviewed_source.replace(
+                "</Project>",
+                '<ItemGroup><PackageReference Include="System.Collections.Immutable" '
+                'Version="9.0.0" /></ItemGroup></Project>')
+            put("Shared/Shared.csproj", package_project)
+            unreviewed = value(call(proc, 9, "plan_target_solution", {
+                "source": "source", "config": "adapter.json"}))
+            expect(unreviewed["status"] == "blocked"
+                and any(i["code"] == "SOLUTION_LIBRARY_PACKAGE_UNSUPPORTED"
+                        for i in unreviewed["issues"])
+                and any(i["code"] == "SOLUTION_NUNIT_PLANNING_DEFERRED"
+                        for i in unreviewed["issues"])
+                and all(p["candidateId"] is None for p in
+                        unreviewed["projects"] if p["kind"] == "nunit"),
+                "unreviewed shared packages must block before NUnit generation")
+
+            reviewed_config = dict(config,
+                TargetSolutionReviewedPackages=[{
+                    "SourceProject": "Shared/Shared.csproj",
+                    "Reviewed": True,
+                    "Packages": [{
+                        "Id": "System.Collections.Immutable",
+                        "Version": "9.0.0"
+                    }]
+                }])
+            adapter.write_text(json.dumps(reviewed_config), encoding="utf-8")
+            accepted = value(call(proc, 10, "plan_target_solution", {
+                "source": "source", "config": "adapter.json"}))
+            shared = next(p for p in accepted["projects"]
+                          if p["sourceProject"] == "Shared/Shared.csproj")
+            expect(accepted["status"] == "ready_for_build"
+                and shared["packageReferences"] == [{
+                    "id": "System.Collections.Immutable", "version": "9.0.0"
+                }]
+                and accepted["planId"] != plan["planId"],
+                "explicit exact source packages must be projected and hash-bound")
+
+            put("Shared/Shared.csproj",
+                package_project.replace('Version="9.0.0"',
+                                        'Version="9.0.1"'))
+            mismatch = value(call(proc, 11, "plan_target_solution", {
+                "source": "source", "config": "adapter.json"}))
+            expect(mismatch["status"] == "blocked"
+                and any(i["code"] == "SOLUTION_PACKAGE_REVIEW_MISMATCH"
+                        for i in mismatch["issues"]),
+                "source library package version changes must invalidate approval")
+            put("Shared/Shared.csproj", reviewed_source)
+            adapter.write_text(json.dumps(config), encoding="utf-8")
+
             print("Multi-project MCP plan + Core CLI NUnit 2/2 runtime passed", flush=True)
         finally:
             proc.terminate()
