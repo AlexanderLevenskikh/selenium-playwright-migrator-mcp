@@ -129,7 +129,7 @@ public static class MigrationTools
     }
 
     [McpServerTool(Name = "plan_target_solution")]
-    [Description("Read-only source-bound multi-csproj graph plan: separate NUnit assemblies, ProjectReference libraries, per-assembly SetUpFixture boundaries, SHA-256 file inventory and exact .slnx. No source code bodies, file writes or command execution.")]
+    [Description("Read-only source-bound multi-csproj graph plan. An optional TargetSolutionEntryProjects adapter scope selects NUnit entry projects plus all transitive ProjectReference dependencies and lists excluded projects. Keeps independent SetUpFixture assemblies and SHA-256 manifest. No code bodies, file writes or execution.")]
     public static string PlanTargetSolution(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Multi-project SDK-style source solution directory within workspace")] string source,
@@ -146,7 +146,7 @@ public static class MigrationTools
             result.SchemaVersion, result.SourceTreeHash,
             result.ConfigurationHash, result.PlanId, result.TargetTreeHash,
             result.SolutionFile, result.ManifestFile, result.Status,
-            result.Projects,
+            result.Scope, result.Projects,
             files = result.Files.Select(file => new
                 { file.RelativePath, file.Sha256, file.SourcePath }),
             result.Issues, result.Limitations, execution = "read_only_not_run"
