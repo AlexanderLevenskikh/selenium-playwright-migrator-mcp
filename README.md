@@ -401,3 +401,29 @@ Microsoft.Extensions.DependencyInjection types with recorded
 \`IBrowser\` fakes and real NUnit/TRX success/failure/retry/cleanup
 checks; actual browser launch and private product E2E remain
 \`not_run\`. GitHub CI contains only fictional synthetic inputs.
+
+
+## preview.28 — real Chromium acceptance via pinned Core
+
+The MCP Linux release CI now runs the **actual** source-attested
+\`MigratorPlaywrightDiBridge\` emitted by pinned Core using
+\`Microsoft.Playwright\` and a separately installed Chromium browser.
+The smoke starts a fictional loopback-only HTTP web application, checks
+the actual DOM, browser JavaScript console, per-fixture
+\`IBrowserContext\`/\`IPage\`, isolated localStorage, real PNG screenshot
+and console log artifacts, NUnit explicit retry and final failure, and
+fixture context/service scope cleanup before the shared browser and
+provider close. The \`scripts/assert_real_chromium_evidence.py\` guard
+requires all three real-browser scenarios and independent TRX/runtime
+status, and rejects mock-only or customer-E2E claims. Linux CI preserves
+a separate synthetic-browser JSON artifact. Windows continues the full
+self-contained MCP protocol and NUnit regressions; it does not claim
+to run Chromium unless separately evidenced.
+
+MCP itself remains read-only. Its
+\`review_playwright_fixture_lifetime\` returns exact SHA metadata for
+both the NUnit adapter and concrete runtime bridge; it does not
+generate runnable code bodies, open Chromium or connect to customer
+systems. A successful synthetic browser smoke does **not** approve
+private application DI registrations, credentials, original Selenium
+browser-pool behavior or custom listener/teardown equivalence.
