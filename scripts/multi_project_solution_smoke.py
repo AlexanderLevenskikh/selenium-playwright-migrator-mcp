@@ -227,6 +227,8 @@ namespace Synthetic.Tests {
                         for i in unreviewed["issues"])
                 and any(i["code"] == "SOLUTION_NUNIT_PLANNING_DEFERRED"
                         for i in unreviewed["issues"])
+                and sum(p["declaredTests"] for p in unreviewed["projects"]
+                        if p["kind"] == "nunit") == 2
                 and all(p["candidateId"] is None for p in
                         unreviewed["projects"] if p["kind"] == "nunit"),
                 "unreviewed shared packages must block before NUnit generation")
@@ -263,6 +265,44 @@ namespace Synthetic.Tests {
                 "source library package version changes must invalidate approval")
             put("Shared/Shared.csproj", reviewed_source)
             adapter.write_text(json.dumps(config), encoding="utf-8")
+
+            # Preflight must preserve source test inventory in a blocked
+            # assembly, and reject nested suite ownership before target output.
+            put("TestsOne/NestedScope.cs", """
+using NUnit.Framework;
+public class Container {
+    [SetUpFixture] public class Nested {
+        [OneTimeTearDown] public void Cleanup() {}
+    }
+}
+[TestFixture] public class AnotherFixture {
+    [Test] public void Extra() {}
+}
+""")
+            nested = value(call(proc, 12, "plan_target_solution", {
+                "source": "source", "config": "adapter.json"}))
+            tests_one = next(p for p in nested["projects"]
+                             if p["sourceProject"] == "TestsOne/TestsOne.csproj")
+            expect(nested["status"] == "blocked"
+                and nested["schemaVersion"] == "migrator-target-solution/v1alpha3"
+                and tests_one["declaredTests"] == 2
+                and tests_one["candidateId"] is None
+                and any(i["code"] == "SOLUTION_NESTED_SETUPFIXTURE_UNSUPPORTED"
+                        for i in nested["issues"]),
+                "blocked NUnit scope must preserve source test count, not invent target")
+            (source / "TestsOne/NestedScope.cs").unlink()
+
+            put("TestsOne/AssemblyPolicy.cs", """
+using NUnit.Framework;
+[assembly: Parallelizable(ParallelScope.Fixtures)]
+""")
+            parallel = value(call(proc, 13, "plan_target_solution", {
+                "source": "source", "config": "adapter.json"}))
+            expect(parallel["status"] == "blocked"
+                and any(i["code"] == "SOLUTION_ASSEMBLY_SCHEDULING_REQUIRES_REVIEW"
+                        for i in parallel["issues"]),
+                "source NUnit assembly parallelism cannot be omitted silently")
+            (source / "TestsOne/AssemblyPolicy.cs").unlink()
 
             print("Multi-project MCP plan + Core CLI NUnit 2/2 runtime passed", flush=True)
         finally:
