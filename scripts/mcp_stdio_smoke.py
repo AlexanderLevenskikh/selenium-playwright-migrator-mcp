@@ -97,7 +97,7 @@ using NUnit.Framework;
             send(proc, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
             listing = receive(proc, 2)
             names = {tool["name"] for tool in listing.get("tools", [])}
-            expect({"analyze_migration", "preview_migration", "explain_finding", "verify_artifact", "inspect_pom_sources", "review_pom_mapping"} <= names,
+            expect({"analyze_migration", "preview_migration", "explain_finding", "verify_artifact", "inspect_pom_sources", "inspect_nunit_lifecycle", "review_pom_mapping"} <= names,
                    f"Missing MCP tools: {names}")
             report = value(call(proc, 3, "analyze_migration", {"source": "."}))
             expect(report["discoveryStatus"] == "complete", f"Incorrect discovery: {report}")
@@ -563,6 +563,86 @@ using NUnit.Framework;
             expect(explicit_preview["transformationStatus"] == "blocked"
                 and len(explicit_preview["files"]) == 0,
                 "Explicit case must not become an unconditional test")
+
+            # Read-only lifecycle source inspection follows same-type private
+            # listeners and preserves evidence of inherited teardown, browser
+            # resource ownership and an invalid nested SetUpFixture.
+            lifecycle_dir = product / "lifecycle-source-evidence"
+            lifecycle_dir.mkdir()
+            (lifecycle_dir / "BaseFixture.cs").write_text("""
+using NUnit.Framework;
+namespace Fictional.Integration;
+public abstract class BaseFixture {
+    protected IWebDriver WebDriver =>
+        DiContainer.GetScopedRequiredService<IPooledWebDriver>().WrappedDriver;
+    protected Navigation Navigation =>
+        DiContainer.GetScopedRequiredService<Navigation>();
+    protected LocalStorage LocalStorage =>
+        DiContainer.GetScopedRequiredService<LocalStorage>();
+    [OneTimeSetUp] public void Start() { InstallListener(); }
+    [TearDown] public void CleanupTest() {
+        TestContext.CurrentContext.WriteBrowserLogs(WebDriver);
+        Screenshoter.CreateAndSaveScreenshot();
+    }
+    [OneTimeTearDown] public void End() { DiContainer.DisposeScope(); }
+    private void InstallListener() {
+        var listener = new RetryTestListener();
+        TestExecutionContext.CurrentContext.GetType().GetProperties();
+    }
+    [SetUpFixture] public class InvalidNestedCleanup {
+        [OneTimeTearDown] public void End() {
+            DiContainer.FullDispose();
+        }
+    }
+}
+""", encoding="utf-8")
+            (lifecycle_dir / "Tests.cs").write_text("""
+using NUnit.Framework;
+namespace Fictional.Integration;
+[TestFixture] public class Tests : BaseFixture {
+    [Test] public void CanRun() {}
+}
+""", encoding="utf-8")
+            evidence = value(call(proc, 85, "inspect_nunit_lifecycle",
+                {"sourceDirectory": "lifecycle-source-evidence"}))
+            expect(evidence["schemaVersion"] ==
+                       "migrator-nunit-lifecycle-source/v1alpha1"
+                and evidence["status"] == "blocked"
+                and evidence["declaredTestMethods"] == 1
+                and evidence["inspectedFiles"] == 2
+                and len(evidence["sourceTreeHash"]) == 64
+                and len(evidence["hooks"]) == 4,
+                "real MCP must expose complete source-bound lifecycle ledger")
+            kinds = {item["kind"] for item in evidence["effects"]}
+            expect({"di_scoped_service", "di_scope_dispose",
+                    "di_global_dispose", "browser_logs", "browser_screenshot",
+                    "nunit_listener_reflection", "browser_driver_scope",
+                    "browser_navigation_scope", "browser_storage_scope"} <= kinds,
+                "lifecycle inspector must retain DI/browser/listener/cleanup obligations")
+            expect(any(item["kind"] == "nunit_listener_reflection"
+                       and item["reachedThrough"] == "InstallListener"
+                       for item in evidence["effects"]),
+                "bounded same-class private listener helper must be reachable")
+            expect(any(item["code"] ==
+                       "NUNIT_NESTED_SETUPFIXTURE_REQUIRES_REVIEW"
+                       for item in evidence["issues"])
+                and evidence["setUpFixtures"][0]["cleanupOnly"] is True
+                and evidence["build"] == "not_run"
+                and evidence["nUnitRuntime"] == "not_run"
+                and evidence["browserObservables"] == "not_run",
+                "nested cleanup scope must fail closed without invented execution")
+            expect(all(len(hook["methodSha256"]) == 64
+                       and hook["sourceLine"] > 0 for hook in evidence["hooks"]),
+                "all lifecycle hooks must carry source hash and line evidence")
+            expect("GetScopedRequiredService<" not in json.dumps(evidence)
+                and "CreateAndSaveScreenshot();" not in json.dumps(evidence),
+                "tool may not expose raw private C# source bodies")
+            with (lifecycle_dir / "BaseFixture.cs").open("a", encoding="utf-8") as file:
+                file.write("\n// source changed\n")
+            changed = value(call(proc, 86, "inspect_nunit_lifecycle",
+                {"sourceDirectory": "lifecycle-source-evidence"}))
+            expect(changed["sourceTreeHash"] != evidence["sourceTreeHash"],
+                "lifecycle evidence source fingerprint must expire on edits")
 
             print("MCP stdio integration smoke passed", flush=True)
         finally:
