@@ -156,6 +156,85 @@ namespace Synthetic.Tests {
                 and readonly["nUnitRuntime"]["status"] == "not_run",
                 "read-only MCP verification cannot inherit Core CLI runtime success")
 
+            # Scope a large source tree to exactly one NUnit entry project
+            # and its reachable shared library. The second test assembly and
+            # its global SetUpFixture are not part of the target solution.
+            scoped_config = workspace / "scoped.json"
+            scoped_config.write_text(json.dumps(dict(config,
+                TargetSolutionEntryProjects=["TestsOne/TestsOne.csproj"])),
+                encoding="utf-8")
+            selected = value(call(proc, 40, "plan_target_solution", {
+                "source": "source", "config": "scoped.json"}))
+            scope = selected["scope"]
+            expect(selected["status"] == "ready_for_build"
+                and selected["schemaVersion"] == "migrator-target-solution/v1alpha4"
+                and scope["explicit"] is True
+                and scope["entryProjects"] == ["TestsOne/TestsOne.csproj"]
+                and set(scope["includedProjects"]) == {
+                    "TestsOne/TestsOne.csproj", "Shared/Shared.csproj"
+                }
+                and scope["excludedProjects"] == ["TestsTwo/TestsTwo.csproj"]
+                and selected["sourceTreeHash"] == plan["sourceTreeHash"]
+                and selected["planId"] != plan["planId"]
+                and len(selected["projects"]) == 2
+                and sum(p["declaredTests"] for p in selected["projects"]) == 1
+                and all(not f["relativePath"].startswith("TestsTwo/")
+                        for f in selected["files"]),
+                "MCP scope must report excluded NUnit project and retain exact references")
+
+            # Only the separate, trusted CLI writes files and executes real
+            # dotnet build + NUnit. Read-only MCP must not acquire these claims.
+            scoped_cli = subprocess.run([
+                "dotnet", str(cli), "solution-generate",
+                str(source), str(workspace / "generated-scoped"),
+                "--config", str(scoped_config), "--build", "--test"
+            ], text=True, capture_output=True, timeout=290)
+            expect(scoped_cli.returncode == 0,
+                "Scoped Core CLI runtime failed: "
+                + scoped_cli.stdout[-2500:] + scoped_cli.stderr[-2500:])
+            scoped_run = json.loads(scoped_cli.stdout)
+            expect(scoped_run["build"]["status"] == "passed"
+                and scoped_run["nUnitRuntime"]["status"] == "passed"
+                and scoped_run["nUnitRuntime"]["executedTests"] == 1
+                and scoped_run["nUnitRuntime"]["passedTests"] == 1
+                and len(scoped_run["projectExecutions"]) == 1,
+                "scoped solution must run one NUnit test assembly 1/1, not 2/2")
+            scoped_verify = value(call(proc, 41, "verify_target_solution", {
+                "source": "source", "targetRoot": "generated-scoped",
+                "expectedSourceTreeHash": selected["sourceTreeHash"],
+                "expectedPlanId": selected["planId"], "config": "scoped.json"}))
+            expect(scoped_verify["completeness"]["status"] == "passed"
+                and scoped_verify["build"]["status"] == "not_run"
+                and scoped_verify["nUnitRuntime"]["status"] == "not_run",
+                "scoped MCP verification is read-only and cannot inherit CLI execution")
+
+            # An explicitly omitted NUnit test assembly becomes reachable if
+            # a selected source project references it. The planner must
+            # re-include it and reject test-to-test ProjectReference.
+            put("TestsOne/TestsOne.csproj", project_template.replace(
+                "</ItemGroup>",
+                '<ProjectReference Include="../TestsTwo/TestsTwo.csproj" />'
+                '</ItemGroup>'))
+            contaminated = value(call(proc, 42, "plan_target_solution", {
+                "source": "source", "config": "scoped.json"}))
+            expect(contaminated["status"] == "blocked"
+                and len(contaminated["scope"]["includedProjects"]) == 3
+                and contaminated["scope"]["excludedProjects"] == []
+                and any(i["code"] == "SOLUTION_REFERENCE_TO_TEST_ASSEMBLY"
+                        for i in contaminated["issues"]),
+                "selected project scope must never drop a reachable test reference")
+            put("TestsOne/TestsOne.csproj", project_template)
+
+            scoped_config.write_text(json.dumps(dict(config,
+                TargetSolutionEntryProjects=["../outside/Other.csproj"])),
+                encoding="utf-8")
+            invalid_scope = value(call(proc, 43, "plan_target_solution", {
+                "source": "source", "config": "scoped.json"}))
+            expect(invalid_scope["status"] == "blocked"
+                and any(i["code"] == "SOLUTION_SCOPE_CONFIG_INVALID"
+                        for i in invalid_scope["issues"]),
+                "invalid project-entry paths cannot fall back to all projects")
+
             target = workspace / "generated"
             required = target / "TestsOne/RootHookPlaywright.cs"
             saved = required.read_bytes()
@@ -284,7 +363,7 @@ public class Container {
             tests_one = next(p for p in nested["projects"]
                              if p["sourceProject"] == "TestsOne/TestsOne.csproj")
             expect(nested["status"] == "blocked"
-                and nested["schemaVersion"] == "migrator-target-solution/v1alpha3"
+                and nested["schemaVersion"] == "migrator-target-solution/v1alpha4"
                 and tests_one["declaredTests"] == 2
                 and tests_one["candidateId"] is None
                 and any(i["code"] == "SOLUTION_NESTED_SETUPFIXTURE_UNSUPPORTED"

@@ -143,3 +143,23 @@ assembly-level parallel scheduling, skip gates, and data-provider lifetime.
 Do not flatten one-time hooks into per-test code, switch test frameworks
 silently, drop skipped cases, or infer data from method names.
 Each source graph scope and adapter hash must be rechecked before any build.
+
+## Explicit project-entry scope for mixed solutions (preview.22)
+
+If a source repository includes unrelated API tests, generators or tooling,
+create a *reviewed* adapter with \`TargetSolutionEntryProjects\` containing
+normalized relative paths to the intended NUnit test project(s). Call
+\`plan_target_solution\`; confirm \`scope.entryProjects\`,
+\`scope.includedProjects\`, \`scope.excludedProjects\` and all
+\`ProjectReference\` edges. Review exclusions explicitly: they are out of
+scope, not completed tests. Never remove a required dependency or an NUnit
+\`SetUpFixture\` merely to make the plan green. A test-to-test reference
+in the transitive closure is a blocker, not permission to collapse assembly
+boundaries. Re-run plan after any adapter/source change. The source-tree hash
+covers the entire workspace, while the adapter hash binds exact entries,
+so target materialization/verification must use current IDs.
+
+Only the trusted Core CLI performs \`solution-generate --build --test\`.
+Run it with deliberate approval in a separate non-overlapping target tree;
+verify per-assembly TRX counts and real browser/product observables
+independently. MCP planning alone is not compilation, runtime or behavior.
