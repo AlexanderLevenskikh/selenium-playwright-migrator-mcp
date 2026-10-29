@@ -282,6 +282,21 @@ using NUnit.Framework;
                    "missing global SetUpFixture in one target assembly must fail")
             required.write_bytes(saved)
 
+            scheduling_file = target / (
+                "TestsOne/Migrator.Generated.NUnitAssemblyScheduling.cs")
+            scheduling_bytes = scheduling_file.read_bytes()
+            scheduling_file.unlink()
+            missing_policy = value(call(proc, 61, "verify_target_solution", {
+                "source": "source", "targetRoot": "generated",
+                "expectedSourceTreeHash": plan["sourceTreeHash"],
+                "expectedPlanId": plan["planId"], "config": "adapter.json"
+            }))
+            expect(missing_policy["completeness"]["status"] != "passed"
+                and missing_policy["build"]["status"] == "not_run"
+                and missing_policy["nUnitRuntime"]["status"] == "not_run",
+                "missing source scheduling policy must invalidate target closure")
+            scheduling_file.write_bytes(scheduling_bytes)
+
             rogue = target / "TestsTwo/Unexpected.cs"
             rogue.write_text("public class Unexpected {}", encoding="utf-8")
             extra = value(call(proc, 7, "verify_target_solution", {
@@ -407,14 +422,14 @@ public class Container {
 
             put("TestsOne/AssemblyPolicy.cs", """
 using NUnit.Framework;
-[assembly: Parallelizable(ParallelScope.Fixtures)]
+[assembly: Parallelizable(ParallelScope.Fixtures | ParallelScope.Self)]
 """)
-            parallel = value(call(proc, 13, "plan_target_solution", {
+            invalid_policy = value(call(proc, 13, "plan_target_solution", {
                 "source": "source", "config": "adapter.json"}))
-            expect(parallel["status"] == "blocked"
-                and any(i["code"] == "SOLUTION_ASSEMBLY_SCHEDULING_REQUIRES_REVIEW"
-                        for i in parallel["issues"]),
-                "source NUnit assembly parallelism cannot be omitted silently")
+            expect(invalid_policy["status"] == "blocked"
+                and any(i["code"] == "NUNIT_ASSEMBLY_SCHEDULING_ARGUMENT_UNSUPPORTED"
+                        for i in invalid_policy["issues"]),
+                "computed scheduling expressions must remain blocked")
             (source / "TestsOne/AssemblyPolicy.cs").unlink()
 
             print("Multi-project MCP plan + Core CLI NUnit 2/2 runtime passed", flush=True)
