@@ -189,7 +189,7 @@ The new read-only tools are:
 
 To actually create, compile or run a generated test assembly, use the **explicit Core CLI** with `plan`, `generate --build --test`, and `verify --build`. For safety MCP remains read-only and never executes MSBuild or application tests on its own.
 
-The Linux/Windows MCP CI regression uses a **separate, trusted Core AssemblyCli** to materialize one public synthetic target project, then runs real `dotnet build` and two NUnit tests. MCP verifies the same generated content hash without inheriting CLI runtime claims, rejects a missing namespace `SetUpFixture`, and rejects injected `Unlisted.cs`. The existing 13 + 3 synthetic Chromium/NUnit workflows remain independent. This is synthetic framework validation; private ArBilling builds and business observables are not run.
+The Linux/Windows MCP CI regression uses a **separate, trusted Core AssemblyCli** to materialize one public synthetic target project, then runs real `dotnet build` and two NUnit tests. MCP verifies the same generated content hash without inheriting CLI runtime claims, rejects a missing namespace `SetUpFixture`, and rejects injected `Unlisted.cs`. The existing 13 + 3 synthetic Chromium/NUnit workflows remain independent. This is synthetic framework validation; private customer-application builds and business observables are not run.
 
 ## Preview.18 — multi-project NUnit solutions
 
@@ -455,6 +455,6 @@ TRX statuses, explicit selection, a deliberately failing explicitly
 selected test, and separate NUnit4 source baseline on Linux and Windows.
 MCP CI runs a real stdio protocol regression with fictional fixtures in
 both OSes, with the NuGet package bound to a pinned Core Git revision.
-ArBilling remains private and must be retested separately with its source
+Customer applications remain private and must be retested separately with its source
 tree hashes; no private runtime evidence is inferred from the synthetic
 pipeline.
