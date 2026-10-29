@@ -756,6 +756,7 @@ public static class DiContainer {
                 dict(mapping_query, bindings=[])))
             expect(absent["status"] == "blocked"
                 and absent["candidate"] is None
+                and absent["concreteBridge"] is None
                 and any(issue["code"] ==
                         "PLAYWRIGHT_LIFETIME_SOURCE_BINDING_MISSING"
                         for issue in absent["issues"]),
@@ -768,7 +769,14 @@ public static class DiContainer {
                 and mapped_lifetime["status"] == "requires_review"
                 and mapped_lifetime["candidate"] is not None
                 and len(mapped_lifetime["candidate"]["sha256"]) == 64
+                and mapped_lifetime["concreteBridge"] is not None
+                and len(mapped_lifetime["concreteBridge"]["sha256"]) == 64
+                and mapped_lifetime["concreteBridge"]["relativePath"] ==
+                    "Migrator.Generated.ConcretePlaywrightDiBridge.cs"
+                and mapped_lifetime["concreteBridge"]["sha256"] !=
+                    mapped_lifetime["candidate"]["sha256"]
                 and "content" not in mapped_lifetime["candidate"]
+                and "content" not in mapped_lifetime["concreteBridge"]
                 and len(mapped_lifetime["validatedBindings"]) == len(bindings)
                 and {m["sourceMethod"] for m in
                      mapped_lifetime["infrastructureMethods"]} ==
@@ -785,6 +793,7 @@ public static class DiContainer {
             mismatch = value(call(proc, 94, "review_playwright_fixture_lifetime",
                 dict(mapping_query, bindings=changed_role)))
             expect(mismatch["status"] == "blocked"
+                and mismatch["concreteBridge"] is None
                 and any(issue["code"] ==
                     "PLAYWRIGHT_LIFETIME_ROLE_REVIEW_REQUIRED"
                     for issue in mismatch["issues"]),
