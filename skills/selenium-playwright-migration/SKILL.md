@@ -187,3 +187,26 @@ before declaring equivalence.
 ## NUnit TestBase and cleanup review (preview.24)
 
 Call `inspect_nunit_lifecycle(sourceDirectory)` before migrating inherited NUnit hooks, suite setup, DI/browser ownership, logs, screenshots, retries or cleanup. Review source-line and SHA evidence for every OneTimeSetUp, SetUp, TearDown and OneTimeTearDown obligation, including reached private helpers. Never move a nested SetUpFixture into assembly scope automatically. Only a standalone namespace/assembly setup fixture may use the reviewed teardown-only form. Inspector output is source-only: build, NUnit and browser evidence remain `not_run`. Reinspect whenever sourceTreeHash changes.
+
+
+## Preserve nested NUnit cleanup scopes (preview.25)
+
+Synthetic NUnit 3 and 4 source tests demonstrate that a nested
+\`[SetUpFixture]\` may execute one-time cleanup after namespace tests,
+including failure paths. Do not drop this hook or turn it into per-test
+teardown. Call \`inspect_nunit_lifecycle\`, select the exact nested
+\`sourceType\`, then call \`review_nested_nunit_cleanup\` with the current
+\`sourceTreeHash\` and **all** concrete, reviewed target invocation
+statements. Use the source hook's method fingerprint and effect
+categories as review evidence. Stale or conflicting/ambiguous mappings
+must remain blocked.
+
+\`requires_review\` means only that a source-attested structural
+candidate can be drafted. MCP intentionally does not return runnable
+C# or claim any build, NUnit or browser execution. The source runtime
+hash, if supplied, is a caller assertion, not a validated test report.
+Do not enable the candidate in the complete target solution without
+source and target NUnit execution counts, cleanup sequencing,
+original DI/browser disposal semantics, and failure-path observables.
+A real customer source hook cannot be mapped by guessing a
+\`FullDispose()\` replacement.

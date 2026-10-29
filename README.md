@@ -299,3 +299,37 @@ Real private product E2E remains `not_run`.
 MCP `0.1.0-preview.24` consumes pinned Core `99fbfdc7601041fab1ceb16efe7c39ffb36e4c57`. The read-only `inspect_nunit_lifecycle(sourceDirectory)` tool returns a content-hashed Roslyn source inventory of inherited NUnit hooks, private helper calls, nested setup fixtures, scoped DI/browser resources, listener/retry code and log/screenshot/disposal obligations. Every hook/effect includes source path, line and a SHA-256 fingerprint; no original C# body is returned. The tool never performs build, NUnit or browser execution; their statuses remain `not_run`.
 
 Core also supports a *standalone* namespace-scoped `SetUpFixture` with just `OneTimeTearDown`, proven through synthetic `dotnet build` and NUnit runtime. An invalid nested `SetUpFixture` is still blocked, and no automatic DI/listener/pooled-browser/cleanup migration is asserted. All GitHub CI inputs remain fictional. Real application behavior requires separately observed tests.
+
+
+## Preview.25 — preserve reviewed nested NUnit cleanup-only scope
+
+MCP consumes pinned Core \`0.1.0-preview.25\` commit
+\`e0944506c5768fb67b85045fec545ec92128bce1\`, via versioned NuGet.
+A real synthetic source/target NUnit 3.14.0 and 4.3.2 experiment showed
+that a public nested \`[SetUpFixture]\` with \`[OneTimeTearDown]\`
+**does execute once after its namespace tests**, even when one
+\`[OneTimeSetUp]\` fails. It must not be deleted, moved into ordinary
+per-test teardown, or automatically promoted to an assembly-global hook.
+
+The new read-only \`review_nested_nunit_cleanup\` tool accepts an exact
+source type and \`sourceTreeHash\` from \`inspect_nunit_lifecycle\`, a list
+of concrete, explicitly reviewed target cleanup invocation statements
+and optionally a **caller-supplied** source runtime evidence SHA-256.
+It returns the original namespace, containing type, source method
+SHA-256, source effects, target candidate relative path and SHA-256,
+plus precise issues, **without returning generated C# or private source**.
+A structurally accepted candidate is \`requires_review\`, never
+behaviorally verified. No source/target build, NUnit, browser execution
+or materialization occurs inside MCP.
+
+Missing/extra/unsafe actions, source changes, competing namespace
+SetUpFixtures, unsupported nested source state and invalid candidate
+shapes fail closed. Core's separate API provides the reviewed exact
+nested C# candidate for trusted local tooling: it retains the original
+outer type and nested SetUpFixture class, rather than flattening
+NUnit cleanup scope. The existing full project planner remains blocked
+until real source/target behavioral evidence and integration are available.
+
+CI uses only invented NUnit fixture, DI cleanup, trace and migration
+examples. No proprietary ArBilling code, URLs, selectors or
+credentials are ever committed to GitHub.

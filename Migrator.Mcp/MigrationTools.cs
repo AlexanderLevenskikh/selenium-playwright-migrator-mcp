@@ -179,6 +179,54 @@ public static class MigrationTools
         return JsonSerializer.Serialize(result, JsonOptions);
     }
 
+    [McpServerTool(Name = "review_nested_nunit_cleanup")]
+    [Description("Source-hash-bound, read-only reviewed candidate for a nested, cleanup-only NUnit SetUpFixture. Requires one reviewed target invocation per source invocation, preserves outer/nested type shape, does not write or execute code and never claims source/target runtime equivalence.")]
+    public static string ReviewNestedNUnitCleanup(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Source NUnit C# project directory within workspace")]
+        string sourceDirectory,
+        [Description("Exact fully qualified nested NUnit SetUpFixture source type")]
+        string sourceType,
+        [Description("Exact sourceTreeHash from inspect_nunit_lifecycle")]
+        string expectedSourceTreeHash,
+        [Description("Explicitly reviewed concrete C# cleanup invocation statements")]
+        string[] targetStatements,
+        [Description("Optional unverified external source NUnit runtime evidence SHA256")]
+        string? sourceRuntimeEvidenceSha256 = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = engine.ReviewNestedNUnitCleanup(
+            workspace.ResolveSourceScope(sourceDirectory, cancellationToken),
+            sourceType, expectedSourceTreeHash, targetStatements,
+            sourceRuntimeEvidenceSha256, cancellationToken);
+        var response = new
+        {
+            result.SchemaVersion, result.Status, result.SourceTreeHash,
+            result.SourceType, result.SourceFile, result.SourceLine,
+            result.OriginalNamespace, result.OuterType,
+            result.SourceMethodSha256, result.SourceRuntimeEvidenceSha256,
+            result.SourceEffectKinds, result.Issues,
+            candidate = result.Candidate == null ? null : new
+            {
+                result.Candidate.RelativePath, result.Candidate.Sha256,
+                result.Candidate.SourceType,
+                result.Candidate.OriginalNamespace,
+                result.Candidate.OwnerType,
+                result.Candidate.HookMethod,
+                result.Candidate.SourceMethodSha256
+            },
+            result.BehavioralEquivalenceVerified, result.SourceNUnitRuntime,
+            result.TargetBuild, result.TargetNUnitRuntime,
+            result.BrowserObservables, result.Limitations,
+            execution = "read_only_not_run"
+        };
+        var json = JsonSerializer.Serialize(response, JsonOptions);
+        if (json.Length > 150_000)
+            throw new InvalidOperationException(
+                "NESTED_CLEANUP_REVIEW_TOO_LARGE: narrow the source scope.");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_nunit_lifecycle")]
     [Description("Read-only Roslyn lifecycle audit of inherited/base NUnit hooks, nested SetUpFixture cleanup, reachable private helpers, DI/browser/listener/screenshot/log teardown dependencies. Returns source hashes and lines, never source bodies or behavioral approval.")]
     public static string InspectNUnitLifecycle(
