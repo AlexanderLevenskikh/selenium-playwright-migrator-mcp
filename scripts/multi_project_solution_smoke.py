@@ -105,7 +105,7 @@ using NUnit.Framework;
                 and sum(p["kind"] == "nunit" for p in plan["projects"]) == 2
                 and sum(p["kind"] == "library" for p in plan["projects"]) == 1,
                 "project graph must contain two isolated NUnit assemblies and one shared library")
-            expect(plan["schemaVersion"] == "migrator-target-solution/v1alpha5",
+            expect(plan["schemaVersion"] == "migrator-target-solution/v1alpha6",
                 "new solution schema must attest assembly policy source provenance")
             scheduling = plan["assemblyScheduling"]
             expect(len(scheduling) == 4
@@ -198,7 +198,7 @@ using NUnit.Framework;
                 "source": "source", "config": "scoped.json"}))
             scope = selected["scope"]
             expect(selected["status"] == "ready_for_build"
-                and selected["schemaVersion"] == "migrator-target-solution/v1alpha5"
+                and selected["schemaVersion"] == "migrator-target-solution/v1alpha6"
                 and scope["explicit"] is True
                 and scope["entryProjects"] == ["TestsOne/TestsOne.csproj"]
                 and set(scope["includedProjects"]) == {
@@ -412,7 +412,7 @@ public class Container {
             tests_one = next(p for p in nested["projects"]
                              if p["sourceProject"] == "TestsOne/TestsOne.csproj")
             expect(nested["status"] == "blocked"
-                and nested["schemaVersion"] == "migrator-target-solution/v1alpha5"
+                and nested["schemaVersion"] == "migrator-target-solution/v1alpha6"
                 and tests_one["declaredTests"] == 2
                 and tests_one["candidateId"] is None
                 and any(i["code"] == "SOLUTION_NESTED_SETUPFIXTURE_UNSUPPORTED"

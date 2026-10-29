@@ -8,6 +8,57 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_nunit_execution")]
+    [Description("Read-only preview.29 NUnit Ignore/Explicit/TestCaseSource static case inventory: relative paths, source line/SHA256, run-state and explicit blockers. Does not evaluate source C#, perform NUnit discovery or execute tests.")]
+    public static string InspectNUnitExecution(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Source .cs file or source project directory relative to MIGRATOR_WORKSPACE")] string source,
+        [Description("Optional JSON adapter configuration relative to workspace")] string? config = null,
+        CancellationToken cancellationToken = default)
+    {
+        var report = engine.Analyze(
+            workspace.ResolveSourceScope(source, cancellationToken),
+            config == null ? null : workspace.Resolve(config), cancellationToken);
+        var payload = new
+        {
+            schemaVersion = "migrator-nunit-execution/v1alpha1",
+            report.AnalysisId, report.SourceTreeHash, report.DiscoveryStatus,
+            report.DeclaredTests, report.ParsedTests,
+            report.StaticallyResolvedNUnitCases, report.BlockedNUnitSources,
+            runtimeStatus = "not_run",
+            nunitDiscoveryEvidence = "static_inventory_not_nunit_discovery",
+            files = report.Files.Select(file => new
+            {
+                file.RelativePath, file.Disposition, file.DeclaredTests, file.ParsedTests,
+                cases = file.NUnitCases.Select(item => new
+                {
+                    item.Line, item.Method, item.TargetExpression,
+                    item.RunState, item.Reason
+                }),
+                attributes = file.NUnitAttributes.Select(item => new
+                {
+                    item.Line, item.Kind, item.SourceSha256,
+                    item.TargetExpression, item.RequiresReview, item.Reason
+                }),
+                blockers = file.Findings.Where(item =>
+                    item.Code.StartsWith("NUNIT_", StringComparison.Ordinal))
+                    .Select(item => new { item.Code, item.SourcePath, item.Line })
+            }),
+            limitations = new[]
+            {
+                "No C# data-source execution or environment evaluation.",
+                "Static cases are not NUnit runtime-discovered test cases.",
+                "NUnit3/NUnit4 discovery, skipped reasons, explicit selection and TRX must be checked separately.",
+                "No source bodies or arbitrary source excerpts are returned."
+            }
+        };
+        var json = JsonSerializer.Serialize(payload, JsonOptions);
+        if (json.Length > 200_000)
+            throw new InvalidOperationException(
+                "NUNIT_EXECUTION_REPORT_TOO_LARGE: analyze a narrower source project.");
+        return json;
+    }
+
     [McpServerTool(Name = "analyze_migration")]
     [Description("Analyze Selenium C# source with an independent inventory. Unsupported xUnit and multiple fixtures are counted and reported, not silently converted. Does not change files.")]
     public static string AnalyzeMigration(MigrationEngine engine, WorkspacePaths workspace,

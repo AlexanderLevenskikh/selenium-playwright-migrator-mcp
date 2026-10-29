@@ -277,3 +277,40 @@ and keep nested-cleanup / Ignore / Explicit / TestCaseSource blockers
 visible. Actual private application browser E2E remains \`not_run\`
 until its own service/DI/credentials environment and behavior are
 verified. Never publish customer source, mappings or evidence in CI.
+
+
+## NUnit gates and TestCaseSource (preview.29)
+
+Call `inspect_nunit_execution` on the narrowest source directory before
+allowing any test assembly to be generated. Read `discoveryStatus`,
+`staticallyResolvedNUnitCases`, `blockedNUnitSources`, each
+`NUnitAttributes`/case lineage, source line and SHA-256, and the
+per-case run-state/reason. Never count an NUnit annotated C# method as a
+parameterized runtime case count. An `NUNIT_TEST_CASE_SOURCE_UNSAFE`,
+`NUNIT_INHERITED_GATE_REQUIRES_REVIEW`,
+`NUNIT_EXECUTION_GATE_REQUIRES_REVIEW` or named fixture gate requires
+review: do not generate a runnable target for that source file.
+
+No arbitrary source C# may be invoked for read-only inspection. Only
+literal-only local static source arrays/properties attested by Core can
+be lowered to `[TestCase]`. Retain `[Ignore]` and `[Explicit]` at
+their proven fixture/method/case scope, preserving source reasons and
+never automatically selecting explicit tests. Inspect generated target
+expressions and exact file-set hashes.
+
+Only treat runtime as proven after actual `dotnet test` and NUnit
+discovery/TRX comparison, with a deliberately failing selected test,
+separate explicit filter, observable execution indicators, and verified
+exit codes. TRX may omit an explicit case or its skip reason; report that
+limitation instead of inventing discovery or runtime evidence. NUnit3
+and NUnit4 are not interchangeable without a runtime comparison.
+Keep every private customer file, selector, URL and ZIP out of GitHub.
+
+
+At preview.29 prefer per-case NUnit TRX `UnitTestResult` outcomes over
+aggregate `Counters.notExecuted` (which may be zero for multiple skipped
+tests). Pin package consumers to verified Core
+`313e5ab0cac3f92b746d8aaab6cf7b3cfd902151` and NuGet
+`0.1.0-preview.29`; never reference Core source projects across
+repositories. In a source-only MCP review continue reporting
+`runtimeStatus=not_run` until an explicit trusted CLI runs NUnit.

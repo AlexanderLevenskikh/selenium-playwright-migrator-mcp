@@ -189,7 +189,7 @@ The new read-only tools are:
 
 To actually create, compile or run a generated test assembly, use the **explicit Core CLI** with `plan`, `generate --build --test`, and `verify --build`. For safety MCP remains read-only and never executes MSBuild or application tests on its own.
 
-The Linux/Windows MCP CI regression uses a **separate, trusted Core AssemblyCli** to materialize one public synthetic target project, then runs real `dotnet build` and two NUnit tests. MCP verifies the same generated content hash without inheriting CLI runtime claims, rejects a missing namespace `SetUpFixture`, and rejects injected `Unlisted.cs`. The existing 13 + 3 synthetic Chromium/NUnit workflows remain independent. This is synthetic framework validation; private ArBilling builds and business observables are not run.
+The Linux/Windows MCP CI regression uses a **separate, trusted Core AssemblyCli** to materialize one public synthetic target project, then runs real `dotnet build` and two NUnit tests. MCP verifies the same generated content hash without inheriting CLI runtime claims, rejects a missing namespace `SetUpFixture`, and rejects injected `Unlisted.cs`. The existing 13 + 3 synthetic Chromium/NUnit workflows remain independent. This is synthetic framework validation; private customer-application builds and business observables are not run.
 
 ## Preview.18 — multi-project NUnit solutions
 
@@ -427,3 +427,43 @@ generate runnable code bodies, open Chromium or connect to customer
 systems. A successful synthetic browser smoke does **not** approve
 private application DI registrations, credentials, original Selenium
 browser-pool behavior or custom listener/teardown equivalence.
+
+
+## preview.29 — read-only NUnit execution and case-source inspection
+
+The new `inspect_nunit_execution(source, config?)` MCP tool emits only
+relative source file paths, line numbers, SHA-256 of syntax nodes, target
+attribute expressions, static *case inventory*, run-state (runnable,
+ignored, explicit), reasons where source literals provide them, and
+precise `NUNIT_*` blocking diagnostics. It never runs source C#.
+`analyze_migration` and `preview_migration` also expose additive
+`nunitAttributes` and `nunitCases` properties with versioned
+analysis/preview schemas. **Static case count is not a claim about
+NUnit-discovered cases.** NUnit default/explicit runs and TRX are
+independent evidence, produced only by explicit CI/test commands.
+
+Safe literal-only local static `TestCaseSource` arrays and expression-bodied
+properties can be lowered to `[TestCase(...)]` when parameter arity and
+primitive type compatibility are proven. Unsafe/remote/inherited/dynamic
+sources, custom metadata chains and unsupported fixture-named run gates
+remain blocked. NUnit `[Ignore("reason")]`, `[Explicit("reason")]`,
+and per-`[TestCase]` skip/explicit arguments are preserved when statically
+verified. Never activate an ignored or explicit test to satisfy CI.
+
+Core synthetic acceptance compares real source/target NUnit3 discovery,
+TRX statuses, explicit selection, a deliberately failing explicitly
+selected test, and separate NUnit4 source baseline on Linux and Windows.
+MCP CI runs a real stdio protocol regression with fictional fixtures in
+both OSes, with the NuGet package bound to a pinned Core Git revision.
+Customer applications remain private and must be retested separately with its source
+tree hashes; no private runtime evidence is inferred from the synthetic
+pipeline.
+
+
+For this release the CI package feed is built from immutable, already
+merged Core Git commit `313e5ab0cac3f92b746d8aaab6cf7b3cfd902151`
+and consumes version `0.1.0-preview.29` through NuGet, not a cross-repo
+source reference. The Core synthetic NUnit adapter emits
+`UnitTestResult outcome="NotExecuted"` even when TRX
+`Counters.notExecuted=0`; case-level outcomes are authoritative.
+Static-only MCP responses never claim this execution evidence.
