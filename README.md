@@ -333,3 +333,36 @@ until real source/target behavioral evidence and integration are available.
 CI uses only invented NUnit fixture, DI cleanup, trace and migration
 examples. No proprietary ArBilling code, URLs, selectors or
 credentials are ever committed to GitHub.
+
+## Preview.26 — source-attested Playwright fixture DI and browser lifetime
+
+The read-only \`review_playwright_fixture_lifetime\` tool cross-checks the
+exact source \`inspect_nunit_lifecycle\` tree hash, source abstract fixture
+and its nested cleanup-only \`SetUpFixture\`, plus a separate source DI
+container. Every source effect must have one explicitly reviewer-attested
+\`bindings\` entry with the exact source path/line/expression SHA-256,
+target role and \`reviewed: true\`. Roles include fixture DI services,
+typed BrowserContext/Page, navigation, page-backed storage, failed-test
+browser logs, failure screenshots, NUnit listener/retry review,
+per-fixture disposal and nested global provider disposal.
+
+The underlying Core reviewer checks that the source DI container
+actually uses a NUnit-class-name fixture key, GetOrAdd/CreateScope,
+TryRemove/Dispose and global Clear/Dispose. It rejects absent,
+duplicate, obsolete, wrong-role, stale and unchecked bindings. A
+complete structural review returns only candidate path/SHA-256,
+source infrastructure method evidence and \`requires_review\` —
+**never runnable C# or claimed target behavior**. Core's separate
+review API can render a typed \`Microsoft.Playwright.IBrowserContext\`/
+\`IPage\` NUnit base + nested cleanup envelope. The application must
+supply a real DI-backed bridge to a shared browser/provider, navigation,
+storage, failure logs/screenshots, scope release, retry policy and
+global cleanup. No browser/credentials/selector targets are invented.
+
+A source Selenium WebDriver pool is **not** proven equivalent to
+a Playwright BrowserContext lifetime. Evidence for target build,
+NUnit execution, browser E2E and original application behavior all
+remain \`not_run\` or \`not_verified\` in this MCP review. Source
+compilation and synthetic test fixture runtime cannot replace actual
+customer runtime. No customer source or source bodies are returned
+or uploaded to public CI.
