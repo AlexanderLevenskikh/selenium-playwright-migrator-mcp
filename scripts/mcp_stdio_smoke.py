@@ -603,13 +603,41 @@ namespace Fictional.Integration;
     [Test] public void CanRun() {}
 }
 """, encoding="utf-8")
+            # This is an invented, non-compilable source snippet used only
+            # for exact Roslyn source DI ownership review. No real provider,
+            # browser, URL or account data enters the public regression.
+            (lifecycle_dir / "ScopeRegistry.cs").write_text("""
+using NUnit.Framework;
+namespace Fictional.Integration;
+public static class DiContainer {
+    private static readonly ConcurrentDictionary<string, IServiceScope>
+        ScopeMap = new();
+    private static ServiceProvider ServiceProvider;
+    private static string ScopeKey =>
+        TestContext.CurrentContext.Test.ClassName;
+    public static T GetScopedRequiredService<T>() {
+        var scope = ScopeMap.GetOrAdd(ScopeKey,
+            k => ServiceProvider.CreateScope());
+        return scope.ServiceProvider.GetRequiredService<T>();
+    }
+    public static void DisposeScope() {
+        if (!ScopeMap.TryRemove(ScopeKey, out var scope))
+            throw new InvalidOperationException("No synthetic scope");
+        scope.Dispose();
+    }
+    public static void FullDispose() {
+        ServiceProvider.GetRequiredService<IBrowserPool>().Clear();
+        ServiceProvider.Dispose();
+    }
+}
+""", encoding="utf-8")
             evidence = value(call(proc, 85, "inspect_nunit_lifecycle",
                 {"sourceDirectory": "lifecycle-source-evidence"}))
             expect(evidence["schemaVersion"] ==
                        "migrator-nunit-lifecycle-source/v1alpha1"
                 and evidence["status"] == "blocked"
                 and evidence["declaredTestMethods"] == 1
-                and evidence["inspectedFiles"] == 2
+                and evidence["inspectedFiles"] == 3
                 and len(evidence["sourceTreeHash"]) == 64
                 and len(evidence["hooks"]) == 4,
                 "real MCP must expose complete source-bound lifecycle ledger")
@@ -688,6 +716,87 @@ namespace Fictional.Integration;
                 and any(issue["code"] == "NESTED_CLEANUP_MAPPING_UNSAFE"
                         for issue in unsafe_mapping["issues"]),
                 "control flow cannot be guessed from a cleanup method")
+            roles = {
+                "di_scoped_service": "FixtureService",
+                "browser_driver_scope": "BrowserContextPage",
+                "browser_navigation_scope": "PageNavigation",
+                "browser_storage_scope": "PageStorage",
+                "browser_logs": "FailedTestBrowserLogs",
+                "browser_screenshot": "FailedTestScreenshot",
+                "di_scope_dispose": "FixtureScopeDispose",
+                "di_global_dispose": "GlobalServiceDispose",
+                "nunit_listener_reflection": "RetryListenerReview"
+            }
+            fixture_types = {
+                "Fictional.Integration.BaseFixture",
+                "Fictional.Integration.BaseFixture.InvalidNestedCleanup"
+            }
+            original_effects = [effect for effect in evidence["effects"]
+                                if effect["sourceType"] in fixture_types]
+            expect(len(original_effects) >= 10
+                and all(effect["kind"] in roles for effect in original_effects),
+                "synthetic fixture effects must cover every reviewed target role")
+            bindings = [{
+                "sourceKind": effect["kind"],
+                "sourcePath": effect["sourcePath"],
+                "sourceLine": effect["sourceLine"],
+                "expressionSha256": effect["expressionSha256"],
+                "targetRole": roles[effect["kind"]],
+                "reviewed": True
+            } for effect in original_effects]
+            mapping_query = {
+                "sourceDirectory": "lifecycle-source-evidence",
+                "fixtureBaseType": "Fictional.Integration.BaseFixture",
+                "nestedCleanupType":
+                    "Fictional.Integration.BaseFixture.InvalidNestedCleanup",
+                "infrastructureType": "Fictional.Integration.DiContainer",
+                "expectedSourceTreeHash": evidence["sourceTreeHash"]
+            }
+            absent = value(call(proc, 92, "review_playwright_fixture_lifetime",
+                dict(mapping_query, bindings=[])))
+            expect(absent["status"] == "blocked"
+                and absent["candidate"] is None
+                and any(issue["code"] ==
+                        "PLAYWRIGHT_LIFETIME_SOURCE_BINDING_MISSING"
+                        for issue in absent["issues"]),
+                "missing source-role mapping must block executable lifecycle")
+            mapped_lifetime = value(call(proc, 93,
+                "review_playwright_fixture_lifetime",
+                dict(mapping_query, bindings=bindings)))
+            expect(mapped_lifetime["schemaVersion"] ==
+                    "migrator-reviewed-playwright-lifetime/v1alpha1"
+                and mapped_lifetime["status"] == "requires_review"
+                and mapped_lifetime["candidate"] is not None
+                and len(mapped_lifetime["candidate"]["sha256"]) == 64
+                and "content" not in mapped_lifetime["candidate"]
+                and len(mapped_lifetime["validatedBindings"]) == len(bindings)
+                and {m["sourceMethod"] for m in
+                     mapped_lifetime["infrastructureMethods"]} ==
+                    {"GetScopedRequiredService", "DisposeScope", "FullDispose"}
+                and mapped_lifetime["behavioralEquivalenceVerified"] is False
+                and mapped_lifetime["sourceNUnitRuntime"] == "not_run"
+                and mapped_lifetime["targetBuild"] == "not_run"
+                and mapped_lifetime["targetNUnitRuntime"] == "not_run"
+                and mapped_lifetime["browserE2E"] == "not_run",
+                "exact source-bound DI roles must remain review-only with "
+                "typed candidate metadata, not private target C# or runtime")
+            changed_role = [dict(x) for x in bindings]
+            changed_role[0]["targetRole"] = "GlobalServiceDispose"
+            mismatch = value(call(proc, 94, "review_playwright_fixture_lifetime",
+                dict(mapping_query, bindings=changed_role)))
+            expect(mismatch["status"] == "blocked"
+                and any(issue["code"] ==
+                    "PLAYWRIGHT_LIFETIME_ROLE_REVIEW_REQUIRED"
+                    for issue in mismatch["issues"]),
+                "wrong DI/Playwright operation role must fail closed")
+            missing_review = [dict(x) for x in bindings]
+            missing_review[0]["reviewed"] = False
+            rejected = value(call(proc, 95, "review_playwright_fixture_lifetime",
+                dict(mapping_query, bindings=missing_review)))
+            expect(rejected["status"] == "blocked"
+                and rejected["candidate"] is None,
+                "unreviewed source role must not produce candidate")
+
             with (lifecycle_dir / "BaseFixture.cs").open("a", encoding="utf-8") as file:
                 file.write("\n// source changed\n")
             changed = value(call(proc, 86, "inspect_nunit_lifecycle",
@@ -700,6 +809,11 @@ namespace Fictional.Integration;
                     "Fictional.Resources.FullDispose();"]))
             expect(stale_review.get("isError") is True,
                 "stale source hash must reject an old nested cleanup candidate")
+            stale_lifetime = call(proc, 96,
+                "review_playwright_fixture_lifetime",
+                dict(mapping_query, bindings=bindings))
+            expect(stale_lifetime.get("isError") is True,
+                "changed fixture source must invalidate lifetime role mappings")
 
             print("MCP stdio integration smoke passed", flush=True)
         finally:
