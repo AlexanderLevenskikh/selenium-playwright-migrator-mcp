@@ -235,3 +235,35 @@ dynamic `TestCaseSource` and xUnit. These must be verified or explicitly
 resolved, not dropped or guessed. MCP remains read-only. CI uses synthetic
 project graphs and real NUnit assemblies on Linux and Windows; no customer
 files or business endpoints are used.
+
+## preview.22 — explicit NUnit entry-project selection
+
+The Core \`0.1.0-preview.22\` dependency is built from pinned Core commit
+\`24562c224b04b99d1db7f21f902f2c3b3f215b5e\`, never from a cross-repo
+\`ProjectReference\`. \`plan_target_solution\` now also returns a source-backed
+\`scope\` object from the v1alpha4 manifest. For a mixed repository with
+independent API NUnit assemblies or generator projects, select one or more
+NUnit **entry .csproj** in adapter JSON:
+
+\`\`\`json
+{
+  "SourceProjectName": "Synthetic",
+  "TargetSolutionEntryProjects": ["UiTests/UiTests.csproj"]
+}
+\`\`\`
+
+The engine includes the *complete transitive closure* of literal in-root
+\`ProjectReference\` edges automatically. It explicitly records every
+excluded project in \`scope.excludedProjects\`. Tests in excluded assemblies
+are **not converted or counted**; once-per-assembly \`SetUpFixture\` scopes
+must never be flattened or borrowed from excluded test assemblies.
+Any missing/dynamic/out-of-root reference or reachable test-to-test reference
+is a blocker, not a reason to ignore the dependency. Nested project ownership
+remains blocked even when a nested project is outside the entry selection.
+
+MCP remains read-only: the separate Core CLI executes any expressly requested
+target build/test. A synthetic Linux/Windows protocol regression validates the
+source scope, excluded project ledger, a real selected 1/1 NUnit assembly
+build/TRX, hash-locked read-only verification and fail-closed references.
+Existing unscoped independent 2/2 runtime remains covered. This is **not**
+private product E2E or behavioral-equivalence evidence.
