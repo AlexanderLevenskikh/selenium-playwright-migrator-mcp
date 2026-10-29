@@ -179,6 +179,24 @@ public static class MigrationTools
         return JsonSerializer.Serialize(result, JsonOptions);
     }
 
+    [McpServerTool(Name = "inspect_nunit_lifecycle")]
+    [Description("Read-only Roslyn lifecycle audit of inherited/base NUnit hooks, nested SetUpFixture cleanup, reachable private helpers, DI/browser/listener/screenshot/log teardown dependencies. Returns source hashes and lines, never source bodies or behavioral approval.")]
+    public static string InspectNUnitLifecycle(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Source C# project directory within MIGRATOR_WORKSPACE")]
+        string sourceDirectory,
+        CancellationToken cancellationToken = default)
+    {
+        var report = engine.InspectNUnitLifecycle(
+            workspace.ResolveSourceScope(sourceDirectory, cancellationToken),
+            cancellationToken);
+        var json = JsonSerializer.Serialize(report, JsonOptions);
+        if (json.Length > 250_000)
+            throw new InvalidOperationException(
+                "NUNIT_LIFECYCLE_EVIDENCE_TOO_LARGE: use a narrower C# project scope.");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_sources")]
     [Description("Inspect in-scope C# Page Object source and selector helper implementations with Roslyn. Returns source-lined, review-required Playwright locator proposals and LocalStorage helper evidence. Never applies mappings or runs tests.")]
     public static string InspectPomSources(PomSourceInspector inspector, WorkspacePaths workspace,
