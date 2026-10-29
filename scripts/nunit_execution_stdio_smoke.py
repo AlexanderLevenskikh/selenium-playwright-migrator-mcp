@@ -74,8 +74,19 @@ def main():
                         "method": "tools/list", "params": {}})
             names = {item["name"] for item in receive(proc, 2).get("tools", [])}
             expect("inspect_nunit_execution" in names, "Missing preview29 MCP tool")
-            inspection = value(call(proc, 3, "inspect_nunit_execution",
-                                    {"source": "."}))
+            inspected_response = call(proc, 3, "inspect_nunit_execution",
+                                      {"source": "."})
+            if inspected_response.get("isError"):
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait(timeout=5)
+                error_log = proc.stderr.read().decode("utf-8", errors="replace")
+                raise AssertionError("inspect_nunit_execution failed: "
+                    + str(inspected_response) + " stderr: " + error_log[-8000:])
+            inspection = value(inspected_response)
             expect(inspection["schemaVersion"] == "migrator-nunit-execution/v1alpha1",
                    "Wrong NUnit execution schema")
             expect(inspection["runtimeStatus"] == "not_run"
