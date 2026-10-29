@@ -59,6 +59,18 @@ jobs:
       - name: Multi-project graph MCP + CLI + per-assembly NUnit TRX
         run: python3 scripts/multi_project_solution_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll core/Migrator.AssemblyCli/bin/Release/net10.0/Migrator.AssemblyCli.dll
 
+      - name: Real Chromium against synthetic local HTTP app via pinned Core
+        timeout-minutes: 15
+        run: dotnet run --project core/Migrator.Application.Smoke/Migrator.Application.Smoke.csproj -c Release -- --real-chromium-only
+      - name: Verify real Chromium source-bound browser evidence
+        run: python3 scripts/assert_real_chromium_evidence.py artifacts/real-chromium-preview28/summary.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selenium-playwright-migrator-mcp-real-chromium-preview28
+          path: artifacts/real-chromium-preview28/*.json
+          if-no-files-found: warn
+
       - name: Pack MCP as a versioned dotnet tool
         run: |
           mkdir -p artifacts/mcp
