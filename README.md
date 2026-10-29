@@ -458,3 +458,12 @@ both OSes, with the NuGet package bound to a pinned Core Git revision.
 Customer applications remain private and must be retested separately with its source
 tree hashes; no private runtime evidence is inferred from the synthetic
 pipeline.
+
+
+For this release the CI package feed is built from immutable, already
+merged Core Git commit `313e5ab0cac3f92b746d8aaab6cf7b3cfd902151`
+and consumes version `0.1.0-preview.29` through NuGet, not a cross-repo
+source reference. The Core synthetic NUnit adapter emits
+`UnitTestResult outcome="NotExecuted"` even when TRX
+`Counters.notExecuted=0`; case-level outcomes are authoritative.
+Static-only MCP responses never claim this execution evidence.
