@@ -58,6 +58,20 @@ def main(path: pathlib.Path):
             and by_name["final-failure"]["screenshotCount"] >= 1
             and by_name["final-failure"]["logFileCount"] >= 1,
             "real failed browser case needs authentic screenshot and console logs")
+    png = path.parent / "synthetic-final-failure.png"
+    console = path.parent / "synthetic-browser-console.txt"
+    require(png.exists() and png.stat().st_size > 100,
+            "genuine synthetic browser screenshot must be retained")
+    require(png.read_bytes()[:8] == b"\x89PNG\r\n\x1a\n",
+            "retained final-failure screenshot must have a PNG signature")
+    require(console.exists()
+            and "synthetic-console-boot" in console.read_text(
+                encoding="utf-8"),
+            "retained real Chromium console logs must include JS evidence")
+    require(all(isinstance(item.get("chromiumVersion"), str)
+                and item["chromiumVersion"].count(".") >= 2
+                for item in entries),
+            "observed Chromium version is required for all scenarios")
     print("MCP REAL_CHROMIUM_EVIDENCE_VALIDATED scenarios=3 browser=real "
           "context-open=6 context-close=6 customer-E2E=not_run", flush=True)
 
