@@ -293,3 +293,9 @@ CI uses fictional assembly policies in independently generated
 NUnit projects: exact file-ledger verification, reflection-observed
 attributes and actual `dotnet build`/NUnit TRX on Linux and Windows.
 Real private product E2E remains `not_run`.
+
+## Preview.24 — NUnit lifecycle source evidence
+
+MCP `0.1.0-preview.24` consumes pinned Core `99fbfdc7601041fab1ceb16efe7c39ffb36e4c57`. The read-only `inspect_nunit_lifecycle(sourceDirectory)` tool returns a content-hashed Roslyn source inventory of inherited NUnit hooks, private helper calls, nested setup fixtures, scoped DI/browser resources, listener/retry code and log/screenshot/disposal obligations. Every hook/effect includes source path, line and a SHA-256 fingerprint; no original C# body is returned. The tool never performs build, NUnit or browser execution; their statuses remain `not_run`.
+
+Core also supports a *standalone* namespace-scoped `SetUpFixture` with just `OneTimeTearDown`, proven through synthetic `dotnet build` and NUnit runtime. An invalid nested `SetUpFixture` is still blocked, and no automatic DI/listener/pooled-browser/cleanup migration is asserted. All GitHub CI inputs remain fictional. Real application behavior requires separately observed tests.
