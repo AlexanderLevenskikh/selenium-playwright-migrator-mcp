@@ -90,7 +90,7 @@ def main():
             expect(inspection["schemaVersion"] == "migrator-nunit-execution/v1alpha1",
                    "Wrong NUnit execution schema")
             expect(inspection["runtimeStatus"] == "not_run"
-                   and inspection["discoveryStatus"] == "static_inventory_not_nunit_discovery",
+                   and inspection["nunitDiscoveryEvidence"] == "static_inventory_not_nunit_discovery",
                    "Read-only scan fabricated runtime evidence")
             expect(inspection["declaredTests"] == 6
                    and inspection["parsedTests"] == 5,
