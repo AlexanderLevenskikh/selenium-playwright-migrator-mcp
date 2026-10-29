@@ -210,3 +210,24 @@ source and target NUnit execution counts, cleanup sequencing,
 original DI/browser disposal semantics, and failure-path observables.
 A real customer source hook cannot be mapped by guessing a
 \`FullDispose()\` replacement.
+
+## Playwright fixture ownership review (preview.26)
+
+For a Selenium TestBase owning browser resources through DI, first call
+\`inspect_nunit_lifecycle\` and inspect all base and nested cleanup
+hooks/effects. Then call \`review_playwright_fixture_lifetime\` with
+exact fully-qualified source base, nested cleanup and source
+infrastructure DI type names, current \`sourceTreeHash\` and **one
+source-backed** \`bindings\` entry per effect. Each binding must carry
+the original \`sourceKind\`, \`sourcePath\`, \`sourceLine\`,
+\`expressionSha256\`, approved \`targetRole\`, and \`reviewed: true\`.
+Do not approve any role based only on the source method's spelling.
+
+Require separate fixture BrowserContext/Page ownership, failure-only
+log/screenshot capture before fixture release, and nested once-per-suite
+global disposal, with observed NUnit/DI error paths. The existing
+MCP review never runs build/tests or writes code. Its
+\`requires_review\` candidate is NOT actual browser or application
+equivalence. A concrete bridge must implement retries, navigation,
+storage, pooled browser/provider ownership, and artifact timing
+before enabling reviewed code in the target solution.
