@@ -467,3 +467,37 @@ source reference. The Core synthetic NUnit adapter emits
 `UnitTestResult outcome="NotExecuted"` even when TRX
 `Counters.notExecuted=0`; case-level outcomes are authoritative.
 Static-only MCP responses never claim this execution evidence.
+
+## preview.30 P2 — typed Page Object action planning
+
+`inspect_pom_action_plan(sourceDirectory, sourceType, sourceMethod,
+expectedSourceTreeHash, sourceLine?, receiver?)` runs a bounded, read-only
+Roslyn semantic review of one source method. It returns **relative path,
+source line, SHA-256, symbol identity, receiver/return types, ordered
+effect kinds, target statement hashes and explicit blockers**, without
+returning source method bodies, selectors, URLs or target code.
+`status=requires_review` is never a declaration of runtime equivalence;
+`status=blocked` yields no executable target sequence in the corresponding
+Core plan. Dynamic selector expressions, unverified helper calls and
+branching/loops are blocked. An input SHA mismatch fails before planning.
+
+The Core API `PlanPomActions` and trusted local
+`Migrator.AssemblyCli pom-inspect/pom-plan ... --emit-target` provide
+optional review-required target Playwright templates derived only from
+literal Roslyn-bound Selenium navigation/locator calls, element click,
+clear, SendKeys, finite WebDriverWait visibility, NUnit text/count
+assertions and literal-index table row clicks. No invented selectors,
+URLs or browser state. They are **not installed automatically** into
+adapter config or executed by MCP.
+
+P2 CI runs isolated synthetic Linux/Windows NUnit discovery/TRX and
+real Chromium on a loopback HTTP application. Source-side NUnit controls
+validate case discovery/run-state but are not a Selenium browser run;
+target-side Playwright validates actual browser actions and cleanup.
+Do not claim source/target business behavior parity from equal NUnit
+case names or outcome counts.
+
+MCP consumes `SeleniumPlaywrightMigrator.Application` as a versioned
+NuGet package pinned to a verified Core commit. Never add a cross-repo
+source `ProjectReference`, never upload customer source, test results,
+selectors or logs to public CI.
