@@ -366,3 +366,38 @@ remain \`not_run\` or \`not_verified\` in this MCP review. Source
 compilation and synthetic test fixture runtime cannot replace actual
 customer runtime. No customer source or source bodies are returned
 or uploaded to public CI.
+
+
+## Preview.27 — concrete, source-bound Playwright/DI runtime artifact
+
+The Core \`ReviewPlaywrightFixtureLifetime\` plan now exposes two exact,
+SHA-256-locked review artifacts on complete source-to-role attestation:
+the NUnit fixture adapter and a **concrete** generated
+\`MigratorPlaywrightDiBridge\` implementation. The MCP tool
+\`review_playwright_fixture_lifetime\` returns both file paths and hashes
+(\`candidate\` and \`concreteBridge\`) **without** their generated C# bodies.
+
+The concrete bridge accepts an explicit singleton \`IBrowser\` and
+\`IServiceProvider\` or launches owned Chromium through
+\`LaunchChromiumAsync\`. It opens an isolated \`IBrowserContext\` and
+\`IPage\` per NUnit fixture, tracks console/page errors and failure-only
+NUnit-attached browser logs/screenshots, releases DI scopes, always closes
+fixture contexts including page creation/disposal failures and disposes
+owned browser/provider only from the original nested suite cleanup.
+No application URL, selector, account, credentials or DI service wiring
+is inferred.
+
+Retry is **explicit**: each target test must carry \`[Retry(N)]\`
+matching bridge configuration. NUnit retries can execute teardown for
+intermediate attempts, unlike a private listener that may replay only
+the test command; one-to-one retry equivalence is not established by
+matching a numeric count. A missing retry annotation is rejected rather
+than silently enabling different behavior.
+
+The source-backed review is still \`requires_review\`. MCP never runs
+NuGet, NUnit, browser or application code and never materializes target
+artifacts. Core CI compiles real Microsoft.Playwright and
+Microsoft.Extensions.DependencyInjection types with recorded
+\`IBrowser\` fakes and real NUnit/TRX success/failure/retry/cleanup
+checks; actual browser launch and private product E2E remain
+\`not_run\`. GitHub CI contains only fictional synthetic inputs.

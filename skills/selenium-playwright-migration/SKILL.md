@@ -231,3 +231,29 @@ MCP review never runs build/tests or writes code. Its
 equivalence. A concrete bridge must implement retries, navigation,
 storage, pooled browser/provider ownership, and artifact timing
 before enabling reviewed code in the target solution.
+
+
+## Concrete Playwright/DI bridge review (preview.27)
+
+Call \`inspect_nunit_lifecycle\` and
+\`review_playwright_fixture_lifetime\` with exact current source
+hashes and every source path/line/expression SHA binding. On
+\`requires_review\` inspect both \`candidate\` and
+\`concreteBridge\` SHA-256 metadata, preserving their distinct
+types and NUnit nested cleanup ownership. The second artifact is a
+concrete, type-checked DI-backed IBrowser/BrowserContext/IPage runtime,
+not a fully configured customer provider. It must be configured with
+a real application \`IServiceProvider\`, owned or injected
+\`IBrowser\`, browser launch options and private artifact directory
+and reviewed against actual source browser pooling.
+
+Require explicit method-level \`[Retry(N)]\` and source/target
+comparison before approving retry semantics. NUnit retries may
+record intermediate failure screenshots even when the eventual
+test case passes; never claim that an equal retry count proves
+listener parity. Capture logs before screenshot; close contexts
+even when page creation or scope disposal fails; keep global
+browser/provider cleanup only in the original nested
+OneTimeTearDown scope. Treat source role review as structural
+evidence, not build/NUnit/browser/behavioral proof. Never publish
+customer sources or source review mappings in public CI.
