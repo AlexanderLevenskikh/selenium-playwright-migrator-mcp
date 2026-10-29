@@ -127,3 +127,19 @@ If `analyze_migration` reports `NUNIT_EXECUTION_GATE_REQUIRES_REVIEW` for source
 ## Reviewed shared NuGet dependencies and early project-graph validation (preview.20)
 
 Before attempting full multi-project migration, invoke `plan_target_solution` and inspect all source graph issues. If `SOLUTION_NUNIT_PLANNING_DEFERRED` appears, the planner deliberately skipped resource-intensive NUnit generation: fix the source graph first, **not** the missing output files. A shared library with literal NuGet packages needs an explicit `TargetSolutionReviewedPackages` adapter JSON section with source-relative `SourceProject`, `Reviewed: true` and **exact source** `Id` / pinned `Version` values. Only approve after source/target dependency and package trust review. The approval is config-hashed and will be invalidated if package IDs or versions change. Never add broad approvals, fake packages or browser/test-framework dependencies to make the plan green. `ready_for_build` is still not dotnet build, NUnit runtime or behavioral equivalence. Keep customer adapter files and source out of public GitHub/CI.
+
+## Preflight source test count and NUnit contract (preview.21)
+
+With `plan_target_solution`, report `declaredTests` and `candidateId` separately.
+A nonzero source declaration count with null candidate means **source tests
+found, target not generated**. It is never a success or executable fixture.
+If fast source preflight reports
+`SOLUTION_NESTED_SETUPFIXTURE_UNSUPPORTED`,
+`SOLUTION_ASSEMBLY_SCHEDULING_REQUIRES_REVIEW`,
+`SOLUTION_NUNIT_EXECUTION_GATE_REQUIRES_REVIEW`,
+`SOLUTION_DYNAMIC_TEST_DATA_REQUIRES_REVIEW` or
+`SOLUTION_UNSUPPORTED_XUNIT_SOURCE`, inspect the original NUnit structure,
+assembly-level parallel scheduling, skip gates, and data-provider lifetime.
+Do not flatten one-time hooks into per-test code, switch test frameworks
+silently, drop skipped cases, or infer data from method names.
+Each source graph scope and adapter hash must be rechecked before any build.
