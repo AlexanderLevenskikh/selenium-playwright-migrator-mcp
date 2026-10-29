@@ -124,7 +124,7 @@ using NUnit.Framework;
                    "Project-level plan must prove one complete NUnit scope closure")
             expect(len(plan["files"]) == 6
                    and sum(f["relativePath"].endswith(".cs") for f in plan["files"]) == 4
-                   and plan["schemaVersion"] == "migrator-target-assembly/v1alpha2"
+                   and plan["schemaVersion"] == "migrator-target-assembly/v1alpha3"
                    and len(plan["assemblyScheduling"]) == 2
                    and all(a["sourceLine"] > 0 for a in plan["assemblyScheduling"])
                    and any(a["targetExpression"].endswith("LevelOfParallelism(3)")
