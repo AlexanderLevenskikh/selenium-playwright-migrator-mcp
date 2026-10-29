@@ -219,3 +219,19 @@ Synthetic MCP stdio regression tests both an ignored fixture and an explicit dat
 MCP consumes Core `0.1.0-preview.20` from pinned Core SHA `26fd8bd5b2773366e3811a537d6f2b4a3f0f79a6` (local versioned NuGet only, no Core source ProjectReference). `plan_target_solution` now validates all source projects, library dependencies and explicit approval profiles **before** expensive NUnit planning. A blocking graph returns `SOLUTION_NUNIT_PLANNING_DEFERRED`; no NUnit output is materialized and no build/runtime success is implied.
 
 A reviewer can explicitly authorize *source-exact* literal shared NuGet dependencies using adapter JSON `TargetSolutionReviewedPackages: [{ SourceProject, Reviewed: true, Packages: [{ Id, Version }] }]`. IDs/versions must match source exactly; changes, floating versions, unsafe Selenium/NUnit/Playwright package profiles and unreviewed projects are rejected. The target csproj and project ledger include only approved packages. MCP remains read-only and never runs restore, build or tests on private sources. CI uses synthetic dependencies and tests both positive and fail-closed behavior on Windows/Linux.
+
+## Preview.21 — accurate source inventory even when solution generation is blocked
+
+MCP consumes Core `0.1.0-preview.21` at pinned main revision
+`82edf421f0cd15eef99899315bd2f6cc6e3372c5`. Source project
+`declaredTests` now reports the number of NUnit **method declarations** even
+when `candidateId` is null because target generation was deferred.
+The count does not expand `TestCase` data or imply generated/runnable tests.
+The target solution schema is `migrator-target-solution/v1alpha3`.
+
+Source-backed blockers found during fast graph validation include nested
+`SetUpFixture`, assembly-level parallel scheduling, `Ignore`/`Explicit`,
+dynamic `TestCaseSource` and xUnit. These must be verified or explicitly
+resolved, not dropped or guessed. MCP remains read-only. CI uses synthetic
+project graphs and real NUnit assemblies on Linux and Windows; no customer
+files or business endpoints are used.
