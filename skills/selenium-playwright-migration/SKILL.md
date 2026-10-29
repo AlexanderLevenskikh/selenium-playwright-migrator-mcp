@@ -183,3 +183,7 @@ A generated syntax or build pass does not prove observed concurrency,
 fixture lifetime, thread safety, retries, setup/teardown behavior or
 business observables; explicitly run real NUnit and application E2E
 before declaring equivalence.
+
+## NUnit TestBase and cleanup review (preview.24)
+
+Call `inspect_nunit_lifecycle(sourceDirectory)` before migrating inherited NUnit hooks, suite setup, DI/browser ownership, logs, screenshots, retries or cleanup. Review source-line and SHA evidence for every OneTimeSetUp, SetUp, TearDown and OneTimeTearDown obligation, including reached private helpers. Never move a nested SetUpFixture into assembly scope automatically. Only a standalone namespace/assembly setup fixture may use the reviewed teardown-only form. Inspector output is source-only: build, NUnit and browser evidence remain `not_run`. Reinspect whenever sourceTreeHash changes.
