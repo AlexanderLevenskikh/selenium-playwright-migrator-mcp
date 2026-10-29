@@ -26,7 +26,7 @@ public static class MigrationTools
             report.DeclaredTests, report.ParsedTests,
             report.StaticallyResolvedNUnitCases, report.BlockedNUnitSources,
             runtimeStatus = "not_run",
-            discoveryStatus = "static_inventory_not_nunit_discovery",
+            nunitDiscoveryEvidence = "static_inventory_not_nunit_discovery",
             files = report.Files.Select(file => new
             {
                 file.RelativePath, file.Disposition, file.DeclaredTests, file.ParsedTests,
