@@ -314,3 +314,34 @@ tests). Pin package consumers to verified Core
 `0.1.0-preview.29`; never reference Core source projects across
 repositories. In a source-only MCP review continue reporting
 `runtimeStatus=not_run` until an explicit trusted CLI runs NUnit.
+
+## P2 — source-backed Page Object actions (preview.30)
+
+1. Inspect the narrowest C# source project with `inspect_pom_sources` and
+   retain its exact `sourceTreeHash`. For each required POM method call,
+   run `inspect_pom_action_plan` with exact source type/method and that hash.
+2. Inspect ordered typed effects (navigation, click, clear, input SendKeys,
+   finite visible wait, text/count assertion, table-row click), relative
+   source lines and SHA-256, target SHA and blockers. Require the source
+   declaration line for ambiguous overloads.
+3. **Never** infer selectors from field names or tests, invent URL/origin,
+   replace multi-step ComboBox with a Fill-only action, drop Loader/retry
+   side effects or change assertion polarity. A branch, unknown helper,
+   nonliteral selector, missing type/symbol or dynamic wait blocks the
+   entire source method. Do not count a partially projected method as
+   fully migrated.
+4. `requires_review` means source-backed candidate **only**. The MCP
+   tool deliberately hides source/target C# bodies and literals; trusted
+   local Core/CLI may emit target statements via explicit `--emit-target`
+   for user review. Only add these to an adapter when the receiver,
+   argument flow, DOM behavior, timeouts, return values and source setup
+   have been reviewed. Inspect `review_pom_mapping` obligations as well.
+5. Execute an isolated, genuine Chromium localhost scenario and source/
+   target NUnit discovery/TRX, including selected Explicit success/failure,
+   skipped cases, browser console and screenshot and context teardown.
+   Syntax success and matching TRX do not prove Selenium-to-Playwright UI
+   equivalence. Keep private application execution status `not_run`
+   until the real private build/NUnit/browser stages are executed.
+
+Never publish private customer source, URLs, selectors, environment
+settings, evidence archives or browser artifacts in public repos/CI.
