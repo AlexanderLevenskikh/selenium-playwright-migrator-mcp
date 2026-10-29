@@ -305,3 +305,12 @@ exit codes. TRX may omit an explicit case or its skip reason; report that
 limitation instead of inventing discovery or runtime evidence. NUnit3
 and NUnit4 are not interchangeable without a runtime comparison.
 Keep every private customer file, selector, URL and ZIP out of GitHub.
+
+
+At preview.29 prefer per-case NUnit TRX `UnitTestResult` outcomes over
+aggregate `Counters.notExecuted` (which may be zero for multiple skipped
+tests). Pin package consumers to verified Core
+`313e5ab0cac3f92b746d8aaab6cf7b3cfd902151` and NuGet
+`0.1.0-preview.29`; never reference Core source projects across
+repositories. In a source-only MCP review continue reporting
+`runtimeStatus=not_run` until an explicit trusted CLI runs NUnit.
