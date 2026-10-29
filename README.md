@@ -267,3 +267,29 @@ source scope, excluded project ledger, a real selected 1/1 NUnit assembly
 build/TRX, hash-locked read-only verification and fail-closed references.
 Existing unscoped independent 2/2 runtime remains covered. This is **not**
 private product E2E or behavioral-equivalence evidence.
+
+## Preview.23 — source-bound NUnit assembly parallel scheduling
+
+MCP consumes Core `0.1.0-preview.23` from exact merged Core main
+`c1a5ae32dc0fa7762100641d3f72d6c3230960b6` on Linux and Windows (local NuGet feed, no source
+ProjectReference). The read-only `plan_target_assembly` and
+`plan_target_solution` tools expose `assemblyScheduling`: original
+source file/line, source attribute expression, and fully-qualified
+emitted target expression. This evidence is also in the exact
+content-addressed target manifest; the generated
+`Migrator.Generated.NUnitAssemblyScheduling.cs` is explicitly compiled
+into its **own** NUnit target assembly, not copied into shared libraries
+or unrelated NUnit assemblies.
+
+The planner accepts only deterministic NUnit assembly attributes
+`Parallelizable`, `NonParallelizable` and `LevelOfParallelism`
+with a conservative syntax whitelist. Aliased, computed,
+conflicting/duplicate, fixture-level and test-level source policies
+produce explicit blockers. Never change concurrency just to make a
+test compile. The source/target assembly runtime behavior is not
+proven by the static ledger; observe NUnit real scheduling separately.
+
+CI uses fictional assembly policies in independently generated
+NUnit projects: exact file-ledger verification, reflection-observed
+attributes and actual `dotnet build`/NUnit TRX on Linux and Windows.
+Real private product E2E remains `not_run`.

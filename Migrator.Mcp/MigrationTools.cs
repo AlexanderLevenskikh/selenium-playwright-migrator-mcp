@@ -94,6 +94,7 @@ public static class MigrationTools
             plan.SourceTreeHash, plan.PreviewTargetTreeHash, plan.TargetTreeHash,
             plan.ProjectFile, plan.ManifestFile, plan.Status,
             plan.DeclaredTests, plan.ScopedSetUpFixtures,
+            plan.AssemblyScheduling,
             files = plan.Files.Select(file => new
             {
                 file.RelativePath, file.Sha256, file.SourcePath
@@ -146,7 +147,7 @@ public static class MigrationTools
             result.SchemaVersion, result.SourceTreeHash,
             result.ConfigurationHash, result.PlanId, result.TargetTreeHash,
             result.SolutionFile, result.ManifestFile, result.Status,
-            result.Scope, result.Projects,
+            result.Scope, result.Projects, result.AssemblyScheduling,
             files = result.Files.Select(file => new
                 { file.RelativePath, file.Sha256, file.SourcePath }),
             result.Issues, result.Limitations, execution = "read_only_not_run"

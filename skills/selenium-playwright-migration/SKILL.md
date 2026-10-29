@@ -163,3 +163,23 @@ Only the trusted Core CLI performs \`solution-generate --build --test\`.
 Run it with deliberate approval in a separate non-overlapping target tree;
 verify per-assembly TRX counts and real browser/product observables
 independently. MCP planning alone is not compilation, runtime or behavior.
+
+## Assembly-level NUnit scheduling provenance (preview.23)
+
+Before accepting a target NUnit assembly, inspect the returned
+`assemblyScheduling` ledger from `plan_target_solution` or
+`plan_target_assembly`. Verify the source file, line, original expression,
+target expression, owning NUnit project, and generated compile item
+`Migrator.Generated.NUnitAssemblyScheduling.cs`. The exact target
+must contain the file when the original assembly has a source-backed
+scheduling policy. Do not migrate such attributes into a shared library
+or repeat them in individual test fixture methods.
+
+A source `Parallelizable`, `NonParallelizable` or
+`LevelOfParallelism` with aliases, computed expressions, conflicts or
+duplicate declarations is blocked rather than guessed. A fixture/test
+scheduling attribute is *not* interchangeable with an assembly attribute.
+A generated syntax or build pass does not prove observed concurrency,
+fixture lifetime, thread safety, retries, setup/teardown behavior or
+business observables; explicitly run real NUnit and application E2E
+before declaring equivalence.

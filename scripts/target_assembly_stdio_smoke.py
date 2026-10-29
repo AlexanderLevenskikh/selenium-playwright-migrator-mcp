@@ -50,6 +50,11 @@ namespace Example.Nested {
     }
 }
 """, encoding="utf-8")
+        (src / "AssemblyScheduling.cs").write_text("""
+using NUnit.Framework;
+[assembly: Parallelizable(ParallelScope.Fixtures)]
+[assembly: LevelOfParallelism(3)]
+""", encoding="utf-8")
         mappings = {
             "Recorder.RootStart()": [
                 'System.AppContext.SetData("root", ((int?)System.AppContext.GetData("root") ?? 0) + 1);'
@@ -61,6 +66,8 @@ namespace Example.Nested {
             "Recorder.CheckOne()": [
                 'NUnit.Framework.Assert.That(System.AppContext.GetData("root"), NUnit.Framework.Is.EqualTo(1));',
                 'NUnit.Framework.Assert.That(System.AppContext.GetData("namespace"), NUnit.Framework.Is.EqualTo(1));',
+                'NUnit.Framework.Assert.That(System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(NUnit.Framework.ParallelizableAttribute), false).Length, NUnit.Framework.Is.EqualTo(1));',
+                'NUnit.Framework.Assert.That(System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(NUnit.Framework.LevelOfParallelismAttribute), false).Length, NUnit.Framework.Is.EqualTo(1));',
                 'System.AppContext.SetData("one", true);'
             ],
             "Recorder.CheckTwo()": [
@@ -115,13 +122,21 @@ namespace Example.Nested {
                    and plan["declaredTests"] == 2
                    and plan["scopedSetUpFixtures"] == 2,
                    "Project-level plan must prove one complete NUnit scope closure")
-            expect(len(plan["files"]) == 5
-                   and sum(f["relativePath"].endswith(".cs") for f in plan["files"]) == 3
+            expect(len(plan["files"]) == 6
+                   and sum(f["relativePath"].endswith(".cs") for f in plan["files"]) == 4
+                   and plan["schemaVersion"] == "migrator-target-assembly/v1alpha2"
+                   and len(plan["assemblyScheduling"]) == 2
+                   and all(a["sourceLine"] > 0 for a in plan["assemblyScheduling"])
+                   and any(a["targetExpression"].endswith("LevelOfParallelism(3)")
+                           for a in plan["assemblyScheduling"])
+                   and any(f["relativePath"] ==
+                           "Migrator.Generated.NUnitAssemblyScheduling.cs"
+                           for f in plan["files"])
                    and any(f["relativePath"] == "Migrator.Generated.Tests.csproj"
                            for f in plan["files"])
                    and any(f["relativePath"] == "migrator-assembly-manifest.json"
                            for f in plan["files"]),
-                   "Complete target assembly must list 3 source files, csproj and manifest")
+                   "Complete target assembly must include scheduling, fixtures, csproj and manifest")
             expect(plan["candidateId"] == preview["candidateId"]
                    and len(plan["targetTreeHash"]) == 64,
                    "Target assembly identity must be bound to preview parent")
@@ -182,6 +197,19 @@ namespace Example.Nested {
             expect(incomplete["completeness"]["status"] != "passed",
                    "Missing target SetUpFixture cannot be accepted by the MCP")
             target_file.write_bytes(original)
+            scheduling_file = output / "Migrator.Generated.NUnitAssemblyScheduling.cs"
+            scheduling_bytes = scheduling_file.read_bytes()
+            scheduling_file.unlink()
+            missing_schedule = value(call(proc, 51, "verify_target_assembly", {
+                "source":"source", "targetRoot":"generated",
+                "expectedAnalysisId":plan["analysisId"],
+                "candidateId":plan["candidateId"], "config":"adapter.json"
+            }))
+            expect(missing_schedule["completeness"]["status"] != "passed"
+                   and missing_schedule["build"]["status"] == "not_run"
+                   and missing_schedule["nUnitRuntime"]["status"] == "not_run",
+                   "A lost assembly-level scheduling policy must invalidate the target")
+            scheduling_file.write_bytes(scheduling_bytes)
             (output / "Unlisted.cs").write_text("public class Unlisted {}", encoding="utf-8")
             added = value(call(proc, 9, "verify_target_assembly", {
                 "source":"source", "targetRoot":"generated",

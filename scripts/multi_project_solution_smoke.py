@@ -53,6 +53,15 @@ namespace Synthetic.Tests {
     }
 }
 """)
+        put("TestsOne/Scheduling.cs", """
+using NUnit.Framework;
+[assembly: Parallelizable(ParallelScope.Fixtures)]
+[assembly: LevelOfParallelism(2)]
+""")
+        put("TestsTwo/Scheduling.cs", """
+[assembly: NUnit.Framework.Parallelizable(NUnit.Framework.ParallelScope.Fixtures)]
+[assembly: NUnit.Framework.LevelOfParallelism(4)]
+""")
         config = {
             "SourceProjectName": "Synthetic",
             "TestHost": {"BaseClass": "object",
@@ -67,7 +76,9 @@ namespace Synthetic.Tests {
                  ], "RequiresReview": True},
                 {"SourceMethod": "Recorder.Check()",
                  "TargetStatements": [
-                     "NUnit.Framework.Assert.That(Synthetic.Shared.Tracker.Count, NUnit.Framework.Is.EqualTo(1));"
+                     "NUnit.Framework.Assert.That(Synthetic.Shared.Tracker.Count, NUnit.Framework.Is.EqualTo(1));",
+                     "NUnit.Framework.Assert.That(System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(NUnit.Framework.ParallelizableAttribute), false).Length, NUnit.Framework.Is.EqualTo(1));",
+                     "NUnit.Framework.Assert.That(System.Reflection.Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(NUnit.Framework.LevelOfParallelismAttribute), false).Length, NUnit.Framework.Is.EqualTo(1));"
                  ], "RequiresReview": True}
             ]
         }
@@ -94,6 +105,26 @@ namespace Synthetic.Tests {
                 and sum(p["kind"] == "nunit" for p in plan["projects"]) == 2
                 and sum(p["kind"] == "library" for p in plan["projects"]) == 1,
                 "project graph must contain two isolated NUnit assemblies and one shared library")
+            expect(plan["schemaVersion"] == "migrator-target-solution/v1alpha5",
+                "new solution schema must attest assembly policy source provenance")
+            scheduling = plan["assemblyScheduling"]
+            expect(len(scheduling) == 4
+                and sum(a["sourceProject"] == "TestsOne/TestsOne.csproj"
+                        for a in scheduling) == 2
+                and sum(a["sourceProject"] == "TestsTwo/TestsTwo.csproj"
+                        for a in scheduling) == 2
+                and all(a["sourceLine"] > 0
+                        and a["sourceExpression"]
+                        and a["targetExpression"] for a in scheduling)
+                and any(a["targetExpression"].endswith(
+                    "LevelOfParallelism(2)") for a in scheduling)
+                and any(a["targetExpression"].endswith(
+                    "LevelOfParallelism(4)") for a in scheduling),
+                "per-assembly scheduling provenance must be preserved")
+            expect(sum(f["relativePath"].endswith(
+                    "Migrator.Generated.NUnitAssemblyScheduling.cs")
+                    for f in plan["files"]) == 2,
+                "each NUnit target must contain its own assembly policy file")
             expect(sum(p["scopedSetUpFixtures"] for p in plan["projects"]) == 2
                 and sum(p["declaredTests"] for p in plan["projects"]) == 2,
                 "each assembly must own its own global SetUpFixture and one test")
@@ -167,13 +198,16 @@ namespace Synthetic.Tests {
                 "source": "source", "config": "scoped.json"}))
             scope = selected["scope"]
             expect(selected["status"] == "ready_for_build"
-                and selected["schemaVersion"] == "migrator-target-solution/v1alpha4"
+                and selected["schemaVersion"] == "migrator-target-solution/v1alpha5"
                 and scope["explicit"] is True
                 and scope["entryProjects"] == ["TestsOne/TestsOne.csproj"]
                 and set(scope["includedProjects"]) == {
                     "TestsOne/TestsOne.csproj", "Shared/Shared.csproj"
                 }
                 and scope["excludedProjects"] == ["TestsTwo/TestsTwo.csproj"]
+                and len(selected["assemblyScheduling"]) == 2
+                and all(a["sourceProject"] == "TestsOne/TestsOne.csproj"
+                        for a in selected["assemblyScheduling"])
                 and selected["sourceTreeHash"] == plan["sourceTreeHash"]
                 and selected["planId"] != plan["planId"]
                 and len(selected["projects"]) == 2
@@ -247,6 +281,21 @@ namespace Synthetic.Tests {
             expect(damaged["completeness"]["status"] != "passed",
                    "missing global SetUpFixture in one target assembly must fail")
             required.write_bytes(saved)
+
+            scheduling_file = target / (
+                "TestsOne/Migrator.Generated.NUnitAssemblyScheduling.cs")
+            scheduling_bytes = scheduling_file.read_bytes()
+            scheduling_file.unlink()
+            missing_policy = value(call(proc, 61, "verify_target_solution", {
+                "source": "source", "targetRoot": "generated",
+                "expectedSourceTreeHash": plan["sourceTreeHash"],
+                "expectedPlanId": plan["planId"], "config": "adapter.json"
+            }))
+            expect(missing_policy["completeness"]["status"] != "passed"
+                and missing_policy["build"]["status"] == "not_run"
+                and missing_policy["nUnitRuntime"]["status"] == "not_run",
+                "missing source scheduling policy must invalidate target closure")
+            scheduling_file.write_bytes(scheduling_bytes)
 
             rogue = target / "TestsTwo/Unexpected.cs"
             rogue.write_text("public class Unexpected {}", encoding="utf-8")
@@ -363,7 +412,7 @@ public class Container {
             tests_one = next(p for p in nested["projects"]
                              if p["sourceProject"] == "TestsOne/TestsOne.csproj")
             expect(nested["status"] == "blocked"
-                and nested["schemaVersion"] == "migrator-target-solution/v1alpha4"
+                and nested["schemaVersion"] == "migrator-target-solution/v1alpha5"
                 and tests_one["declaredTests"] == 2
                 and tests_one["candidateId"] is None
                 and any(i["code"] == "SOLUTION_NESTED_SETUPFIXTURE_UNSUPPORTED"
@@ -373,14 +422,14 @@ public class Container {
 
             put("TestsOne/AssemblyPolicy.cs", """
 using NUnit.Framework;
-[assembly: Parallelizable(ParallelScope.Fixtures)]
+[assembly: Parallelizable(ParallelScope.Fixtures | ParallelScope.Self)]
 """)
-            parallel = value(call(proc, 13, "plan_target_solution", {
+            invalid_policy = value(call(proc, 13, "plan_target_solution", {
                 "source": "source", "config": "adapter.json"}))
-            expect(parallel["status"] == "blocked"
-                and any(i["code"] == "SOLUTION_ASSEMBLY_SCHEDULING_REQUIRES_REVIEW"
-                        for i in parallel["issues"]),
-                "source NUnit assembly parallelism cannot be omitted silently")
+            expect(invalid_policy["status"] == "blocked"
+                and any(i["code"] == "NUNIT_ASSEMBLY_SCHEDULING_ARGUMENT_UNSUPPORTED"
+                        for i in invalid_policy["issues"]),
+                "computed scheduling expressions must remain blocked")
             (source / "TestsOne/AssemblyPolicy.cs").unlink()
 
             print("Multi-project MCP plan + Core CLI NUnit 2/2 runtime passed", flush=True)

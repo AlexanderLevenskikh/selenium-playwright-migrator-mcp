@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: 24562c224b04b99d1db7f21f902f2c3b3f215b5e
+          ref: c1a5ae32dc0fa7762100641d3f72d6c3230960b6
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -65,7 +65,7 @@ jobs:
           dotnet pack Migrator.Mcp/Migrator.Mcp.csproj --no-restore -c Release -o artifacts/mcp
       - name: Install packaged tool from local NuGet feed
         run: |
-          dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.22 --tool-path "$PWD/artifacts/tool" --add-source "$PWD/artifacts/mcp" --add-source "$PWD/artifacts/nuget" --add-source https://api.nuget.org/v3/index.json
+          dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.23 --tool-path "$PWD/artifacts/tool" --add-source "$PWD/artifacts/mcp" --add-source "$PWD/artifacts/nuget" --add-source https://api.nuget.org/v3/index.json
       - name: Exercise installed MCP tool over stdio
         run: python3 scripts/mcp_stdio_smoke.py artifacts/tool/selenium-pw-migrator-mcp
       - uses: actions/upload-artifact@v4
@@ -98,7 +98,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: 24562c224b04b99d1db7f21f902f2c3b3f215b5e
+          ref: c1a5ae32dc0fa7762100641d3f72d6c3230960b6
           path: core
       - uses: actions/setup-dotnet@v4
         with:
