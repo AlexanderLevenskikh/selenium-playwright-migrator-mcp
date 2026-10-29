@@ -637,12 +637,69 @@ namespace Fictional.Integration;
             expect("GetScopedRequiredService<" not in json.dumps(evidence)
                 and "CreateAndSaveScreenshot();" not in json.dumps(evidence),
                 "tool may not expose raw private C# source bodies")
+            # A nested cleanup runs once under NUnit 3/4, including failed
+            # one-time setup. The review tool preserves its exact nested
+            # lexical type instead of silently dropping it or hoisting it.
+            review_args = {
+                "sourceDirectory": "lifecycle-source-evidence",
+                "sourceType": "Fictional.Integration.BaseFixture.InvalidNestedCleanup",
+                "expectedSourceTreeHash": evidence["sourceTreeHash"]
+            }
+            missing_actions = value(call(proc, 87,
+                "review_nested_nunit_cleanup",
+                dict(review_args, targetStatements=[])))
+            expect(missing_actions["status"] == "blocked"
+                and missing_actions["candidate"] is None
+                and any(issue["code"] == "NESTED_CLEANUP_MAPPING_REQUIRED"
+                        for issue in missing_actions["issues"]),
+                "nested FullDispose may not be silently lost without a mapping")
+            mapped = value(call(proc, 88, "review_nested_nunit_cleanup",
+                dict(review_args, targetStatements=[
+                    "Fictional.Resources.FullDispose();"])))
+            expect(mapped["schemaVersion"] ==
+                   "migrator-nunit-nested-cleanup-review/v1alpha1"
+                and mapped["status"] == "requires_review"
+                and mapped["candidate"]["relativePath"].endswith(".cs")
+                and len(mapped["candidate"]["sha256"]) == 64
+                and mapped["candidate"]["ownerType"] == "BaseFixture"
+                and mapped["candidate"]["hookMethod"] == "End"
+                and "di_global_dispose" in mapped["sourceEffectKinds"]
+                and mapped["behavioralEquivalenceVerified"] is False
+                and mapped["sourceNUnitRuntime"] == "not_run"
+                and mapped["targetBuild"] == "not_run"
+                and mapped["targetNUnitRuntime"] == "not_run"
+                and mapped["browserObservables"] == "not_run"
+                and "content" not in mapped["candidate"],
+                "source-attested cleanup must be review only, never raw C# or runtime proof")
+            wrong_count = value(call(proc, 89, "review_nested_nunit_cleanup",
+                dict(review_args, targetStatements=[
+                    "Fictional.Resources.FullDispose();",
+                    "Fictional.Resources.DisposeAgain();"])))
+            expect(wrong_count["status"] == "blocked"
+                and any(issue["code"] ==
+                        "NESTED_CLEANUP_ACTION_COUNT_MISMATCH"
+                        for issue in wrong_count["issues"]),
+                "review cannot silently add/remove cleanup actions")
+            unsafe_mapping = value(call(proc, 90,
+                "review_nested_nunit_cleanup",
+                dict(review_args, targetStatements=[
+                    'if (true) Fictional.Resources.FullDispose();'])))
+            expect(unsafe_mapping["status"] == "blocked"
+                and any(issue["code"] == "NESTED_CLEANUP_MAPPING_UNSAFE"
+                        for issue in unsafe_mapping["issues"]),
+                "control flow cannot be guessed from a cleanup method")
             with (lifecycle_dir / "BaseFixture.cs").open("a", encoding="utf-8") as file:
                 file.write("\n// source changed\n")
             changed = value(call(proc, 86, "inspect_nunit_lifecycle",
                 {"sourceDirectory": "lifecycle-source-evidence"}))
             expect(changed["sourceTreeHash"] != evidence["sourceTreeHash"],
                 "lifecycle evidence source fingerprint must expire on edits")
+            stale_review = call(proc, 91,
+                "review_nested_nunit_cleanup",
+                dict(review_args, targetStatements=[
+                    "Fictional.Resources.FullDispose();"]))
+            expect(stale_review.get("isError") is True,
+                "stale source hash must reject an old nested cleanup candidate")
 
             print("MCP stdio integration smoke passed", flush=True)
         finally:
