@@ -257,3 +257,23 @@ browser/provider cleanup only in the original nested
 OneTimeTearDown scope. Treat source role review as structural
 evidence, not build/NUnit/browser/behavioral proof. Never publish
 customer sources or source review mappings in public CI.
+
+
+## Chromium integration acceptance and private E2E boundary (preview.28)
+
+Before declaring a concrete Playwright bridge runnable, verify the
+versioned real-Chromium synthetic CI record
+\`migrator-real-chromium-smoke/v1\`: installed browser, local HTTP app,
+source-backed Core candidate, two independent contexts and localStorage
+isolation, real console/screenshot artifacts, observed NUnit retry
+attempt counts, final failure, scope/context close counts and the nested
+global browser/provider cleanup. Do not rely on the old fake-IBrowser
+synthetic runtime as a replacement.
+
+When reviewing a private source, re-run
+\`inspect_nunit_lifecycle\` and
+\`review_playwright_fixture_lifetime\` with current source hashes,
+and keep nested-cleanup / Ignore / Explicit / TestCaseSource blockers
+visible. Actual private application browser E2E remains \`not_run\`
+until its own service/DI/credentials environment and behavior are
+verified. Never publish customer source, mappings or evidence in CI.

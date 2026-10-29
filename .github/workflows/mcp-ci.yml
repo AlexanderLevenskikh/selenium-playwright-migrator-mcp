@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: 19a4574c03dec4e8a0552667b5082ffcae75c7e1
+          ref: 76072b891f911299aab7fd7746cb50882ad68ae7
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -59,13 +59,25 @@ jobs:
       - name: Multi-project graph MCP + CLI + per-assembly NUnit TRX
         run: python3 scripts/multi_project_solution_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll core/Migrator.AssemblyCli/bin/Release/net10.0/Migrator.AssemblyCli.dll
 
+      - name: Real Chromium against synthetic local HTTP app via pinned Core
+        timeout-minutes: 15
+        run: dotnet run --project core/Migrator.Application.Smoke/Migrator.Application.Smoke.csproj -c Release -- --real-chromium-only
+      - name: Verify real Chromium source-bound browser evidence
+        run: python3 scripts/assert_real_chromium_evidence.py artifacts/real-chromium-preview28/summary.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selenium-playwright-migrator-mcp-real-chromium-preview28
+          path: artifacts/real-chromium-preview28/*
+          if-no-files-found: warn
+
       - name: Pack MCP as a versioned dotnet tool
         run: |
           mkdir -p artifacts/mcp
           dotnet pack Migrator.Mcp/Migrator.Mcp.csproj --no-restore -c Release -o artifacts/mcp
       - name: Install packaged tool from local NuGet feed
         run: |
-          dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.27 --tool-path "$PWD/artifacts/tool" --add-source "$PWD/artifacts/mcp" --add-source "$PWD/artifacts/nuget" --add-source https://api.nuget.org/v3/index.json
+          dotnet tool install SeleniumPlaywrightMigrator.Mcp --version 0.1.0-preview.28 --tool-path "$PWD/artifacts/tool" --add-source "$PWD/artifacts/mcp" --add-source "$PWD/artifacts/nuget" --add-source https://api.nuget.org/v3/index.json
       - name: Exercise installed MCP tool over stdio
         run: python3 scripts/mcp_stdio_smoke.py artifacts/tool/selenium-pw-migrator-mcp
       - uses: actions/upload-artifact@v4
@@ -98,7 +110,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: 19a4574c03dec4e8a0552667b5082ffcae75c7e1
+          ref: 76072b891f911299aab7fd7746cb50882ad68ae7
           path: core
       - uses: actions/setup-dotnet@v4
         with:
