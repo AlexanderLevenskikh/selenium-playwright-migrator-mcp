@@ -197,6 +197,19 @@ using NUnit.Framework;
             expect(incomplete["completeness"]["status"] != "passed",
                    "Missing target SetUpFixture cannot be accepted by the MCP")
             target_file.write_bytes(original)
+            scheduling_file = output / "Migrator.Generated.NUnitAssemblyScheduling.cs"
+            scheduling_bytes = scheduling_file.read_bytes()
+            scheduling_file.unlink()
+            missing_schedule = value(call(proc, 51, "verify_target_assembly", {
+                "source":"source", "targetRoot":"generated",
+                "expectedAnalysisId":plan["analysisId"],
+                "candidateId":plan["candidateId"], "config":"adapter.json"
+            }))
+            expect(missing_schedule["completeness"]["status"] != "passed"
+                   and missing_schedule["build"]["status"] == "not_run"
+                   and missing_schedule["nUnitRuntime"]["status"] == "not_run",
+                   "A lost assembly-level scheduling policy must invalidate the target")
+            scheduling_file.write_bytes(scheduling_bytes)
             (output / "Unlisted.cs").write_text("public class Unlisted {}", encoding="utf-8")
             added = value(call(proc, 9, "verify_target_assembly", {
                 "source":"source", "targetRoot":"generated",
