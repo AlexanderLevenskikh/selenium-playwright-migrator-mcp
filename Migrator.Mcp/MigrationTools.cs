@@ -179,6 +179,53 @@ public static class MigrationTools
         return JsonSerializer.Serialize(result, JsonOptions);
     }
 
+    [McpServerTool(Name = "review_playwright_fixture_lifetime")]
+    [Description("Read-only, source-hash-bound review of exact inherited NUnit DI scope, BrowserContext/Page, failure logs/screenshots and nested FullDispose roles. Every source expression needs its exact path/line/SHA-256 and a reviewer-attested target role. No source or generated C# bodies, file writes, build, browser or runtime execution.")]
+    public static string ReviewPlaywrightFixtureLifetime(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Source SDK C# project directory within workspace")]
+        string sourceDirectory,
+        [Description("Fully qualified source abstract NUnit fixture base type")]
+        string fixtureBaseType,
+        [Description("Fully qualified nested cleanup-only NUnit SetUpFixture type")]
+        string nestedCleanupType,
+        [Description("Fully qualified source scoped DI container type")]
+        string infrastructureType,
+        [Description("Exact sourceTreeHash from inspect_nunit_lifecycle")]
+        string expectedSourceTreeHash,
+        [Description("Exact source-backed one-to-one role bindings, each with reviewer attestation")]
+        ReviewedPlaywrightLifetimeBinding[] bindings,
+        CancellationToken cancellationToken = default)
+    {
+        var plan = engine.ReviewPlaywrightFixtureLifetime(
+            workspace.ResolveSourceScope(sourceDirectory, cancellationToken),
+            fixtureBaseType, nestedCleanupType, infrastructureType,
+            expectedSourceTreeHash, bindings, cancellationToken);
+        var response = new
+        {
+            plan.SchemaVersion, plan.Status, plan.SourceTreeHash,
+            plan.FixtureBaseType, plan.NestedCleanupType,
+            plan.InfrastructureType, plan.ValidatedBindings,
+            plan.InfrastructureMethods, plan.Issues,
+            candidate = plan.Candidate == null ? null : new
+            {
+                plan.Candidate.RelativePath, plan.Candidate.Sha256,
+                plan.Candidate.FixtureBaseType,
+                plan.Candidate.NestedCleanupType,
+                plan.Candidate.InfrastructureType
+            },
+            plan.BehavioralEquivalenceVerified, plan.SourceNUnitRuntime,
+            plan.TargetBuild, plan.TargetNUnitRuntime,
+            plan.BrowserE2E, plan.Limitations,
+            execution = "read_only_not_run"
+        };
+        var json = JsonSerializer.Serialize(response, JsonOptions);
+        if (json.Length > 300_000)
+            throw new InvalidOperationException(
+                "PLAYWRIGHT_LIFETIME_EVIDENCE_TOO_LARGE: narrow sourceDirectory.");
+        return json;
+    }
+
     [McpServerTool(Name = "review_nested_nunit_cleanup")]
     [Description("Source-hash-bound, read-only reviewed candidate for a nested, cleanup-only NUnit SetUpFixture. Requires one reviewed target invocation per source invocation, preserves outer/nested type shape, does not write or execute code and never claims source/target runtime equivalence.")]
     public static string ReviewNestedNUnitCleanup(
