@@ -214,6 +214,14 @@ public static class MigrationTools
                 plan.Candidate.NestedCleanupType,
                 plan.Candidate.InfrastructureType
             },
+            concreteBridge = plan.ConcreteBridge == null ? null : new
+            {
+                plan.ConcreteBridge.RelativePath,
+                plan.ConcreteBridge.Sha256,
+                plan.ConcreteBridge.FixtureBaseType,
+                plan.ConcreteBridge.NestedCleanupType,
+                plan.ConcreteBridge.InfrastructureType
+            },
             plan.BehavioralEquivalenceVerified, plan.SourceNUnitRuntime,
             plan.TargetBuild, plan.TargetNUnitRuntime,
             plan.BrowserE2E, plan.Limitations,
