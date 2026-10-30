@@ -575,3 +575,5 @@ NUnit control vs target discovery/TRX and browser cleanup. The
 source test is a synthetic NUnit/HttpClient control, *not*
 Selenium WebDriver behavioral evidence. No customer archives,
 selectors or private logs are uploaded to GitHub.
+
+**Adapter integration caveat (preview.32):** source-backed zero-argument Page Object methods named like waits can be recognized by the Selenium frontend as `WaitForAction`. Use an explicit exact-source-call reviewed `MethodMapping` to apply the verified candidate; a `ParameterizedMethodMapping` for such a wait is not guaranteed to override the conservative `WAIT_REQUIRES_STATE_ASSERTION` fallback. This is validated in Core's real parser/adapter/renderer synthetic regression. The Playwright .NET timeout catch is `System.TimeoutException`, not an invented `Microsoft.Playwright.TimeoutException`. Both behavioral equivalence and completion remain review-required.
