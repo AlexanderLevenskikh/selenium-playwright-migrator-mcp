@@ -89,7 +89,7 @@ def main():
                      "sourceMethod":method,"expectedSourceTreeHash":tree_hash}))
 
             combo = inspect(4, "Choose")
-            require(combo["schemaVersion"]=="migrator-pom-action/v1alpha2"
+            require(combo["schemaVersion"]=="migrator-pom-action/v1alpha3"
                     and combo["status"]=="requires_review"
                     and combo["canAutoApply"] is False
                     and combo["runtimeVerified"] is False,
