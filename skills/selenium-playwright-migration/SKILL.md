@@ -407,3 +407,5 @@ original source and proper environment. Never publish private data.
    source-control NUnit/HttpClient with Selenium browser parity.
    Keep private ArBilling build/runtime/browser and fresh source
    SHA/declared methods/cases `not_run` unless its archives exist.
+
+**Exact mapping rule for wait-prefixed helpers:** inspect the source method and its `WaitForAction` classification. For a no-argument `page.WaitReadyRetry()`, configure the exact reviewed `Methods.SourceMethod = "page.WaitReadyRetry()"` with its source-backed `TargetStatements` and `RequiresReview=true`. Do not assume `ParameterizedMethods` overrides an explicitly recognized wait. If the parser still emits `WAIT_REQUIRES_STATE_ASSERTION`, stop and report the test as blocked rather than declaring conversion success. Keep the documented .NET timeout catch `System.TimeoutException` and runtime-verify the retry failure path.
