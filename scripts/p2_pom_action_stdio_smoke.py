@@ -87,7 +87,7 @@ def main():
                                      "sourceType": "Fictional.Ui.FictionalCatalogPage",
                                      "sourceMethod": method,
                                      "expectedSourceTreeHash": h}))
-                expect(result["schemaVersion"] == "migrator-pom-action/v1alpha2"
+                expect(result["schemaVersion"] == "migrator-pom-action/v1alpha3"
                        and result["status"] == "requires_review"
                        and not result["canAutoApply"]
                        and not result["runtimeVerified"], "POM proposal was auto-approved")
