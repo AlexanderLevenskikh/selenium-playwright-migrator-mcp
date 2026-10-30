@@ -46,6 +46,8 @@ jobs:
         run: python3 scripts/p2_pom_action_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: preview.31 structured POM source-backed MCP stdio
         run: python3 scripts/p2_structured_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
+      - name: preview.32 read-only nested typed helper and bounded retry MCP stdio
+        run: python3 scripts/p2_typed_retry_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: Mapped Loader and table assertions stdio regression
         run: python3 scripts/mapped_table_loader_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: Review source-backed POM mappings over stdio
@@ -164,6 +166,9 @@ jobs:
       - name: preview.31 structured POM Windows self-contained stdio
         shell: pwsh
         run: python scripts/p2_structured_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
+      - name: preview.32 read-only typed helper and bounded retry Windows stdio
+        shell: pwsh
+        run: python scripts/p2_typed_retry_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
       - name: Mapped Loader and table assertions Windows protocol
         shell: pwsh
         run: python scripts/mapped_table_loader_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
