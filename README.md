@@ -501,3 +501,39 @@ MCP consumes `SeleniumPlaywrightMigrator.Application` as a versioned
 NuGet package pinned to a verified Core commit. Never add a cross-repo
 source `ProjectReference`, never upload customer source, test results,
 selectors or logs to public CI.
+
+## preview.31 P2 — bounded structured POM source actions
+
+The read-only `inspect_pom_action_plan` now reports ordered
+`controlFlowPath` on every source-backed effect, distinguishing
+`root`, `helper:<method>@<line>`, `if:true@<line>` and
+`if:false@<line>`. The output also carries Roslyn-bound source
+method/property symbols, source return/receiver types, relative source
+path/line/SHA-256, and target statement SHA-256. It does **not** include
+any source/target code, selectors, URL literals, environmental settings
+or executable code. The tool never edits or executes the customer
+application.
+
+Supported reviewed candidates are the narrow semantic subset:
+same-class zero-argument private non-virtual helper inlining,
+`if/else` with symbol-bound `FindElements(By.literal).Count`
+comparison or string parameter vs literal (plus short-circuit Boolean
+composition), real Selenium navigation/click/clear/SendKeys,
+`WebDriverWait` with literal/constant timeout or a **source-enforced**
+`timeoutMs` bound via a first-statement argument range check, and
+NUnit `Assert.That(..., Is.EqualTo/GreaterThan/LessThan)` table/text
+comparisons. All target statements remain opt-in and review-required
+through trusted Core APIs/CLI. No arbitrary C# evaluation occurs.
+
+A dynamic URL, unknown helper, unbounded dynamic wait, opaque condition,
+loop, side effect, unsupported exception path or missing branch blocks
+the **entire** proposed target sequence, with no active TODO presented
+as migrated. A source bound is proven by its exact source code; a
+guess about a positive timeout or retry count is not sufficient.
+
+Public CI includes real Chromium tests against a fictional localhost
+application and NUnit source-control versus target discovery/TRX on
+Linux and Windows. The baseline suite uses NUnit/HttpClient, **not**
+Selenium WebDriver, so matching case names/outcomes do not establish
+Selenium/Playwright business parity. Private ArBilling is `not_run`
+unless original source archives are present locally.
