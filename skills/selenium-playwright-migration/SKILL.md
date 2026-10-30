@@ -345,3 +345,36 @@ repositories. In a source-only MCP review continue reporting
 
 Never publish private customer source, URLs, selectors, environment
 settings, evidence archives or browser artifacts in public repos/CI.
+
+## P2 / preview.31 — conditional Page Objects and guarded waits
+
+For a POM method with conditional actions, a loader or a nested
+ComboBox helper, first obtain the exact snapshot from
+`inspect_pom_sources`, then call `inspect_pom_action_plan` with the
+source tree hash. Read the ordered source relative lines, SHA-256 and
+`controlFlowPath` values. Treat each `if:true` and `if:false` as
+required source obligations; never replace a conditional ComboBox
+selection with an unconditional click/fill.
+
+Accept only compiler-proven Selenium `FindElements(By.literal).Count`
+guards and string parameter comparisons to literals. A same-class
+private no-arg helper is followable only when it can be completely
+inlined; recursion and unverified dispatch are blocked. A dynamic
+`WebDriverWait` timeout needs an exact source runtime guard with
+finite 1..300000 ms range and matching parameter identity; otherwise
+block the method. Literal/constant waits still need browser review.
+NUnit `Is.GreaterThan` and `Is.LessThan` must preserve strict
+inequality, not silently become `ToHaveCountAsync(n)`.
+
+Read-only MCP does not disclose target statements, selectors or URLs.
+Trusted local Core `pom-plan ... --emit-target` can produce an
+adapter candidate for **manual review**; never auto-apply or report
+`FullyConverted`. Reject any blocked method as an entire unit,
+not merely its unsupported branch.
+
+Compare NUnit case discovery and actual TRX records (including
+`NotExecuted` and selected Explicit failure/success) and run real
+Playwright Chromium against a separately isolated synthetic localhost
+app. Record console/screenshot/cleanup, keep product browser parity
+`not_verified` and private customer runs `not_run` without the
+original source and proper environment. Never publish private data.
