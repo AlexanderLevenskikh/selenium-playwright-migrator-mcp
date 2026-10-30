@@ -8,6 +8,50 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_action_plan")]
+    [Description("Read-only preview.30 Roslyn POM action proposal for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
+    public static string InspectPomActionPlan(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Narrow source C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Fully qualified C# Page Object source type")] string sourceType,
+        [Description("Exact Page Object source method name")] string sourceMethod,
+        [Description("Exact SourceTreeHash from inspect_pom_sources")] string expectedSourceTreeHash,
+        [Description("Source declaration line to disambiguate overloads (0 = any)")] int sourceLine = 0,
+        [Description("Source fixture receiver identifier (not a locator or selector)")] string receiver = "page",
+        CancellationToken cancellationToken = default)
+    {
+        var report = engine.PlanPomActions(
+            workspace.ResolveSourceScope(sourceDirectory, cancellationToken),
+            sourceType, sourceMethod, expectedSourceTreeHash, sourceLine,
+            receiver, cancellationToken);
+        // Never include source bodies or target statements in the protocol
+        // by default: generated action text could contain private selectors
+        // or URLs. Full templates are exposed only through trusted local
+        // Core APIs after source-hash review.
+        var response = new
+        {
+            report.SchemaVersion, report.SourceTreeHash, report.Status,
+            report.SourceType, report.SourceMethod, report.SourceMethodSymbol,
+            report.SourceMethodSha256, report.SourcePath, report.SourceLine,
+            report.SuggestedSourcePattern, report.CanAutoApply,
+            report.RuntimeVerified, report.ProvenSourceActions,
+            actions = report.Actions.Select(action => new
+            {
+                action.Order, action.SourcePath, action.SourceLine,
+                action.SourceSha256, action.SourceSymbol,
+                action.ReceiverType, action.SourceReturnType,
+                action.Effect, action.TargetSha256, action.RequiresReview
+            }),
+            report.Blockers, report.Limitations,
+            execution = "read_only_not_run"
+        };
+        var json = JsonSerializer.Serialize(response, JsonOptions);
+        if (json.Length > 150_000)
+            throw new InvalidOperationException(
+                "POM_ACTION_PLAN_TOO_LARGE: inspect one method at a time.");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_nunit_execution")]
     [Description("Read-only preview.29 NUnit Ignore/Explicit/TestCaseSource static case inventory: relative paths, source line/SHA256, run-state and explicit blockers. Does not evaluate source C#, perform NUnit discovery or execute tests.")]
     public static string InspectNUnitExecution(
