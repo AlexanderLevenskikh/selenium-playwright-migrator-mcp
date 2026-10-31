@@ -9,7 +9,7 @@ namespace Migrator.Mcp;
 public static class MigrationTools
 {
     [McpServerTool(Name = "inspect_pom_action_plan")]
-    [Description("Read-only preview.35 typed Count/Text NUnit immediate snapshot facts, cross-file helpers and blockers; rendered-text/exception parity still requires external runtime proof for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
+    [Description("Read-only preview.36 typed Count/Text source-only facts and bounded CSS-hidden/normal-whitespace candidate; preserved whitespace and missing-element exception parity remain review-required for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
     public static string InspectPomActionPlan(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Narrow source C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
@@ -53,6 +53,10 @@ public static class MigrationTools
                 runtimeVerified = false,
                 canAutoApply = false,
                 hiddenTextParity = "not_proven_requires_review",
+                measuredCssHiddenSubset = "source_candidate_only_not_runtime_proof",
+                normalWhitespaceSubset = "source_candidate_only_not_runtime_proof",
+                preservedWhitespace = "fail_closed_review_required",
+                fullWebDriverRenderedTextParity = "not_proven_requires_review",
                 missingElementExceptionParity = "not_proven_requires_review"
             },
             retry = new {
