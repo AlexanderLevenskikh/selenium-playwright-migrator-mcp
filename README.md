@@ -577,3 +577,30 @@ Selenium WebDriver behavioral evidence. No customer archives,
 selectors or private logs are uploaded to GitHub.
 
 **Adapter integration caveat (preview.32):** source-backed zero-argument Page Object methods named like waits can be recognized by the Selenium frontend as `WaitForAction`. Use an explicit exact-source-call reviewed `MethodMapping` to apply the verified candidate; a `ParameterizedMethodMapping` for such a wait is not guaranteed to override the conservative `WAIT_REQUIRES_STATE_ASSERTION` fallback. This is validated in Core's real parser/adapter/renderer synthetic regression. The Playwright .NET timeout catch is `System.TimeoutException`, not an invented `Microsoft.Playwright.TimeoutException`. Both behavioral equivalence and completion remain review-required.
+
+
+## preview.33 — cross-file typed POM and detached Loader (review only)
+
+This MCP tool consumes \`SeleniumPlaywrightMigrator.Application
+0.1.0-preview.33\` from an exact Core commit pinned in
+\`.github/workflows/mcp-ci.yml\` (no cross-repository ProjectReference).
+\`inspect_pom_action_plan\` now reports source-line/SHA and ordered typed
+effects for private partial-class helper chains with up to two independently
+bound source literal/parameter \`string\`/\`int\` arguments, numeric
+parameter guards, \`!\` and short-circuit conditions. No helper name is
+treated as proof of its implementation.
+
+One new supported source wait is a finite Selenium
+\`WebDriverWait.Until(d => d.FindElements(By.literal).Count == 0)\`.
+It yields a \`detached_wait\` **review-required** effect only when the
+actual lambda driver receiver is proven; \`!FindElement(...).Displayed\`
+(hidden but still present), an unrelated captured driver, dynamic
+selectors, retry catch filters and unknown side effects remain blocked.
+Do not substitute Playwright auto-wait for business-state semantics.
+
+Synthetic MCP stdio Linux/Windows tests assert no raw selectors, C#
+target statement or adapter candidate escapes the read-only tool.
+Core's Linux/Windows Chromium and NUnit source-control tests are
+separate evidence; the control suite uses HttpClient and does not prove
+full Selenium-to-Playwright browser equivalence. Private ArBilling
+is not included in public CI. No automatic mapping approval.
