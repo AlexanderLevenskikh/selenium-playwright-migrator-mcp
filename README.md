@@ -604,3 +604,28 @@ Core's Linux/Windows Chromium and NUnit source-control tests are
 separate evidence; the control suite uses HttpClient and does not prove
 full Selenium-to-Playwright browser equivalence. Private ArBilling
 is not included in public CI. No automatic mapping approval.
+
+
+## preview.34 — actual Selenium WebDriver browser parity (separate Core CI)
+
+Core preview.34 adds *real* Selenium WebDriver + ChromeDriver and Playwright .NET
+synthetic NUnit runs on the same Chrome for Testing executable and localhost
+app. This supersedes the old HttpClient stand-in **for those cases only**:
+positive browser DOM/event/ComboBox/Loader/retry snapshots are compared, and
+selected actual terminal timeout exceptions and screenshots are tested.
+
+The **mandatory negative counterexample** is a changing DOM: an immediate
+source NUnit FindElements.Count assertion fails, while Playwright
+Expect(locator).ToHaveCountAsync retries and passes. Thus structurally
+source-backed assertion mapping is not automatically equivalent. Agents must
+treat this as a review blocker, not report a successful complete migration.
+The MCP protocol remains read-only, redacted and source-only, even if Core
+browser CI passes. No browser execution or original selectors are returned
+over MCP, and no automatic adapter promotion is permitted.
+
+The preview.34 MCP package is 0.1.0-preview.34, using exact Core SHA pinned
+in both Linux and Windows jobs of the MCP workflow. The synthetic read-only
+stdio regression checks assertion provenance, target redaction, source
+immutability, unsafe side-effect blockers and stale hash rejection.
+Private customer E2E remains not_run; source-loop retry attempts are not
+independently instrumented at runtime.
