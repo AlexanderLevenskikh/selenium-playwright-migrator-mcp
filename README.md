@@ -681,3 +681,31 @@ selectors, source bodies, generated target code or call the browser.
 No privately uploaded ArBilling tests or credentials are used.
 Versioned \`0.1.0-preview.36\` MCP consumes the exact Core SHA
 pinned in the Linux/Windows workflow without ProjectReference.
+
+
+## preview.37 — source-only pre/pre-wrap and Unicode Text evidence
+
+Core preview.37 extends the bounded \`IWebElement.Text\`
+\`EvaluateAllAsync<string>\` source candidate to simple direct-leaf,
+single-line CSS \`pre\` and \`pre-wrap\` and the measured Unicode subset:
+NBSP to regular space, U+200B zero-width removal, and unchanged
+combining characters. **These claims are based solely on specific
+public synthetic real Selenium/Playwright Chromium comparisons.**
+The candidate still requires review, is not runtime-certified by
+MCP and is never auto-applied. No Selenium dependency or business
+logic is guessed in the target.
+
+Unknown CSS \`break-spaces\`, multiline/mixed pre, text-transform
+and unverified Unicode spacing deliberately fail closed in the
+draft. Missing-element exceptions are not identity-equivalent:
+Selenium NoSuchElementException vs PlaywrightException. A matching
+normal NUnit result is insufficient to approve a migration that
+catches the source exception.
+
+The MCP \`inspect_pom_action_plan\` response only exposes fixed
+source-only flags, source SHA/line and effect counts, **never raw
+selectors, private source or generated target C#**. Linux/Windows
+stdio protocol tests verify this boundary, unknown effects and
+stale source hashes. The independent versioned MCP package consumes
+exact Core SHA via NuGet, without ProjectReference, version
+\`0.1.0-preview.37\`. Private ArBilling: not_run.

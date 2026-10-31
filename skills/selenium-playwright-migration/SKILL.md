@@ -519,3 +519,32 @@ raw C# or private locators. The \`assertions\` summary includes fixed
 \`measuredCssHiddenSubset\`, \`normalWhitespaceSubset\` and
 \`preservedWhitespace\` limitations, not observed browser truth.
 Real comparison, NUnit/TRX and screenshots belong to trusted Core CI.
+
+
+## preview.37 — Unicode/preserved-space rendered text and exceptions
+
+For a source NUnit assertion using WebDriver \`IWebElement.Text\`,
+preserve the **immediate** source snapshot, source selector, method,
+literal/parameter provenance, and SHA. The preview.37 Core candidate
+handles only the measured direct-leaf, single-line CSS pre/pre-wrap
+and specific NBSP, U+200B, and combining Unicode cases in the
+public same-Chrome Selenium WebDriver/Playwright .NET fixture.
+
+**Do not infer** support for break-spaces, nested or multiline
+preserved space, CSS text-transform, U+202F/narrow-NBSP or other
+unverified Unicode whitespace. The candidate deliberately signals
+a review error rather than fabricating an equivalent string.
+Selenium NoSuchElementException catch semantics cannot be preserved
+by a PlaywrightException without explicit reviewed exception
+adaptation: treat it as a blocker for exception-sensitive source
+methods. Do not introduce a hidden Selenium package dependency in
+migrated Playwright code.
+
+MCP tools cannot execute browser tests or approve mappings, and
+source-only \`assertions\` metadata are **not** observed runtime
+measurements. Inspect \`CanAutoApply=false\`,
+\`RuntimeVerified=false\`, \`requires_review\`, exact source hashes,
+the fixed CSS/Unicode coverage limitations and fail-closed
+controls. No private source text, selectors or target code may
+leave MCP stdio. Use actual real Selenium and Playwright on the
+same browser for any semantic equivalence decision.
