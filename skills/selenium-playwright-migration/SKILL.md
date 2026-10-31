@@ -465,3 +465,30 @@ number of attempts observed at runtime. Source/target timeout exception
 types differ (WebDriverTimeoutException vs System.TimeoutException) and
 must be separately verified. MCP inspection stays read-only; never execute
 customer browser code from stdio tools or leak private target code.
+
+
+## preview.35 — immediate assertion semantics, strict review boundary
+
+Do not translate source \`Assert.That(FindElements(...).Count,
+Is.EqualTo(n))\` to \`Expect(locator).ToHaveCountAsync(n)\`: it
+auto-retries and changed a real Selenium FAIL into a Playwright PASS
+in preview.34. Source-backed Count EqualTo, GreaterThan and LessThan
+now use one immediate \`CountAsync()\` read and NUnit comparison.
+Verify the exact selected DOM and two real runtime outcomes.
+
+Do not translate typed \`IWebElement.Text\` equality to
+\`ToHaveTextAsync\`, whose auto-retry can hide a failing source.
+The preview.35 candidate evaluates the selected DOM immediately and
+compares with NUnit. **This does not prove full Selenium .Text parity**.
+For a missing element, Selenium and Playwright throw distinct exception
+types; for a hidden element, rendered Selenium .Text can differ from
+DOM innerText. These cases require manual review/blocked approval and
+real source/target runtime evidence. Never claim equivalence from just
+matched positive visible-text cases. No CSS, XPath, URL, timeout,
+browser condition or side effect may be guessed.
+
+MCP \`inspect_pom_action_plan\` remains strictly read-only and
+redacted. Check \`assertions.sourceImmediateCountSnapshots\`,
+\`sourceImmediateTextSnapshots\`, \`hiddenTextParity\` and
+\`missingElementExceptionParity\`; the status is source-only
+\`requires_review\`, never auto-apply or runtime certified.

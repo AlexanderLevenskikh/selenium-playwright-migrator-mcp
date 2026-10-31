@@ -629,3 +629,28 @@ stdio regression checks assertion provenance, target redaction, source
 immutability, unsafe side-effect blockers and stale hash rejection.
 Private customer E2E remains not_run; source-loop retry attempts are not
 independently instrumented at runtime.
+
+
+## preview.35 — source-backed immediate Count/Text assertion facts
+
+Core preview.35 replaces auto-retrying Playwright \`ToHaveCountAsync\`
+for NUnit Count \`EqualTo\` with one \`locator.CountAsync()\` snapshot
+and immediate NUnit EqualTo. GreaterThan and LessThan remain single-read.
+For typed \`IWebElement.Text\`, source projections take one DOM
+\`EvaluateAllAsync<string>(...innerText...)\` read instead of
+auto-retrying \`ToHaveTextAsync\`. All candidates remain
+\`requires_review\` and have \`CanAutoApply=false\`.
+
+In the public same-Chrome real Selenium/Playwright controls, a delayed
+Count update and changing visible text must now fail on BOTH engines.
+Two known text gaps remain: hidden Selenium rendered text versus DOM
+innerText, and different exception types for missing elements. These
+are **not** behavioral equivalence. The MCP reply reports only
+non-sensitive source assertion counts and explicit unresolved parity
+statuses; it does not return target code, selectors or source bodies.
+Only a trusted local Core API with \`--emit-target\` may reveal a
+reviewable draft. MCP is read-only and executes no user/browser code.
+
+The package is \`0.1.0-preview.35\` from one exact Core commit pinned
+in Linux and Windows CI, never a cross-repository ProjectReference.
+Private ArBilling remains not_run.

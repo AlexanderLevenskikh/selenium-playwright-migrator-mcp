@@ -9,7 +9,7 @@ namespace Migrator.Mcp;
 public static class MigrationTools
 {
     [McpServerTool(Name = "inspect_pom_action_plan")]
-    [Description("Read-only preview.34 source-only POM facts and typed cross-file helpers; browser parity and immediate-vs-retrying assertion semantics require external runtime proof for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
+    [Description("Read-only preview.35 typed Count/Text NUnit immediate snapshot facts, cross-file helpers and blockers; rendered-text/exception parity still requires external runtime proof for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
     public static string InspectPomActionPlan(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Narrow source C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
@@ -44,6 +44,17 @@ public static class MigrationTools
                 action.ControlFlowPath
             }),
             report.Blockers, report.Limitations,
+            assertions = new {
+                sourceImmediateCountSnapshots = report.Actions.Count(action =>
+                    action.Effect is "table_count_assertion" or "table_count_comparison"),
+                sourceImmediateTextSnapshots = report.Actions.Count(action =>
+                    action.Effect == "text_assertion"),
+                allSourceOnly = true,
+                runtimeVerified = false,
+                canAutoApply = false,
+                hiddenTextParity = "not_proven_requires_review",
+                missingElementExceptionParity = "not_proven_requires_review"
+            },
             retry = new {
                 boundedLoops = report.Actions.Count(action => action.Effect == "bounded_retry"),
                 sourceBackedTerminalRethrows = report.Actions.Count(action => action.Effect == "retry_failure_rethrow"),
