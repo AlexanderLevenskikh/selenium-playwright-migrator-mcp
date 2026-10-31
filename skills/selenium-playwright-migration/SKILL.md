@@ -438,3 +438,30 @@ paths and \`System.TimeoutException\` on actual Playwright .NET; its
 source NUnit control uses HttpClient, **not Selenium WebDriver**. Do not
 claim behavioral equivalence, automatic migration or private ArBilling
 validation from equal discovery/TRX or browser smoke alone.
+
+
+## preview.34 — mandatory real Selenium baseline and assertion-gap guard
+
+Before marking Selenium-to-Playwright behavioral equivalence, run *both*
+actual Selenium WebDriver with ChromeDriver and Playwright .NET on the same
+browser executable and localhost/prod-approved fixture; compare source/target
+DOM, ordered application effects, ComboBox positive/missing paths, Loader
+detached state, real retry recovery/terminal failure, exact exception
+identities, NUnit outcomes, real screenshots and resource cleanup.
+Capture browser binary/version and source/target SHA as immutable evidence.
+Core's synthetic suite verifies a narrow public fixture only; it does not
+certify private ArBilling or business behavior.
+
+**Do not auto-approve NUnit Count -> Playwright ToHaveCountAsync.**
+NUnit Assert.That(FindElements(...).Count,Is.EqualTo(N)) examines a
+synchronous snapshot, whereas Playwright Expect(locator).ToHaveCountAsync
+may auto-retry. A delayed DOM insertion makes Selenium FAIL and Playwright
+PASS on the same Chrome and app: an **actual known semantic difference**,
+not a migration success. A matching selector and green target NUnit result
+cannot resolve this. Require separate reviewed equivalent assertion
+semantics before approving; otherwise keep requires_review/blocked. A
+source retry loop literal 2 attempts is not independent proof of the
+number of attempts observed at runtime. Source/target timeout exception
+types differ (WebDriverTimeoutException vs System.TimeoutException) and
+must be separately verified. MCP inspection stays read-only; never execute
+customer browser code from stdio tools or leak private target code.
