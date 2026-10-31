@@ -537,3 +537,43 @@ Linux and Windows. The baseline suite uses NUnit/HttpClient, **not**
 Selenium WebDriver, so matching case names/outcomes do not establish
 Selenium/Playwright business parity. Private ArBilling is `not_run`
 unless original source archives are present locally.
+
+## preview.32 — source-backed typed POM helpers and bounded retries
+
+The read-only `inspect_pom_action_plan` returns source lines,
+SHA-256 identities, typed Roslyn method symbols, ordered effects
+and `controlFlowPath`, plus a redacted `retry` count summary
+(`boundedLoops`, `sourceBackedTerminalRethrows`). It does not
+return selectors, URLs, C# source bodies or executable Playwright
+statements. `status=requires_review` is **not** behavioral approval.
+
+The closed source-mapped subset now expands an immediate or nested
+nonvirtual same-class private POM helper with **at most one string
+argument**, only when Roslyn resolves that argument to a source
+parameter or literal. Argument substitution edits C# identifier
+tokens, never string literals, URL values or selector text.
+Every reached helper must be fully translated. Unknown calls,
+recursion, overloaded ambiguous dispatch and side effects block
+the entire method rather than dropping a step.
+
+A strictly bounded Selenium retry is accepted as a review-required
+template only with an AST-proven `for (var attempt=0;
+attempt<2; attempt++)`, a *single* `WebDriverWait.Until`
+operation, `break` on success, exactly
+`catch (WebDriverTimeoutException) { if (attempt == 1) throw; }`
+on failure, and **2–4 literal attempts**. Source-derived wait
+timeout is retained. Catch type and polling/actionability may differ
+in Playwright, so Chromium success/failure validation is mandatory
+before an agent may propose applying the mapping. Any changed
+exception handler, larger/unbounded attempt count, extra body effect,
+condition or dynamic wait remains blocked.
+
+Public synthetic Core Linux/Windows CI now tests actual Playwright
+Chromium against loopback-only HTML, including source-backed
+nested ComboBox and source-bounded retry, selected terminal failure,
+NUnit control vs target discovery/TRX and browser cleanup. The
+source test is a synthetic NUnit/HttpClient control, *not*
+Selenium WebDriver behavioral evidence. No customer archives,
+selectors or private logs are uploaded to GitHub.
+
+**Adapter integration caveat (preview.32):** source-backed zero-argument Page Object methods named like waits can be recognized by the Selenium frontend as `WaitForAction`. Use an explicit exact-source-call reviewed `MethodMapping` to apply the verified candidate; a `ParameterizedMethodMapping` for such a wait is not guaranteed to override the conservative `WAIT_REQUIRES_STATE_ASSERTION` fallback. This is validated in Core's real parser/adapter/renderer synthetic regression. The Playwright .NET timeout catch is `System.TimeoutException`, not an invented `Microsoft.Playwright.TimeoutException`. Both behavioral equivalence and completion remain review-required.

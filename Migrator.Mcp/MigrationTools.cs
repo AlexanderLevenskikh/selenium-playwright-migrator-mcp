@@ -9,7 +9,7 @@ namespace Migrator.Mcp;
 public static class MigrationTools
 {
     [McpServerTool(Name = "inspect_pom_action_plan")]
-    [Description("Read-only preview.31 structured Roslyn POM action proposal for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
+    [Description("Read-only preview.32 typed-helper and bounded-retry structured Roslyn POM action proposal for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
     public static string InspectPomActionPlan(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Narrow source C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
@@ -44,6 +44,12 @@ public static class MigrationTools
                 action.ControlFlowPath
             }),
             report.Blockers, report.Limitations,
+            retry = new {
+                boundedLoops = report.Actions.Count(action => action.Effect == "bounded_retry"),
+                sourceBackedTerminalRethrows = report.Actions.Count(action => action.Effect == "retry_failure_rethrow"),
+                requiresReview = true,
+                sourceOnly = true
+            },
             execution = "read_only_not_run"
         };
         var json = JsonSerializer.Serialize(response, JsonOptions);

@@ -378,3 +378,34 @@ Playwright Chromium against a separately isolated synthetic localhost
 app. Record console/screenshot/cleanup, keep product browser parity
 `not_verified` and private customer runs `not_run` without the
 original source and proper environment. Never publish private data.
+
+## preview.32 — nested typed POM helpers and bounded Loader retry
+
+1. Capture exact source tree hash using `inspect_pom_sources`.
+   Inspect each page helper using `inspect_pom_action_plan`.
+   Read `controlFlowPath`, typed Roslyn symbol, source line/SHA,
+   effects and `retry` metadata; never infer behavior from names.
+2. Inline private same-class nonvirtual helpers only if *all*
+   statements are source-backed and their zero/one string argument
+   maps to the actual source parameter or literal. Preserve nested
+   argument flow, selector literals and both conditional branches.
+   A partial helper or changed source hash blocks the entire method.
+3. Accept a retry proposal only for an AST-matched finite 2–4-attempt
+   Selenium loop with one WebDriverWait, success `break`,
+   WebDriverTimeoutException catch and exact final-attempt rethrow.
+   Reject broad catch, missing terminal rethrow, extra side effects,
+   dynamic attempt count, unbounded loop or unsupported wait.
+   Retain exact source timeout and exception-path evidence.
+4. This remains **review_required**; no invented selectors,
+   timeouts, retries, URLs, click/selection ordering or side effects.
+   Core's local `pom-plan --emit-target` yields an opt-in
+   reviewed candidate. MCP deliberately never returns private
+   source or target code or selectors.
+5. Check actual Chromium success/failure, source-control and target
+   NUnit discovery and per-case TRX on Linux/Windows and screenshot,
+   browser console and context/IBrowser cleanup. Do not equate
+   source-control NUnit/HttpClient with Selenium browser parity.
+   Keep private ArBilling build/runtime/browser and fresh source
+   SHA/declared methods/cases `not_run` unless its archives exist.
+
+**Exact mapping rule for wait-prefixed helpers:** inspect the source method and its `WaitForAction` classification. For a no-argument `page.WaitReadyRetry()`, configure the exact reviewed `Methods.SourceMethod = "page.WaitReadyRetry()"` with its source-backed `TargetStatements` and `RequiresReview=true`. Do not assume `ParameterizedMethods` overrides an explicitly recognized wait. If the parser still emits `WAIT_REQUIRES_STATE_ASSERTION`, stop and report the test as blocked rather than declaring conversion success. Keep the documented .NET timeout catch `System.TimeoutException` and runtime-verify the retry failure path.
