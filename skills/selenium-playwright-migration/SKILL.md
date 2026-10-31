@@ -492,3 +492,30 @@ redacted. Check \`assertions.sourceImmediateCountSnapshots\`,
 \`sourceImmediateTextSnapshots\`, \`hiddenTextParity\` and
 \`missingElementExceptionParity\`; the status is source-only
 \`requires_review\`, never auto-apply or runtime certified.
+
+
+## preview.36 — source-backed CSS hidden/normal-whitespace Text subset
+
+Use actual Selenium WebDriver \`IWebElement.Text\` as the source
+behavior, not DOM innerText intuition. The Core preview.36 candidate
+reads a typed source locator exactly once via Playwright
+EvaluateAllAsync<string>, handles measured direct/ancestor CSS
+display:none and visibility:hidden/collapse as empty text, and
+normalizes the narrow tested CSS normal-space/tab subset. It does
+**not** implement the complete WebDriver rendered-text atom.
+
+CSS preserved white-space (\`pre\`, \`pre-wrap\`, \`break-spaces\`)
+must fail closed with \`POM_TEXT_PRESERVED_WHITESPACE_REVIEW\`.
+Missing element exception types are not equivalent and remain
+manual review. Other visibility inheritance, pseudo-elements,
+shadow DOM, bidirectional Unicode, complex whitespace, accessibility
+text and product-specific state are not implied by synthetic success.
+Never broaden the supported subset based on a method name or guess
+a selector, timeout or state. Preserve source path/line/SHA and
+unapproved \`requires_review\`; never count as fully migrated.
+
+MCP \`inspect_pom_action_plan\` is read-only/source-only with no
+raw C# or private locators. The \`assertions\` summary includes fixed
+\`measuredCssHiddenSubset\`, \`normalWhitespaceSubset\` and
+\`preservedWhitespace\` limitations, not observed browser truth.
+Real comparison, NUnit/TRX and screenshots belong to trusted Core CI.

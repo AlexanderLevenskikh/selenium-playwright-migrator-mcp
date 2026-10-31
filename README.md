@@ -654,3 +654,30 @@ reviewable draft. MCP is read-only and executes no user/browser code.
 The package is \`0.1.0-preview.35\` from one exact Core commit pinned
 in Linux and Windows CI, never a cross-repository ProjectReference.
 Private ArBilling remains not_run.
+
+
+## preview.36 — rendered-text subset and honest MCP review boundary
+
+Core preview.36 implements a narrow **review-only** candidate for
+Selenium \`IWebElement.Text\`: a one-shot Playwright DOM query checks
+CSS display:none and visibility:hidden/collapse on the source element
+and its ancestors, then returns \`""\` for measured hidden cases.
+It collapses ordinary spaces/tabs in the measured normal-white-space
+subset. For \`pre\`, \`pre-wrap\` or \`break-spaces\`, the candidate
+explicitly throws a review marker rather than guessing the Selenium
+rendered-text algorithm. Missing elements fail, but Selenium
+NoSuchElementException and PlaywrightException are not interchangeable.
+
+Core CI runs **actual** C# Selenium WebDriver and Playwright .NET on
+the **same Chrome for Testing binary** against a public localhost test
+app on Linux and Windows. The positive hidden/normal-whitespace cases
+are validated against original Selenium. The preserved-white-space
+control intentionally remains source Passed vs target Failed, with
+manual review required; no auto-apply approval is introduced.
+
+The MCP read-only tool reports only source action counts and
+fixed, non-sensitive parity limitations. It does **not** return
+selectors, source bodies, generated target code or call the browser.
+No privately uploaded ArBilling tests or credentials are used.
+Versioned \`0.1.0-preview.36\` MCP consumes the exact Core SHA
+pinned in the Linux/Windows workflow without ProjectReference.
