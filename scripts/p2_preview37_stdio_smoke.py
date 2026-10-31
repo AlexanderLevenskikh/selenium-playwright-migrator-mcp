@@ -123,7 +123,8 @@ def main():
                        and not state["runtimeVerified"]
                        and not state["canAutoApply"]
                        and state["assertions"]["sourceImmediateTextSnapshots"]==1
-                       and state["assertions"]["preservedWhitespace"]=="mixed_CSS_modes_fail_closed_review_required"
+                       and state["assertions"]["preservedWhitespace"]=="fail_closed_review_required"
+                       and state["assertions"]["preservedWhitespacePartialMode"]=="mixed_CSS_modes_fail_closed_review_required"
                        and state["assertions"]["fullWebDriverRenderedTextParity"]=="not_proven_requires_review"
                        and state["assertions"]["measuredCssHiddenSubset"]=="source_candidate_only_not_runtime_proof"
                        and state["assertions"]["normalWhitespaceSubset"]=="source_candidate_only_not_runtime_proof"
