@@ -709,3 +709,36 @@ stdio protocol tests verify this boundary, unknown effects and
 stale source hashes. The independent versioned MCP package consumes
 exact Core SHA via NuGet, without ProjectReference, version
 \`0.1.0-preview.37\`. Private ArBilling: not_run.
+
+
+## preview.38 — strict source-bound NoSuchElement and WebDriverTimeout catches
+
+MCP \`inspect_pom_action_plan\` reports **read-only, source-only** exception
+facts from the Core Roslyn projector. A syntactically and semantically
+proven single immediate \`FindElement(...).Text\` NUnit assertion may
+have a typed \`catch (NoSuchElementException)\`, and a finite
+\`WebDriverWait.Until\` may have a typed
+\`catch (WebDriverTimeoutException)\`. The catch must contain a single
+source-backed immediate count assertion or a bare \`throw;\`.
+This *does not* mean Selenium and Playwright external CLR exception
+types are equal. They are not: NoSuchElementException ->
+PlaywrightException, WebDriverTimeoutException -> System.TimeoutException.
+Consequently, **outer source catch chains require manual review**.
+
+The Playwright missing-element catch is guarded by the exact emitted
+JavaScript error marker. It must not swallow unrelated Playwright errors.
+A broad catch, catch filter, catch variable read, arbitrary side
+effects, multiple catches or an unproven click/wait must fail closed
+with no generated active target. All candidates remain
+\`requires_review\`, \`canAutoApply=false\`,
+\`runtimeVerified=false\`.
+
+The stdio tool emits only source path/line/SHA, effect kinds, bounded
+counts and **fixed non-sensitive limitation strings**; no selector,
+source method body, target C#, credentials or browser execution.
+Linux/Windows synthetic stdio regressions check typed facts, blockers,
+stale source rejection and no leakage. Core has independent real same-
+Chrome Selenium/Playwright evidence for recovery, rethrow and non-
+swallowed assertion errors. No private ArBilling tests run.
+MCP \`0.1.0-preview.38\` consumes versioned Core Application NuGet
+from exact Core SHA pinned in both OS CI (no ProjectReference).

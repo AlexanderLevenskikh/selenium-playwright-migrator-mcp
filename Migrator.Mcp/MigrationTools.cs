@@ -9,7 +9,7 @@ namespace Migrator.Mcp;
 public static class MigrationTools
 {
     [McpServerTool(Name = "inspect_pom_action_plan")]
-    [Description("Read-only preview.37 typed Count/Text source-only provenance with narrow pre/pre-wrap and Unicode candidates; unknown CSS and missing-element exception parity require independent review for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
+    [Description("Read-only preview.38 source-proven typed NoSuchElement/Timeout catch and rethrow inventory; catch filters and external CLR exception identity remain unverified; no source or target code exposure for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
     public static string InspectPomActionPlan(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Narrow source C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
@@ -64,6 +64,23 @@ public static class MigrationTools
                 missingElementExceptionType = "Selenium_NoSuchElement_vs_Playwright_PlaywrightException_not_equivalent",
                 fullWebDriverRenderedTextParity = "not_proven_requires_review",
                 missingElementExceptionParity = "not_proven_requires_review"
+            },
+            exceptions = new {
+                sourceTypedCatchClauses = report.Actions.Count(action =>
+                    action.Effect == "source_exception_catch"),
+                sourceBareRethrows = report.Actions.Count(action =>
+                    action.Effect == "exception_rethrow"),
+                sourceOnly = true,
+                runtimeVerified = false,
+                canAutoApply = false,
+                protectedNoSuchElementSubset = "source_attested_immediate_text_only",
+                protectedWebDriverTimeoutSubset = "source_attested_finite_wait_only",
+                missingElementTargetCatch = "narrow_PlaywrightException_with_emitted_missing_marker_review_only",
+                timeoutTargetCatch = "System_TimeoutException_review_only",
+                outsideCatchClrIdentity = "not_equivalent_requires_review",
+                catchFilters = "blocked",
+                genericCatch = "blocked",
+                arbitraryActions = "blocked"
             },
             retry = new {
                 boundedLoops = report.Actions.Count(action => action.Effect == "bounded_retry"),
