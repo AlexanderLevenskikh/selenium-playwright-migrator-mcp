@@ -409,3 +409,32 @@ original source and proper environment. Never publish private data.
    SHA/declared methods/cases `not_run` unless its archives exist.
 
 **Exact mapping rule for wait-prefixed helpers:** inspect the source method and its `WaitForAction` classification. For a no-argument `page.WaitReadyRetry()`, configure the exact reviewed `Methods.SourceMethod = "page.WaitReadyRetry()"` with its source-backed `TargetStatements` and `RequiresReview=true`. Do not assume `ParameterizedMethods` overrides an explicitly recognized wait. If the parser still emits `WAIT_REQUIRES_STATE_ASSERTION`, stop and report the test as blocked rather than declaring conversion success. Keep the documented .NET timeout catch `System.TimeoutException` and runtime-verify the retry failure path.
+
+
+## preview.33 — source-bound cross-file helpers and DOM-absence waits
+
+For private helpers in the same partial Page Object class, Roslyn may now bind
+up to two literal or owning-method \`string\`/\`int\` parameters. Check every
+argument's symbol, exact source path/SHA, ordered effects and both conditional
+arms. Parameter swaps must remain independent; no free-form substitutions,
+dynamic calls, constructors, getters, overrides or side effects are accepted.
+
+\`WebDriverWait.Until(d => d.FindElements(By.literal).Count == 0)\` is
+a *candidate* for \`WaitForSelectorState.Detached\` with an explicit
+source timeout and the lambda receiver resolved to its own IWebDriver
+parameter. This is not a general hidden-loader mapping:
+\`!FindElement(...).Displayed\` requires an existing hidden element and
+**must remain blocked** rather than becoming Playwright Hidden/Detached.
+Other collection predicates, captured drivers, selector guesses, unbounded
+or filtered retries remain blocked. Numeric guards and \`!\`, \`&&\`, \`||\`
+must preserve short-circuit order, polarity and every branch.
+
+Inspect \`actions[].controlFlowPath\`, \`retry\` and \`blockers\`.
+The MCP stdio interface remains read-only and redacted: never expose the
+candidate's raw target C#, selectors or source body. Use trusted Core CLI
+with \`--emit-target\` only in an approved local workspace. The public
+preview.33 synthetic Chromium/NUnit suite proves specific success/failure
+paths and \`System.TimeoutException\` on actual Playwright .NET; its
+source NUnit control uses HttpClient, **not Selenium WebDriver**. Do not
+claim behavioral equivalence, automatic migration or private ArBilling
+validation from equal discovery/TRX or browser smoke alone.
