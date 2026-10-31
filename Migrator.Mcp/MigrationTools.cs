@@ -9,7 +9,7 @@ namespace Migrator.Mcp;
 public static class MigrationTools
 {
     [McpServerTool(Name = "inspect_pom_action_plan")]
-    [Description("Read-only preview.36 typed Count/Text source-only facts and bounded CSS-hidden/normal-whitespace candidate; preserved whitespace and missing-element exception parity remain review-required for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
+    [Description("Read-only preview.37 typed Count/Text source-only provenance with narrow pre/pre-wrap and Unicode candidates; unknown CSS and missing-element exception parity require independent review for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
     public static string InspectPomActionPlan(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Narrow source C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
@@ -56,6 +56,12 @@ public static class MigrationTools
                 measuredCssHiddenSubset = "source_candidate_only_not_runtime_proof",
                 normalWhitespaceSubset = "source_candidate_only_not_runtime_proof",
                 preservedWhitespace = "fail_closed_review_required",
+                preservedWhitespacePartialMode = "mixed_CSS_modes_fail_closed_review_required",
+                measuredSingleLinePreAndPreWrap = "source_candidate_only_not_runtime_proof",
+                measuredNbspZeroWidthCombining = "source_candidate_only_not_runtime_proof",
+                complexUnicodeSpace = "fail_closed_review_required",
+                cssTextTransform = "fail_closed_review_required",
+                missingElementExceptionType = "Selenium_NoSuchElement_vs_Playwright_PlaywrightException_not_equivalent",
                 fullWebDriverRenderedTextParity = "not_proven_requires_review",
                 missingElementExceptionParity = "not_proven_requires_review"
             },
