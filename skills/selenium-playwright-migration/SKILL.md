@@ -548,3 +548,34 @@ the fixed CSS/Unicode coverage limitations and fail-closed
 controls. No private source text, selectors or target code may
 leave MCP stdio. Use actual real Selenium and Playwright on the
 same browser for any semantic equivalence decision.
+
+
+## preview.38 — NoSuchElementException and WebDriverTimeoutException
+
+Source Roslyn syntax and exact symbol types decide whether a C#
+\`catch\` candidate exists. Never replace every Selenium
+\`NoSuchElementException\` with a broad PlaywrightException handler:
+ClickAsync auto-wait failures, navigation, driver disposal, network
+errors and user JavaScript exceptions are not source FindElement
+missing behavior. The only admitted source operation is an immediate
+typed \`FindElement(By.literal).Text\` NUnit assertion. Its projected
+Playwright catch must filter the specific generated
+\`POM_SOURCE_ELEMENT_ABSENT\` marker.
+
+A typed finite \`WebDriverWait.Until\` with source
+\`WebDriverTimeoutException\` can catch System.TimeoutException
+*only for the attested projected wait*. A bare rethrow preserves the
+Playwright exception **object**, not the Selenium CLR type. If an
+external source caller catches NoSuchElementException or
+WebDriverTimeoutException, the migrated API's thrown type is **not
+identical**; do not approve without separate reviewed compatibility
+work. Avoid any hidden runtime Selenium dependency in output.
+
+Source catch filters, catch(Exception), catch variable inspection,
+finally, additional effects, alternate thrown exception instances,
+Click-related NoSuch catches and unknown source operations remain
+blocked with no partial target. MCP \`exceptions\` data reports only
+source-backed counts, fixed limits and review status; it is not
+browser-executed evidence. The trusted Core same-Chrome Linux/Windows
+synthetic benchmark is the test authority, not MCP tool metadata.
+No private source body or selector leaves MCP stdio.
