@@ -1064,3 +1064,22 @@ assertion precedence. The public CLR FullName + assembly filter is
 the only supported review-only C# syntax; a direct catch of the
 non-public TargetClosedException fails CS0122. No private ArBilling
 test, auto-apply or release was performed.
+
+## preview.47-A: OneTimeTearDown browser and Playwright cleanup (source-only)
+
+The new `inspect_pom_one_time_targetclosed_cleanup` opt-in tool reads a captured
+SHA-bound NUnit fixture and proves the exact resource ownership and independently
+guarded `IBrowser.CloseAsync` / `IPlaywright.Dispose` source calls.
+Only the public `PlaywrightException` filtered by exact runtime subtype
+`Microsoft.Playwright.TargetClosedException` **and** assembly identity is
+admitted. Both catch bodies must emit separately guarded, fixed cleanup codes.
+Unexpected exceptions, extra side effects, broad catches, unknown fields and
+unverified control flow remain `blocked`; no partial target or auto-edit.
+
+This tool **does not** assert that Browser.CloseAsync or Dispose really throws.
+Linux/Windows NUnit+Chromium driver-loss evidence is separate; synthetic
+injections are never labeled real API failures. No claim is made that arbitrary
+NUnit OneTimeTearDown failures preserve the primary test error, that unreturned
+driver internals are owned, or that an entire OS has zero leaked children.
+Core is a locally packed versioned NuGet dependency pinned to the exact tested
+feature commit in CI; pin to final merged Core main before accepting MCP.
