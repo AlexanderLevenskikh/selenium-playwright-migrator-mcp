@@ -928,9 +928,12 @@ the `pinnedUpstreamSemantics` metadata from the existing
 source identity is Playwright .NET **1.63.0**, exact Microsoft commit
 `6d5c263758e8b50cfc18d3abb384f251b7deb370`; the matching
 `Browser.CloseAsync` implementation already catches and swallows
-the internal TargetClosed predicate. An extra exact TargetClosed
-catch may be syntactically valid but is **not** a proven runtime
-requirement. `PlaywrightImpl.Dispose` delegates to connection
+the internal TargetClosed predicate. The pinned `IPage.CloseAsync`
+also normally swallows TargetClosed (except its `RunBeforeUnload=true`
+path), while `IBrowserContext.CloseAsync` lacks the same internal guard:
+this is consistent with the real preview.46 Windows Context-positive
+and Page-not-observed evidence. An extra exact TargetClosed catch may
+be syntactically valid but is **not** a proven runtime requirement. `PlaywrightImpl.Dispose` delegates to connection
 disposal; arbitrary callbacks and other exceptions remain unproven.
 
 Do not infer that a missing external exception is a failed test, or
