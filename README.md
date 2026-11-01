@@ -912,3 +912,17 @@ During development the packaged MCP 0.1.0-preview.43 jobs use exact
 temporary Core feature SHA. Re-pin both OS to merged Core main after
 Core CI and evidence complete, run both MCP jobs again and merge
 only if 2/2 jobs succeed on final HEAD.
+
+
+
+### preview.43 final acceptance pin
+The two MCP CI jobs must both checkout exact merged Core main
+\`cf1da08f43f04ff2c162bee86b8092a65f31d9c5\` and consume
+\`SeleniumPlaywrightMigrator.Application\` version 0.1.0-preview.43
+from the resulting local NuGet feed (no cross-repository ProjectReference).
+Core PR #52 passed 18/18 CI on \`cd50b987fa7161021f61d9897117220f05a445d8\`
+with real same-Chrome Selenium/Playwright baseline and
+separate synthetic NUnit failure-injection probes on both OS.
+Do not call the latter a real Playwright.CreateAsync internal
+failure or an OS process-level leak proof; the new endpoint is
+always read-only and review-required.
