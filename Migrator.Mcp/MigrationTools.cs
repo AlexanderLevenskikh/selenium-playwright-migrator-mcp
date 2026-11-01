@@ -8,6 +8,75 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_external_lifecycle_count_contract")]
+    [Description("Read-only preview.42 exact Roslyn IPage/IBrowserContext constructor injection and NUnit fixture setup/cleanup ownership for one PageObject->TestBase->NUnit async Count recovery. Return only source path/line/SHA, exact field names, type/proof flags and blockers. NEVER source C#, selectors, target snippets, browser execution or auto-apply.")]
+    public static string InspectPomExternalLifecycleCountContract(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Source C# directory scoped within MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Exact fully-qualified Page Object source type")] string sourceType,
+        [Description("Exact source Page Object method")] string sourceMethod,
+        [Description("Captured SourceTreeHash from inspect_pom_sources")] string expectedSourceTreeHash,
+        [Description("Explicit actual IPage field name")] string pageField,
+        [Description("Explicit actual IBrowserContext field name")] string contextField,
+        [Description("Explicit actual IBrowser field name")] string browserField,
+        [Description("Explicit actual IPlaywright field name")] string playwrightField,
+        [Description("Source declaration line, 0 selects unique exact method")] int sourceLine = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var plan = engine.PlanPomExternalAsyncLifecycleCountContract(
+            workspace.ResolveSourceScope(sourceDirectory, cancellationToken),
+            sourceType, sourceMethod, expectedSourceTreeHash,
+            pageField, contextField, browserField, playwrightField,
+            sourceLine, cancellationToken);
+        var lifecycle = plan.FixtureLifecycle;
+        var response = new
+        {
+            plan.SchemaVersion, plan.SourceTreeHash, plan.Status,
+            plan.SourceType, plan.SourceMethod, plan.SourceMethodSha256,
+            plan.VerifiedPageReceiver, plan.Blockers, plan.Limitations,
+            plan.RuntimeVerified, plan.CanAutoApply, plan.RequiresReview,
+            plan.Execution,
+            fixture = lifecycle == null ? null : new
+            {
+                lifecycle.FixtureSourcePath, lifecycle.FixtureSourceSha256,
+                lifecycle.PageConstructorSha256,
+                lifecycle.OneTimeSetUpSha256, lifecycle.SetUpSha256,
+                lifecycle.TearDownSha256, lifecycle.OneTimeTearDownSha256,
+                lifecycle.PageField, lifecycle.ContextField,
+                lifecycle.BrowserField, lifecycle.PlaywrightField,
+                lifecycle.FixtureType, lifecycle.ContextFromBrowser,
+                lifecycle.PageFromContext,
+                lifecycle.PageAndContextConstructorInjected,
+                lifecycle.PerTestCleanupInFinally,
+                lifecycle.OneTimeCleanupInFinally
+            },
+            catches = plan.CatchCandidates.Select(c => new
+            {
+                c.CatchSourcePath, c.CatchSourceLine, c.CatchSourceSha256,
+                c.SourceCaughtType, c.TargetCaughtType, c.TargetCatchSha256
+            }),
+            asyncMethods = plan.AsyncMethods.Select(m => new
+            {
+                m.SourcePath, m.SourceLine, m.SourceSha256, m.SourceSymbol,
+                requiresAsyncTask = true, requiresManualReview = true
+            }),
+            safety = new
+            {
+                sourceOnly = true, noTargetCodeOverMcp = true,
+                noBrowserExecution = true, noTargetSeleniumDependency = true,
+                canAutoApply = false, runtimeVerified = false,
+                completeProjectEquivalence = false,
+                failedOneTimeSetUpCleanupProven = false,
+                externalAssembliesProven = false
+            }
+        };
+        var json = JsonSerializer.Serialize(response, JsonOptions);
+        if (json.Length > 150_000)
+            throw new InvalidOperationException(
+                "POM_EXTERNAL_LIFECYCLE_TOO_LARGE: inspect exactly one method.");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_external_async_count_contract")]
     [Description("Read-only preview.41 opt-in source-backed NUnit/TestBase async Count contract: exact PageObject method, captured source SHA and explicitly named constructor-bound real Microsoft.Playwright.IPage field. Returns only source paths/lines/SHA and typed exception/async metadata. NEVER source bodies, target C# signatures/statements, private selectors, browser claims or auto-apply.")]
     public static string InspectPomExternalAsyncCountContract(
