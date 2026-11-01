@@ -868,3 +868,15 @@ Core public same-Chrome Linux/Windows browser jobs, not MCP metadata,
 are responsible for real failure/success cleanup evidence. ArBilling
 not_run. CI uses versioned NuGet 0.1.0-preview.42 and must pin final
 merged Core main SHA on both OS before MCP merges.
+
+
+
+### preview.42 final cross-repository acceptance
+Both Linux and Windows MCP workflow jobs now pin exact **merged**
+Core \`e937f078485e9c55b3a28d50fc73d0c2aaa47c3d\`
+with versioned \`SeleniumPlaywrightMigrator.Application\`
+0.1.0-preview.42 NuGet, never a ProjectReference. The new MCP
+negative protocol controls block a second SourcePage constructor
+invocation and unexpected Context.CloseAsync outside the attested
+lifecycle; all partial candidates remain empty. Source/target browser
+parity is only proven for public synthetic tests in Core.

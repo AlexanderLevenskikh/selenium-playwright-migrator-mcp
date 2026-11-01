@@ -120,6 +120,10 @@ def main():
                  "finally {}"))
             neg(fixture.replace("page = new SourcePage(driver,Page,Context);",
                  "page = new SourcePage(driver,Page,null!);"))
+            neg(fixture.replace("page = new SourcePage(driver,Page,Context);",
+                 "page = new SourcePage(driver,Page,Context); _ = new SourcePage(driver,Page,Context);"))
+            neg(fixture.replace("Page = await Context.NewPageAsync();",
+                 "Page = await Context.NewPageAsync(); await Context.CloseAsync();"))
             neg(fixture.replace("finally { PW.Dispose(); }","finally {}"))
             neg(fixture.replace("Page = await Context.NewPageAsync();",
                  "Page = await Context.NewPageAsync(); Page = await Context.NewPageAsync();"))
