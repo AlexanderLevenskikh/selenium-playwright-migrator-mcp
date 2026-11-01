@@ -9,7 +9,7 @@ namespace Migrator.Mcp;
 public static class MigrationTools
 {
     [McpServerTool(Name = "inspect_pom_typed_target_closed_teardown")]
-    [Description("Read-only preview.46 source-bound exact real Microsoft.Playwright.TargetClosedException in NUnit TearDown for IPage.CloseAsync and owned IBrowserContext.CloseAsync in finally; fixed guarded diagnostic codes. Requires immutable source SHA and four explicit field identifiers. Does not execute browsers, leak source/target C# or claim Linux/Windows runtime equivalence.")]
+    [Description("Read-only preview.46 source-bound public PlaywrightException filtered by exact CLR FullName and Playwright assembly to non-public TargetClosedException in NUnit TearDown for IPage.CloseAsync and owned IBrowserContext.CloseAsync in finally; fixed guarded diagnostic codes. Requires immutable source SHA and four explicit field identifiers. Does not execute browsers, leak source/target C# or claim Linux/Windows runtime equivalence.")]
     public static string InspectPomTypedTargetClosedTearDown(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Source C# scope relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
@@ -23,7 +23,7 @@ public static class MigrationTools
         [Description("Source method declaration line; 0 requires uniqueness")] int sourceLine=0,
         CancellationToken cancellationToken=default)
     {
-        var plan=engine.PlanPomTypedTargetClosedTearDown(
+        var plan=engine.PlanPomTargetClosedClrTearDown(
             workspace.ResolveSourceScope(sourceDirectory,cancellationToken),
             sourceType,sourceMethod,expectedSourceTreeHash,
             pageField,contextField,browserField,playwrightField,
@@ -49,10 +49,11 @@ public static class MigrationTools
                 f.SafeSecondaryDiagnosticCodes,
                 f.DiagnosticSinkFailurePreservesPrimary,
                 f.SourceSinkNotRebound,f.FaultWitnessSourceOnly,
-                f.TypedTargetClosedTearDownSourceOnly,
-                f.PageTargetClosedCatchGuarded,
-                f.ContextTargetClosedCatchGuarded,
-                f.TestFailurePrecedenceOnlyForTargetClosed
+                f.TargetClosedClrTearDownSourceOnly,
+                f.PageTargetClosedClrFilterGuarded,
+                f.ContextTargetClosedClrFilterGuarded,
+                f.TestFailurePrecedenceOnlyForTargetClosed,
+                f.PublicCaughtType,f.ExactRuntimeClrSubtype
             },
             catches=plan.CatchCandidates.Select(c=>new{
                 c.CatchSourcePath,c.CatchSourceLine,c.CatchSourceSha256,
@@ -63,7 +64,8 @@ public static class MigrationTools
                 requiresManualReview=true
             }),
             scope=new{
-                sourceOnly=true,typedPlaywrightExceptionOnly=true,
+                sourceOnly=true,publicPlaywrightExceptionExactClrSubtypeFilterOnly=true,
+                nonPublicDirectTargetClosedCatchRejected=true,
                 unrelatedCleanupErrorsNotProven=true,
                 oneTimeTearDownFailuresNotProven=true,
                 runtimeObservedWindowsTargetClosed=false,
