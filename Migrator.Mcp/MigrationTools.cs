@@ -8,6 +8,70 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_failure_atomic_count_contract")]
+    [Description("Read-only preview.43 source-attested failure-atomic NUnit OneTimeSetUp/SetUp rollback. Exact PageObject→TestBase→NUnit Count, four explicit Playwright resource fields and immutable source SHA required. Reports only paths/lines/SHA, typed exception metadata and rollback flags. NEVER original source, locators, target C#, execution or auto-approval.")]
+    public static string InspectPomFailureAtomicCountContract(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Captured C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Fully qualified Page Object source type")] string sourceType,
+        [Description("Exact source Page Object method")] string sourceMethod,
+        [Description("Captured SourceTreeHash from inspect_pom_sources")] string expectedSourceTreeHash,
+        [Description("Explicit IPage field identifier")] string pageField,
+        [Description("Explicit IBrowserContext field identifier")] string contextField,
+        [Description("Explicit IBrowser field identifier")] string browserField,
+        [Description("Explicit IPlaywright field identifier")] string playwrightField,
+        [Description("Declaration line, 0 requires unique exact method")] int sourceLine = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var plan = engine.PlanPomExternalFailureAtomicCountContract(
+            workspace.ResolveSourceScope(sourceDirectory,cancellationToken),
+            sourceType,sourceMethod,expectedSourceTreeHash,
+            pageField,contextField,browserField,playwrightField,
+            sourceLine,cancellationToken);
+        var proof = plan.FixtureLifecycle;
+        var json = JsonSerializer.Serialize(new
+        {
+            plan.SchemaVersion, plan.SourceTreeHash, plan.Status,
+            plan.SourceType, plan.SourceMethod, plan.SourceMethodSha256,
+            plan.VerifiedPageReceiver, plan.Blockers, plan.Limitations,
+            plan.RuntimeVerified, plan.CanAutoApply, plan.RequiresReview,
+            plan.Execution,
+            fixture = proof == null ? null : new {
+                proof.FixtureSourcePath,proof.FixtureSourceSha256,
+                proof.PageConstructorSha256,proof.OneTimeSetUpSha256,
+                proof.SetUpSha256,proof.TearDownSha256,
+                proof.OneTimeTearDownSha256,
+                proof.PageField,proof.ContextField,proof.BrowserField,
+                proof.PlaywrightField,proof.FixtureType,
+                proof.ContextFromBrowser,proof.PageFromContext,
+                proof.PageAndContextConstructorInjected,
+                proof.PerTestCleanupInFinally,proof.OneTimeCleanupInFinally,
+                proof.OneTimeSetUpFailureCleanup,proof.SetUpFailureCleanup,
+                proof.PrimaryExceptionRethrown,
+                proof.CleanupFailuresDoNotReplacePrimary
+            },
+            catches = plan.CatchCandidates.Select(c=>new {
+                c.CatchSourcePath,c.CatchSourceLine,c.CatchSourceSha256,
+                c.SourceCaughtType,c.TargetCaughtType,c.TargetCatchSha256
+            }),
+            asyncMethods = plan.AsyncMethods.Select(m=>new {
+                m.SourcePath,m.SourceLine,m.SourceSha256,m.SourceSymbol,
+                requiresAsyncTask=true,requiresManualReview=true
+            }),
+            safety = new {
+                sourceOnly=true,failClosed=true,noTargetCodeOverMcp=true,
+                noBrowserExecution=true,noRuntimeSeleniumTargetDependency=true,
+                canAutoApply=false,runtimeVerified=false,
+                secondaryCleanupErrorsSuppressedBySource=true,
+                unreturnedExternalApiResourcesNotProven=true,
+                arbitraryCustomerProjectsNotProven=true
+            }
+        },JsonOptions);
+        if(json.Length>150_000)
+            throw new InvalidOperationException("POM_ATOMIC_SCOPE_TOO_LARGE: choose one source method.");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_external_lifecycle_count_contract")]
     [Description("Read-only preview.42 exact Roslyn IPage/IBrowserContext constructor injection and NUnit fixture setup/cleanup ownership for one PageObject->TestBase->NUnit async Count recovery. Return only source path/line/SHA, exact field names, type/proof flags and blockers. NEVER source C#, selectors, target snippets, browser execution or auto-apply.")]
     public static string InspectPomExternalLifecycleCountContract(
