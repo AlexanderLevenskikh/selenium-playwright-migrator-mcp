@@ -8,6 +8,72 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_safe_cleanup_diagnostics")]
+    [Description("Read-only source-backed preview.44 safe diagnostic codes for secondary NUnit setup cleanup errors. Requires exact source tree SHA, PageObject method and four explicit IPage/IBrowserContext/IBrowser/IPlaywright fields. Never returns user source, selectors, exception messages, stack traces, target C#, host process details, or browser claims.")]
+    public static string InspectPomSafeCleanupDiagnostics(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Captured C# source directory inside MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Exact fully qualified Page Object type")] string sourceType,
+        [Description("Exact Page Object method")] string sourceMethod,
+        [Description("SourceTreeHash from inspect_pom_sources")] string expectedSourceTreeHash,
+        [Description("Exact IPage field")] string pageField,
+        [Description("Exact IBrowserContext field")] string contextField,
+        [Description("Exact IBrowser field")] string browserField,
+        [Description("Exact IPlaywright field")] string playwrightField,
+        [Description("Exact source declaration line, 0 requires unique method")] int sourceLine = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var p = engine.PlanPomSafeCleanupDiagnosticsContract(
+            workspace.ResolveSourceScope(sourceDirectory,cancellationToken),
+            sourceType,sourceMethod,expectedSourceTreeHash,
+            pageField,contextField,browserField,playwrightField,
+            sourceLine,cancellationToken);
+        var proof=p.FixtureLifecycle;
+        var json=JsonSerializer.Serialize(new
+        {
+            p.SchemaVersion,p.SourceTreeHash,p.Status,p.SourceType,
+            p.SourceMethod,p.SourceMethodSha256,p.VerifiedPageReceiver,
+            p.Blockers,p.Limitations,p.RuntimeVerified,p.CanAutoApply,
+            p.RequiresReview,p.Execution,
+            fixture=proof==null ? null : new
+            {
+                proof.FixtureSourcePath,proof.FixtureSourceSha256,
+                proof.PageConstructorSha256,
+                proof.OneTimeSetUpSha256,proof.SetUpSha256,
+                proof.TearDownSha256,proof.OneTimeTearDownSha256,
+                proof.ContextFromBrowser,proof.PageFromContext,
+                proof.PageAndContextConstructorInjected,
+                proof.OneTimeSetUpFailureCleanup,proof.SetUpFailureCleanup,
+                proof.PrimaryExceptionRethrown,
+                proof.CleanupFailuresDoNotReplacePrimary,
+                proof.SafeSecondaryDiagnosticCodes,
+                proof.DiagnosticSinkFailurePreservesPrimary,
+                proof.DiagnosticSurface
+            },
+            catches=p.CatchCandidates.Select(c=>new
+            {
+                c.CatchSourcePath,c.CatchSourceLine,c.CatchSourceSha256,
+                c.SourceCaughtType,c.TargetCaughtType,c.TargetCatchSha256
+            }),
+            asyncMethods=p.AsyncMethods.Select(m=>new
+            {
+                m.SourcePath,m.SourceLine,m.SourceSha256,m.SourceSymbol,
+                requiresManualReview=true
+            }),
+            safety=new
+            {
+                sourceOnly=true,localConstantCodesOnly=true,
+                noExceptionBodiesOrMessages=true,noTargetCodeOverMcp=true,
+                noRuntimeExecution=true,autoApply=false,
+                realCreateAsyncFailureProvenByMcp=false,
+                wholeOsProcessLeakProven=false
+            }
+        },JsonOptions);
+        if(json.Length>150_000)
+            throw new InvalidOperationException("POM_SAFE_DIAGNOSTIC_SCOPE_TOO_LARGE");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_failure_atomic_count_contract")]
     [Description("Read-only preview.43 source-attested failure-atomic NUnit OneTimeSetUp/SetUp rollback. Exact PageObject→TestBase→NUnit Count, four explicit Playwright resource fields and immutable source SHA required. Reports only paths/lines/SHA, typed exception metadata and rollback flags. NEVER original source, locators, target C#, execution or auto-approval.")]
     public static string InspectPomFailureAtomicCountContract(

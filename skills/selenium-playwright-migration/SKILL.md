@@ -758,3 +758,48 @@ separate synthetic NUnit failure-injection probes on both OS.
 Do not call the latter a real Playwright.CreateAsync internal
 failure or an OS process-level leak proof; the new endpoint is
 always read-only and review-required.
+
+
+
+## preview.44-A — source-backed protected fixed-code diagnostics
+
+The opt-in read-only \`inspect_pom_safe_cleanup_diagnostics\`
+requires exact captured SourceTreeHash, source PageObject type/method,
+and explicit Page/Context/Browser/IPlaywright field identifiers.
+It only admits previously source-verified failure-atomic NUnit setup
+rollback when every secondary cleanup catch records its **own fixed**
+error code through exact System.Console.Error.WriteLine(string)
+and independently catches any diagnostic sink failure. The four
+allowlisted codes are derived from exact source Roslyn symbol identity:
+PAGE_CLOSE, CONTEXT_CLOSE, BROWSER_CLOSE, PLAYWRIGHT_DISPOSE.
+No exception object, dynamic content, stack, message, selector,
+private source or generated target snippet is allowed.
+
+Prior preview.40–43 tools retain their blocking behavior.
+MCP only returns source SHA/path/line, boolean proof facts,
+generic limitations/blockers, never C# or runtime/PID evidence.
+\`CanAutoApply=false\`, \`RuntimeVerified=false\`.
+Real Playwright.CreateAsync driver-resolution failure evidence
+uses separate public Core CI on Linux and Windows; do not claim that
+MCP exercises a browser or that a bounded observed OS Chrome PID
+audit proves whole-system leak freedom.
+
+Package version 0.1.0-preview.44 uses a Core NuGet package pinned
+to an exact Core SHA on both Linux/Windows jobs; the feature SHA is
+temporary until Core merges. Private ArBilling not_run.
+
+
+
+### preview.44 final Core SHA pin and evidence limits
+MCP Ubuntu and Windows workflows both checkout exact merged Core main
+\`71cbc8c11762ba259b329269bdf81f7876bbd1ed\`, building
+versioned Core Application 0.1.0-preview.44 through NuGet, with
+no cross-repository ProjectReference. Core PR #53 is merged with
+20/20 CI SUCCESS on source feature commit
+\`8bffb43e88c8548bc1a7fdaedd7ded02bc108afe\`.
+The real Playwright.CreateAsync failure is induced via missing driver
+search path and is distinguished from synthetic secondary cleanup
+exceptions; OS process evidence covers only observed exact Chrome
+binary and Playwright node-driver PIDs. Do not infer internal
+Playwright leak freedom, general customer-project behavior or
+production auto-application.
