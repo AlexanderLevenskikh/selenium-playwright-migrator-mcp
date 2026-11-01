@@ -712,3 +712,35 @@ negative protocol controls block a second SourcePage constructor
 invocation and unexpected Context.CloseAsync outside the attested
 lifecycle; all partial candidates remain empty. Source/target browser
 parity is only proven for public synthetic tests in Core.
+
+
+
+## preview.43-A — source-only failure-atomic setup cleanup
+
+New read-only \`inspect_pom_failure_atomic_count_contract\` requires a
+captured exact SourceTreeHash, one fully qualified Page Object method,
+and four **explicit** Page/Context/Browser/IPlaywright field identifiers.
+It proves the exact Playwright source initialization in both NUnit
+OneTimeSetUp and per-test SetUp occurs inside \`try\`, followed by
+reverse-order null-guarded independent cleanup attempts and a terminal
+bare rethrow in the sole \`catch\` block. Cleanup failures are deliberately
+suppressed, so the original failure has precedence, even when two cleanup
+attempts throw. No cleanup failure telemetry is inferred or transmitted.
+
+The full older source-proven same-Context constructor, Page Object,
+TestBase, NUnit teardown and exception contract is still mandatory.
+Unknown hooks/receivers, missing guards, lost rethrows, extra effects,
+stale hashes, and ambiguous call paths are blocked with **no partial**
+candidate. The preview.40–42 tools remain unchanged. Source bodies,
+selectors, target C#, exception messages and runtime browser operations
+never leave MCP stdio. Trusted local Core CLI requires \`--emit-target\`
+to reveal C# snippets for manual review. \`CanAutoApply=false\`,
+\`RuntimeVerified=false\`. Failed external APIs might never return an
+owned resource; cleanup of such internal resources is not proven.
+Real success/failure and leak checks are limited to public Core
+Chromium CI, not to the MCP result or private ArBilling.
+
+During development the packaged MCP 0.1.0-preview.43 jobs use exact
+temporary Core feature SHA. Re-pin both OS to merged Core main after
+Core CI and evidence complete, run both MCP jobs again and merge
+only if 2/2 jobs succeed on final HEAD.
