@@ -787,3 +787,19 @@ audit proves whole-system leak freedom.
 Package version 0.1.0-preview.44 uses a Core NuGet package pinned
 to an exact Core SHA on both Linux/Windows jobs; the feature SHA is
 temporary until Core merges. Private ArBilling not_run.
+
+
+
+### preview.44 final Core SHA pin and evidence limits
+MCP Ubuntu and Windows workflows both checkout exact merged Core main
+\`71cbc8c11762ba259b329269bdf81f7876bbd1ed\`, building
+versioned Core Application 0.1.0-preview.44 through NuGet, with
+no cross-repository ProjectReference. Core PR #53 is merged with
+20/20 CI SUCCESS on source feature commit
+\`8bffb43e88c8548bc1a7fdaedd7ded02bc108afe\`.
+The real Playwright.CreateAsync failure is induced via missing driver
+search path and is distinguished from synthetic secondary cleanup
+exceptions; OS process evidence covers only observed exact Chrome
+binary and Playwright node-driver PIDs. Do not infer internal
+Playwright leak freedom, general customer-project behavior or
+production auto-application.
