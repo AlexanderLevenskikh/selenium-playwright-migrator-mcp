@@ -72,12 +72,14 @@ def main():
                 p=inspect(method,original)
                 proof=p["fixture"]
                 expect(p["status"]=="requires_review"
-                    and p["schemaVersion"]=="migrator-pom-typed-target-closed-teardown/v1"
+                    and p["schemaVersion"]=="migrator-pom-target-closed-clr-teardown/v1"
                     and p["sourceTreeHash"]==original and proof
-                    and proof["typedTargetClosedTearDownSourceOnly"]
-                    and proof["contextTargetClosedCatchGuarded"]
-                    and proof["pageTargetClosedCatchGuarded"]
+                    and proof["targetClosedClrTearDownSourceOnly"]
+                    and proof["contextTargetClosedClrFilterGuarded"]
+                    and proof["pageTargetClosedClrFilterGuarded"]
                     and proof["testFailurePrecedenceOnlyForTargetClosed"]
+                    and proof["publicCaughtType"]=="Microsoft.Playwright.PlaywrightException"
+                    and proof["exactRuntimeClrSubtype"]=="Microsoft.Playwright.TargetClosedException"
                     and len(proof["contextTargetClosedCatchSha256"])==64
                     and len(proof["pageTargetClosedCatchSha256"])==64
                     and proof["pageTargetClosedCatchLine"]>0
@@ -104,17 +106,30 @@ def main():
                 "Unknown Context receiver accepted")
             fixture=sources["NUnitFixture.cs"]
             cases=[
-                fixture.replace("catch (Microsoft.Playwright.TargetClosedException)",
-                    "catch (System.Exception)"),
-                fixture.replace("catch (Microsoft.Playwright.TargetClosedException)",
-                    "catch (Microsoft.Playwright.PlaywrightException)"),
+                fixture.replace(
+                    "catch (Microsoft.Playwright.PlaywrightException closed)",
+                    "catch (System.Exception closed)"),
+                fixture.replace(
+                    '"Microsoft.Playwright.TargetClosedException"',
+                    '"Microsoft.Playwright.PlaywrightException"'),
+                fixture.replace(
+                    "closed.GetType().FullName","closed.Message"),
+                fixture.replace(
+                    "closed.GetType().Assembly ==",
+                    "typeof(System.String).Assembly =="),
+                fixture.replace(
+                    "typeof(Microsoft.Playwright.IPage).Assembly",
+                    "typeof(System.String).Assembly"),
                 fixture.replace("await Context.CloseAsync();",
                     "await Page.CloseAsync();"),
                 fixture.replace("MIGRATOR_CLEANUP_CONTEXT_CLOSE_FAILED",
                     "PRIVATE_UNTRUSTED_VALUE"),
                 fixture.replace(
-                    "catch (Microsoft.Playwright.TargetClosedException)",
-                    "catch (Microsoft.Playwright.TargetClosedException x) when (x.Message.Length>0)")
+                    "closed.GetType().FullName ==",
+                    "System.DateTime.Now.ToString() =="),
+                fixture.replace(
+                    "closed.GetType().Assembly ==",
+                    "closed.GetType().FullName ==")
             ]
             for item in cases:
                 expect(item!=fixture,"Negative source mutation ineffective")
