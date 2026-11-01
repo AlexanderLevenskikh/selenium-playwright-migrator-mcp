@@ -8,6 +8,57 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_external_async_count_contract")]
+    [Description("Read-only preview.41 opt-in source-backed NUnit/TestBase async Count contract: exact PageObject method, captured source SHA and explicitly named constructor-bound real Microsoft.Playwright.IPage field. Returns only source paths/lines/SHA and typed exception/async metadata. NEVER source bodies, target C# signatures/statements, private selectors, browser claims or auto-apply.")]
+    public static string InspectPomExternalAsyncCountContract(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Captured C# source scope relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Exact source Page Object fully qualified type")] string sourceType,
+        [Description("Exact source Page Object method")] string sourceMethod,
+        [Description("Exact SourceTreeHash from inspect_pom_sources")] string expectedSourceTreeHash,
+        [Description("Explicit source-typed real Playwright IPage field identifier; no default or guess")] string explicitPageReceiver,
+        [Description("Optional declaration line to disambiguate overloads")] int sourceLine = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var report = engine.PlanPomExternalAsyncCountContract(
+            workspace.ResolveSourceScope(sourceDirectory, cancellationToken),
+            sourceType, sourceMethod, expectedSourceTreeHash,
+            explicitPageReceiver, sourceLine, cancellationToken);
+        var payload = new
+        {
+            report.SchemaVersion, report.SourceTreeHash, report.Status,
+            report.SourceType, report.SourceMethod, report.SourceMethodSha256,
+            report.VerifiedPageReceiver, report.Blockers, report.Limitations,
+            report.RuntimeVerified, report.CanAutoApply, report.RequiresReview,
+            report.Execution,
+            catches = report.CatchCandidates.Select(c => new
+            {
+                c.CatchSourcePath, c.CatchSourceLine, c.CatchSourceSha256,
+                c.SourceCaughtType, c.TargetCaughtType,
+                c.SourceCallerSymbol, c.CallerChain, c.TargetCatchSha256
+            }),
+            asyncMethods = report.AsyncMethods.Select(m => new
+            {
+                m.SourcePath, m.SourceLine, m.SourceSha256, m.SourceSymbol,
+                requiresAsyncTask = true, requiresManualReview = true
+            }),
+            adapter = new
+            {
+                exactSourceOnly = true, snippetOnly = true,
+                targetStatementsVisibleOverMcp = false,
+                targetAsyncSignaturesVisibleOverMcp = false,
+                targetSeleniumDependency = false, canAutoApply = false,
+                runtimeVerified = false, externalClrIdentityPreserved = false,
+                constructorInjectionRuntimeVerified = false
+            }
+        };
+        var json = JsonSerializer.Serialize(payload, JsonOptions);
+        if (json.Length > 150_000)
+            throw new InvalidOperationException(
+                "POM_EXTERNAL_ASYNC_COUNT_TOO_LARGE: inspect one method at a time.");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_external_exception_contract")]
     [Description("Read-only preview.40 source-backed external Selenium NoSuchElement/Timeout catch clause contract for one exact Page Object method and captured source SHA. Returns only outer caller path/line/SHA, typed exception facts, target clause SHA and blockers; NEVER source bodies, private selectors, target clause C# or runtime verification. Must not auto-apply.")]
     public static string InspectPomExternalExceptionContract(

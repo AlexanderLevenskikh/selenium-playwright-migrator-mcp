@@ -636,3 +636,33 @@ Source absence in the captured tree is NOT evidence that callers in
 other assemblies are safe. The source CLR NoSuchElementException and
 WebDriverTimeoutException types are NOT preserved by PlaywrightException
 and System.TimeoutException. Unknown remains blocked/review_required.
+
+## preview.41-A — exact async NUnit/TestBase Count and IPage evidence
+
+`inspect_pom_external_async_count_contract` is a separate opt-in,
+strictly source-backed and read-only proposal. It requires the exact
+SourceTreeHash, one Page Object local typed NoSuch/Timeout rethrow,
+one synchronous TestBase forwarder, an NUnit [Test] outer typed
+FindElements.Count equality, and an explicitly named **real**
+Microsoft.Playwright.IPage readonly field assigned from an IPage-typed
+constructor parameter. Missing target binding, filters, additional paths,
+dynamic dispatch and stale hashes are blocked with zero target.
+
+Core locally proposes three review-only async Task method conversions
+and a Count catch clause, never automatically edits code. MCP reveals
+only source paths/lines/SHA, typed exception facts and required async
+conversions; no target code, source bodies, selectors or browser execution.
+Core CLI shows snippets only with explicit --emit-target. The historical
+preview.40 API still blocks nonempty catches. Real Linux/Windows Chrome
+parity requires separate Core CI evidence; same browser context and
+constructor injection are not inferred from type identity. Private
+ArBilling not_run. CI must re-pin both MCP platforms to merged Core main
+before merge.
+
+### preview.41 final Core pin and additional fail-closed case
+
+Both MCP Linux and Windows workflows use exact merged Core main
+`594ccf9cab2c4d871958c0c2eb56594cc628e146` (`SeleniumPlaywrightMigrator.Application` 0.1.0-preview.41).
+A call from a constructor into the selected TestBase chain is not
+captured as a normal method caller and must return `blocked`, zero
+partial candidates. All proposals remain review-only; ArBilling not_run.
