@@ -1083,3 +1083,27 @@ NUnit OneTimeTearDown failures preserve the primary test error, that unreturned
 driver internals are owned, or that an entire OS has zero leaked children.
 Core is a locally packed versioned NuGet dependency pinned to the exact tested
 feature commit in CI; pin to final merged Core main before accepting MCP.
+
+
+## preview.48-A — strict Playwright 1.63 upstream close semantics
+
+The read-only `inspect_pom_one_time_targetclosed_cleanup` tool now
+exposes a strictly version-scoped `pinnedUpstreamSemantics` block
+(**Microsoft.Playwright 1.63.0**, upstream Git commit
+`6d5c263758e8b50cfc18d3abb384f251b7deb370`). Its boolean source
+ownership/catch guard **does not mean** the catch will be reached.
+The pinned source of `IBrowser.CloseAsync` already catches and swallows
+`DriverMessages.IsTargetClosedError` internally. `IPlaywright.Dispose`
+delegates to the internal connection cleanup, including callbacks and
+notification of pending tasks; no actual external Dispose TargetClosed
+exception was demonstrated in preview.47. Unknown callback/cleanup
+exceptions remain `blocked`. The upstream source oracle runs with
+exact Git commit, file blob checks and negative controls independently
+in Core Linux/Windows CI. Actual Chromium-root termination is probed
+separately, never called a synthetic exception.
+
+This corrects interpretation of preview.47 evidence without changing
+its source-only `requires_review`, `CanAutoApply=false` contract or
+the historical preview.40–46 tools. No browser execution or private
+source code appears in MCP results. Exact NuGet pin to final merged
+Core is required before MCP PR merge.
