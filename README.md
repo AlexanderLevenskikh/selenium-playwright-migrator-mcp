@@ -1049,3 +1049,18 @@ assert runtime Windows/Linux behavior. Full real Chrome NUnit evidence
 is independently required from Core CI, with observed Windows positives
 and Linux `not_observed` reported separately, never inferred. The
 tool remains `CanAutoApply=false` and unknown paths are blocked.
+
+
+### preview.46-A merged Core acceptance pin and OS limits
+Both Linux and Windows MCP CI workflows use exact merged Core main
+`166e8e96854c1a6328355dacee3adaff3657cb86` and the `0.1.0-preview.46` versioned NuGet
+Application dependency, never an inter-repository ProjectReference.
+Core #55 passed 24/24 jobs at feature HEAD
+`a5e76c40838654eb9924ec7a669af4f1ba1c49b6`.
+Public NUnit Chrome-for-Testing evidence confirms an actual
+TargetClosed handler outcome on Windows and `not_observed` on Linux
+for the measured exact cleanup code, preserving primary NUnit
+assertion precedence. The public CLR FullName + assembly filter is
+the only supported review-only C# syntax; a direct catch of the
+non-public TargetClosedException fails CS0122. No private ArBilling
+test, auto-apply or release was performed.
