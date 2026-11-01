@@ -774,3 +774,30 @@ handler were dropped. The comparison deliberately does not
 auto-apply or synthesize an exception adapter. NuGet version
 \`0.1.0-preview.39\` pins exact Core SHA on both platforms.
 Private ArBilling remains not_run.
+
+
+## preview.40-A — source-only external exception catch contract
+
+Core now offers a separate, read-only, opt-in external exception catch
+contract proposal for one exact Page Object method. All PlanPomActions
+blocking behavior from preview.39 remains unchanged. A proposal requires
+a single source-typed inner NoSuchElementException/WebDriverTimeoutException
+rethrow, fully projectable FindElement.Text or finite WebDriverWait, one
+symbol-resolved synchronous TestBase chain, and exactly one outer NUnit
+catch with no filter/finally and no other actions.
+
+The only output is a reviewed C# catch CLAUSE, never an invented test or
+a general Selenium exception adapter. External filters, used exception
+variables, broad/mismatched catches, additional actions, multiple
+propagation paths, dynamic dispatch and rethrow beyond the boundary
+fail closed. An accepted catch is review-only and does not preserve
+external Selenium CLR exception identity.
+
+MCP exposes inspect_pom_external_exception_contract as strictly
+read-only source SHA/line and exception-type metadata. It deliberately
+omits TargetCatchClause/source bodies/locators and can never run tests,
+auto-apply a snippet, or certify browser parity. Linux/Windows stdio
+tests independently check positive and negative source graphs, stale
+snapshots and redaction. MCP package 0.1.0-preview.40 consumes versioned
+Core NuGet from an exact pinned SHA on both operating systems.
+Private ArBilling not_run.

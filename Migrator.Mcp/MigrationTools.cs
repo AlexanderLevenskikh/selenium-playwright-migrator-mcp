@@ -8,6 +8,52 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_external_exception_contract")]
+    [Description("Read-only preview.40 source-backed external Selenium NoSuchElement/Timeout catch clause contract for one exact Page Object method and captured source SHA. Returns only outer caller path/line/SHA, typed exception facts, target clause SHA and blockers; NEVER source bodies, private selectors, target clause C# or runtime verification. Must not auto-apply.")]
+    public static string InspectPomExternalExceptionContract(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Narrow captured C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Exact fully qualified Page Object source type")] string sourceType,
+        [Description("Exact Page Object source method name")] string sourceMethod,
+        [Description("SourceTreeHash from inspect_pom_sources")] string expectedSourceTreeHash,
+        [Description("Source declaration line to disambiguate overloads (0 = any)")] int sourceLine = 0,
+        CancellationToken cancellationToken = default)
+    {
+        var report = engine.PlanPomExternalExceptionContract(
+            workspace.ResolveSourceScope(sourceDirectory, cancellationToken),
+            sourceType, sourceMethod, expectedSourceTreeHash,
+            sourceLine, cancellationToken);
+        var payload = new
+        {
+            report.SchemaVersion, report.SourceTreeHash, report.Status,
+            report.SourceType, report.SourceMethod, report.SourceMethodSha256,
+            report.Blockers, report.Limitations,
+            report.RuntimeVerified, report.CanAutoApply, report.RequiresReview,
+            report.Execution,
+            catches = report.CatchCandidates.Select(c => new
+            {
+                c.CatchSourcePath, c.CatchSourceLine, c.CatchSourceSha256,
+                c.SourceCaughtType, c.TargetCaughtType, c.SourceCallerSymbol,
+                c.CallerChain, c.TargetCatchSha256
+            }),
+            adapter = new {
+                snippetOnly = true,
+                externalClrExceptionIdentityPreserved = false,
+                sourceOnly = true,
+                requiresManualReview = true,
+                canAutoApply = false,
+                runtimeVerified = false,
+                inferredExternalCode = false,
+                targetClauseVisibleOverMcp = false
+            }
+        };
+        var json = JsonSerializer.Serialize(payload, JsonOptions);
+        if (json.Length > 150_000)
+            throw new InvalidOperationException(
+                "POM_EXTERNAL_EXCEPTION_CONTRACT_TOO_LARGE: inspect one method at a time.");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_action_plan")]
     [Description("Read-only preview.39 exact source-symbol caller chains across Page Objects/TestBase/NUnit; external Selenium exception catches, filters, dynamic/unsupported edges block target candidates; only in-scope static proof, never browser certification for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
     public static string InspectPomActionPlan(
