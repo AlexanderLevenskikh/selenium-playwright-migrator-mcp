@@ -848,3 +848,28 @@ Fault-witness metadata is source-only: it never certifies real CloseAsync/
 Dispose failures, runtime process ancestry, absence of orphan processes,
 or external Console.Error changes. Actual Chromium and sampled process
 ancestry results belong to Core public CI evidence, not MCP output.
+
+
+## preview.46-A — exact typed NUnit TargetClosed cleanup
+
+New source-only `inspect_pom_typed_target_closed_teardown` requires the
+immutable source SHA, exact PageObject method, and four explicit typed
+IPage/IBrowserContext/IBrowser/IPlaywright source fields. Roslyn proves
+that one NUnit [TearDown] catches only the real assembly-typed
+Microsoft.Playwright.TargetClosedException from Page.CloseAsync and
+Context.CloseAsync (context in finally), with separately guarded fixed
+diagnostic codes. Broad catches, filters, wrong receivers, extra side
+effects, missing source/unknown lifecycle and stale SHA are blocked.
+No auto-apply or output of source/target C#, selectors, exception messages
+or runtime PID data over MCP. Earlier preview.40–45 gates unchanged.
+The per-test failure is preserved only for those exact cleanup errors;
+OneTimeTearDown and other exceptions are not asserted equivalent.
+
+Core has a distinct real NUnit Playwright driver-disconnect benchmark
+on same Chrome-for-Testing Linux and Windows; an OS-positive must never
+be inferred from this read-only MCP source result. Windows TargetClosed
+observations and Linux not_observed need independent CI receipts.
+Versioned MCP package 0.1.0-preview.46 uses the exact Core NuGet
+Application version with no cross-repo ProjectReference; the current
+Core feature SHA CI pin must be replaced by merged Core main SHA and
+the full 2/2 CI repeated before MCP merge. Private ArBilling not_run.
