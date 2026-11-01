@@ -8,6 +8,84 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_one_time_targetclosed_cleanup")]
+    [Description("Read-only preview.47 SHA-bound exact public PlaywrightException TargetClosed CLR/assembly filters in source-owned NUnit OneTimeTearDown for IBrowser.CloseAsync and IPlaywright.Dispose, independent guarded fixed diagnostics and ownership. Unsupported errors blocked, runtime API exceptions never inferred; no source or target code returned.")]
+    public static string InspectPomOneTimeTargetClosedCleanup(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Source C# scope relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Exact fully qualified Page Object type")] string sourceType,
+        [Description("Source Page Object method name")] string sourceMethod,
+        [Description("Captured immutable SourceTreeHash")] string expectedSourceTreeHash,
+        [Description("Explicit IPage field identifier")] string pageField,
+        [Description("Explicit IBrowserContext field identifier")] string contextField,
+        [Description("Explicit IBrowser field identifier")] string browserField,
+        [Description("Explicit IPlaywright field identifier")] string playwrightField,
+        [Description("Source method declaration line; 0 requires uniqueness")] int sourceLine=0,
+        CancellationToken cancellationToken=default)
+    {
+        var plan=engine.PlanPomOneTimeTargetClosedCleanup(
+            workspace.ResolveSourceScope(sourceDirectory,cancellationToken),
+            sourceType,sourceMethod,expectedSourceTreeHash,
+            pageField,contextField,browserField,playwrightField,
+            sourceLine,cancellationToken);
+        var f=plan.FixtureLifecycle;
+        var response=new
+        {
+            plan.SchemaVersion,plan.SourceTreeHash,plan.Status,
+            plan.SourceType,plan.SourceMethod,plan.SourceMethodSha256,
+            plan.VerifiedPageReceiver,plan.Blockers,plan.Limitations,
+            plan.RuntimeVerified,plan.CanAutoApply,plan.RequiresReview,
+            plan.Execution,
+            fixture=f==null?null:new{
+                f.FixtureSourcePath,f.FixtureSourceSha256,
+                f.PageConstructorSha256,f.OneTimeSetUpSha256,
+                f.SetUpSha256,f.TearDownSha256,f.OneTimeTearDownSha256,
+                f.PageTargetClosedCatchSha256,f.ContextTargetClosedCatchSha256,
+                f.BrowserCloseCatchSha256,f.PlaywrightDisposeCatchSha256,
+                f.BrowserCloseCatchLine,f.PlaywrightDisposeCatchLine,
+                f.OneTimeTargetClosedSourceOnly,
+                f.BrowserCloseTargetClosedGuarded,
+                f.PlaywrightDisposeTargetClosedGuarded,
+                f.PageTargetClosedCatchLine,f.ContextTargetClosedCatchLine,
+                f.ContextFromBrowser,f.PageFromContext,
+                f.PageAndContextConstructorInjected,
+                f.PerTestCleanupInFinally,f.OneTimeCleanupInFinally,
+                f.OneTimeSetUpFailureCleanup,f.SetUpFailureCleanup,
+                f.SafeSecondaryDiagnosticCodes,
+                f.DiagnosticSinkFailurePreservesPrimary,
+                f.SourceSinkNotRebound,f.FaultWitnessSourceOnly,
+                f.TargetClosedClrTearDownSourceOnly,
+                f.PageTargetClosedClrFilterGuarded,
+                f.ContextTargetClosedClrFilterGuarded,
+                f.TestFailurePrecedenceOnlyForTargetClosed,
+                f.PublicCaughtType,f.ExactRuntimeClrSubtype
+            },
+            catches=plan.CatchCandidates.Select(c=>new{
+                c.CatchSourcePath,c.CatchSourceLine,c.CatchSourceSha256,
+                c.SourceCaughtType,c.TargetCaughtType,c.TargetCatchSha256
+            }),
+            asyncMethods=plan.AsyncMethods.Select(m=>new{
+                m.SourcePath,m.SourceLine,m.SourceSha256,m.SourceSymbol,
+                requiresManualReview=true
+            }),
+            scope=new{
+                sourceOnly=true,publicPlaywrightExceptionExactClrSubtypeFilterOnly=true,
+                nonPublicDirectTargetClosedCatchRejected=true,
+                unrelatedCleanupErrorsNotProven=true,
+                oneTimeTearDownOnlyExactTargetClosedSourceProven=true,
+                runtimeObservedWindowsTargetClosed=false,
+                runtimeObservedLinuxTargetClosed=false,
+                noBrowserExecution=true,noSourceOrTargetCSharp=true,
+                noExceptionMessageOrSelector=true,noAutoApply=true,
+                primaryTestFailureOnlyForExactTargetClosed=true,realBrowserCloseErrorObserved=false,realDisposeErrorObserved=false
+            }
+        };
+        var json=JsonSerializer.Serialize(response,JsonOptions);
+        if(json.Length>150_000)
+            throw new InvalidOperationException("POM_TARGET_CLOSED_SOURCE_SCOPE_TOO_LARGE");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_typed_target_closed_teardown")]
     [Description("Read-only preview.46 source-bound public PlaywrightException filtered by exact CLR FullName and Playwright assembly to non-public TargetClosedException in NUnit TearDown for IPage.CloseAsync and owned IBrowserContext.CloseAsync in finally; fixed guarded diagnostic codes. Requires immutable source SHA and four explicit field identifiers. Does not execute browsers, leak source/target C# or claim Linux/Windows runtime equivalence.")]
     public static string InspectPomTypedTargetClosedTearDown(
