@@ -850,26 +850,34 @@ or external Console.Error changes. Actual Chromium and sampled process
 ancestry results belong to Core public CI evidence, not MCP output.
 
 
-## preview.46-A — exact typed NUnit TargetClosed cleanup
 
-New source-only `inspect_pom_typed_target_closed_teardown` requires the
-immutable source SHA, exact PageObject method, and four explicit typed
-IPage/IBrowserContext/IBrowser/IPlaywright source fields. Roslyn proves
-that one NUnit [TearDown] catches only the real assembly-typed
-Microsoft.Playwright.TargetClosedException from Page.CloseAsync and
-Context.CloseAsync (context in finally), with separately guarded fixed
-diagnostic codes. Broad catches, filters, wrong receivers, extra side
-effects, missing source/unknown lifecycle and stale SHA are blocked.
-No auto-apply or output of source/target C#, selectors, exception messages
-or runtime PID data over MCP. Earlier preview.40–45 gates unchanged.
-The per-test failure is preserved only for those exact cleanup errors;
-OneTimeTearDown and other exceptions are not asserted equivalent.
+## preview.46-A — non-public TargetClosedException: exact public CLR filter
 
-Core has a distinct real NUnit Playwright driver-disconnect benchmark
-on same Chrome-for-Testing Linux and Windows; an OS-positive must never
-be inferred from this read-only MCP source result. Windows TargetClosed
-observations and Linux not_observed need independent CI receipts.
-Versioned MCP package 0.1.0-preview.46 uses the exact Core NuGet
-Application version with no cross-repo ProjectReference; the current
-Core feature SHA CI pin must be replaced by merged Core main SHA and
-the full 2/2 CI repeated before MCP merge. Private ArBilling not_run.
+Playwright .NET 1.63 exposes `TargetClosedException` as a non-public
+type: external C# `catch (Microsoft.Playwright.TargetClosedException)`
+fails compilation with `CS0122`. We **do not** emit this illegal
+catch. The new source-bound opt-in requires the public
+`Microsoft.Playwright.PlaywrightException closed` with BOTH strict
+filter checks:
+
+```csharp
+catch (Microsoft.Playwright.PlaywrightException closed)
+    when (closed.GetType().FullName ==
+              "Microsoft.Playwright.TargetClosedException"
+          && closed.GetType().Assembly ==
+              typeof(Microsoft.Playwright.IPage).Assembly)
+```
+
+The matched catch must still have exactly the existing independently
+guarded fixed cleanup code, the owned `IPage.CloseAsync` and the
+`IBrowserContext.CloseAsync` inside the NUnit `finally` branch.
+Roslyn validates the actual `GetType`/`FullName`/`Assembly` symbols,
+the `IPage` assembly reference and exact constant subtype identity,
+never exception text, a simple broad catch or a guessed runtime type.
+
+Only the captured source contract is attested. MCP returns no user
+source, generated target body or private selectors, and it does not
+assert runtime Windows/Linux behavior. Full real Chrome NUnit evidence
+is independently required from Core CI, with observed Windows positives
+and Linux `not_observed` reported separately, never inferred. The
+tool remains `CanAutoApply=false` and unknown paths are blocked.
