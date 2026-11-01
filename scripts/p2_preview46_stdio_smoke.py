@@ -11,12 +11,15 @@ def source():
     f46=Path("core/Migrator.Application.Smoke/PomPreview46TypedTargetClosedSmoke.cs")
     expect(f46.is_file(),"Pinned exact Core preview.46 NUnit AST fixture unavailable")
     content=f46.read_text(encoding="utf-8")
-    before=canonical_source("OriginalTearDown",content).strip()
     after=canonical_source("TypedTearDown",content).strip()
     fixture=base["NUnitFixture.cs"]
-    expect(fixture.split(before).__len__()==2,
-        "Core fixture TearDown provenance ambiguous")
-    base["NUnitFixture.cs"]=fixture.replace(before,after)
+    start=fixture.index("[TearDown]")
+    end=fixture.index("[OneTimeTearDown]",start)
+    old=fixture[start:end]
+    expect("try { await Page.CloseAsync(); }" in old and
+        "finally { await Context.CloseAsync(); }" in old,
+        "Core source TearDown provenance unverified")
+    base["NUnitFixture.cs"]=fixture[:start]+after+"\n            "+fixture[end:]
     return base
 
 def main():
