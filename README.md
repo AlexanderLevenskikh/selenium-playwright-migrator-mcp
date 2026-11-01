@@ -790,8 +790,11 @@ The only output is a reviewed C# catch CLAUSE, never an invented test or
 a general Selenium exception adapter. External filters, used exception
 variables, broad/mismatched catches, additional actions, multiple
 propagation paths, dynamic dispatch and rethrow beyond the boundary
-fail closed. An accepted catch is review-only and does not preserve
-external Selenium CLR exception identity.
+fail closed. **Only empty external catches** can yield a reviewed
+clause. Source-typed NUnit Count recovery is blocked because the
+CountAsync snippet would require an unverified target async method
+and a source-proven Playwright IPage receiver. An accepted empty catch
+remains review-only and does not preserve external Selenium CLR identity.
 
 MCP exposes inspect_pom_external_exception_contract as strictly
 read-only source SHA/line and exception-type metadata. It deliberately
