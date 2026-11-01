@@ -834,3 +834,49 @@ Both MCP Linux and Windows workflows use exact merged Core main
 A call from a constructor into the selected TestBase chain is not
 captured as a normal method caller and must return `blocked`, zero
 partial candidates. All proposals remain review-only; ArBilling not_run.
+
+
+
+## preview.42-A — source-backed browser context ownership and NUnit cleanup
+
+Before proposing a reviewed external async Count catch, run
+\`inspect_pom_external_lifecycle_count_contract\` on an **exact**
+captured source tree. Supply four explicit field identifiers:
+pageField, contextField, browserField, playwrightField. Roslyn demands
+actual Microsoft.Playwright assembly symbols, a single sealed NUnit
+fixture, exactly one OneTimeSetUp/SetUp/TearDown/OneTimeTearDown
+async Task method, and direct source assignments from browser →
+context → page → SourcePage constructor → inherited TestBase field.
+The Page Object must retain the same IPage/IBrowserContext in
+readonly fields through exact constructor parameters.
+
+TearDown must \`await IPage.CloseAsync\` with context.CloseAsync in
+\`finally\`, and OneTimeTearDown must close browser with Playwright
+Dispose in \`finally\`. Extra writers, missing/filtered handlers,
+unresolved field paths, additional lifecycle methods and unknown
+effects are **blocked**, with no partial candidates. This is
+source attestation, **not** automatic NUnit fixture implementation:
+failed OneTimeSetUp cleanup, arbitrary external assemblies, DI
+container semantics and target runtime parity remain unverified.
+The prior preview.40/41 endpoints are not widened.
+
+MCP tool output is strictly read-only source field names,
+SHA-256/line/type and proof flags. It never carries original source
+bodies, selectors, target snippets or runtime/execution claims.
+The trusted local Core CLI uses an explicit --emit-target flag.
+Core public same-Chrome Linux/Windows browser jobs, not MCP metadata,
+are responsible for real failure/success cleanup evidence. ArBilling
+not_run. CI uses versioned NuGet 0.1.0-preview.42 and must pin final
+merged Core main SHA on both OS before MCP merges.
+
+
+
+### preview.42 final cross-repository acceptance
+Both Linux and Windows MCP workflow jobs now pin exact **merged**
+Core \`e937f078485e9c55b3a28d50fc73d0c2aaa47c3d\`
+with versioned \`SeleniumPlaywrightMigrator.Application\`
+0.1.0-preview.42 NuGet, never a ProjectReference. The new MCP
+negative protocol controls block a second SourcePage constructor
+invocation and unexpected Context.CloseAsync outside the attested
+lifecycle; all partial candidates remain empty. Source/target browser
+parity is only proven for public synthetic tests in Core.
