@@ -896,3 +896,25 @@ assertion precedence. The public CLR FullName + assembly filter is
 the only supported review-only C# syntax; a direct catch of the
 non-public TargetClosedException fails CS0122. No private ArBilling
 test, auto-apply or release was performed.
+
+## preview.47-A — owned NUnit OneTimeTearDown Browser and Playwright cleanup
+
+For an exact captured Page Object → TestBase → NUnit source graph with four
+explicit source Playwright fields, use the read-only
+`inspect_pom_one_time_targetclosed_cleanup` only after recording the current
+`SourceTreeHash`. It requires exact guarded Browser.CloseAsync and
+IPlaywright.Dispose calls in NUnit OneTimeTearDown and the preview.46
+typed Page/Context source contract. The real Playwright
+`TargetClosedException` is non-public in pinned Playwright .NET 1.63:
+catch public PlaywrightException only with the exact CLR FullName and
+Playwright assembly identity filter. Never invent an accessible direct catch.
+MCP emits only SHA/path/line, symbols, fixed proof booleans and blockers;
+never C# bodies, private locators, exception messages/stacks or process data.
+
+Source evidence cannot certify a real API failure. Keep the actual observed
+Browser.CloseAsync, IPlaywright.Dispose, test outcome and NUnit
+OneTimeTearDown precedence separate per OS: `observed`, `not_observed`
+or `blocked`, never synthesize a positive from a mock or a forced exception.
+Unknown exceptions, unowned resources, arbitrary Dispose errors and changes
+to NUnit scheduling remain `blocked`. No auto-apply, release, ArBilling
+runtime claim, or promotion based on a green synthetic source test.
