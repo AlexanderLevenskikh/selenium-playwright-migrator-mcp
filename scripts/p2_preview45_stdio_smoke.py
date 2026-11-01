@@ -99,7 +99,7 @@ def main():
                 expect(not any(v in leaked for v in (
                     "never-created","loader","Page.Locator(","CountAsync",
                     "targetBody","targetCatchClause","System.Console.Error.WriteLine",
-                    "POM_SOURCE_ELEMENT_ABSENT","TextWriter","Console.SetError")),
+                    "POM_SOURCE_ELEMENT_ABSENT","P45_PRIMARY_MARKER")),
                     "MCP emitted user source/code/exception details")
                 previous=rpc("inspect_pom_safe_cleanup_diagnostics",{
                     "sourceDirectory":"pom","sourceType":"Fictional.P42.SourcePage",
