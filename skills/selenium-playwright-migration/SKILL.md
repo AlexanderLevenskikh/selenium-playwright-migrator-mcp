@@ -918,3 +918,29 @@ or `blocked`, never synthesize a positive from a mock or a forced exception.
 Unknown exceptions, unowned resources, arbitrary Dispose errors and changes
 to NUnit scheduling remain `blocked`. No auto-apply, release, ArBilling
 runtime claim, or promotion based on a green synthetic source test.
+
+
+## preview.48-A — source-backed Playwright close semantics, no imaginary errors
+
+Before advising any manual wrapper for `IBrowser.CloseAsync`, read
+the `pinnedUpstreamSemantics` metadata from the existing
+`inspect_pom_one_time_targetclosed_cleanup` tool. Its upstream
+source identity is Playwright .NET **1.63.0**, exact Microsoft commit
+`6d5c263758e8b50cfc18d3abb384f251b7deb370`; the matching
+`Browser.CloseAsync` implementation already catches and swallows
+the internal TargetClosed predicate. The pinned `IPage.CloseAsync`
+also normally swallows TargetClosed (except its `RunBeforeUnload=true`
+path), while `IBrowserContext.CloseAsync` lacks the same internal guard:
+this is consistent with the real preview.46 Windows Context-positive
+and Page-not-observed evidence. An extra exact TargetClosed catch may
+be syntactically valid but is **not** a proven runtime requirement. `PlaywrightImpl.Dispose` delegates to connection
+disposal; arbitrary callbacks and other exceptions remain unproven.
+
+Do not infer that a missing external exception is a failed test, or
+claim source proof over the customer's actual runtime version. Keep
+real Chromium-root crash and Playwright Node-driver kill as distinct
+fault mechanisms; real API exceptions only count when actually thrown
+by the public method and independently observed in NUnit TRX plus
+original OS evidence. Anything else is `not_observed` or `blocked`.
+No autoapply, no general exception swallow, no invented cleanup
+semantics for another Playwright version or private ArBilling project.
