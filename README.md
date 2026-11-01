@@ -1005,3 +1005,14 @@ global OS leak freedom. Private ArBilling not_run.
 MCP version 0.1.0-preview.45 consumes versioned Core Application NuGet
 using a temporarily pinned Core feature SHA in both OS CI jobs. Re-pin
 to exact merged Core main before MCP merge and rerun both jobs.
+
+### preview.45 merged Core pin
+
+Both Linux and Windows MCP CI workflows now use the exact merged Core main
+`ad1787301f875b0fc5299f2408e6feeae0d02e5d` and versioned Application NuGet `0.1.0-preview.45`.
+Core PR #54 was merged after 22/22 successful jobs on feature HEAD
+`0a7c0a23d5106b0ff3068eed2201a6d2c5ec2bda`.
+Fault-witness metadata is source-only: it never certifies real CloseAsync/
+Dispose failures, runtime process ancestry, absence of orphan processes,
+or external Console.Error changes. Actual Chromium and sampled process
+ancestry results belong to Core public CI evidence, not MCP output.
