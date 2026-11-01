@@ -608,3 +608,28 @@ independent real Selenium-vs-Playwright runtime evidence.
 \`blocked\` has no target statements; otherwise proposals remain
 \`requires_review\` with \`CanAutoApply=false\`. No private
 ArBilling data may be committed to public evidence.
+
+
+## preview.40-A — reviewed external exception contract proposals
+
+Use inspect_pom_external_exception_contract for source-only, typed
+outer TestBase/NUnit catch evidence, only after inspect_pom_sources
+captures an exact SourceTreeHash. A proposal exists solely for a
+single direct symbol-bound one-call synchronous forwarding chain,
+one matching Selenium source catch, and an inner locally rethrown
+FindElement.Text/finite WebDriverWait. Empty catch or one immediate
+source-backed Count equality is the only allowed outer recovery.
+
+MCP intentionally does NOT return target catch C#, selectors, source
+bodies or private values. The trusted local Core CLI may reveal the
+C# clause only with explicit --emit-target. That C# is not a complete
+migrated NUnit method and is never auto-applied; use manual source
+review, independent browser checks and preserve target exception
+identity limitations. The old PlanPomActions must still be blocked.
+
+Do not infer external catch filters, broad catches, external throw,
+multiple calls, dynamically dispatched paths or unknown catch effects.
+Source absence in the captured tree is NOT evidence that callers in
+other assemblies are safe. The source CLR NoSuchElementException and
+WebDriverTimeoutException types are NOT preserved by PlaywrightException
+and System.TimeoutException. Unknown remains blocked/review_required.
