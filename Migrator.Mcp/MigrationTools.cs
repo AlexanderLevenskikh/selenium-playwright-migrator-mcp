@@ -8,6 +8,71 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_cleanup_fault_witness")]
+    [Description("Read-only preview.45 captured-source-only diagnostic sink fault witness. Exact PageObject->TestBase->NUnit and four explicit real Playwright fields; blocks captured Console.SetError rebinding. Does not claim real CloseAsync/Dispose exceptions, process ancestry, external source behavior, or emit C#, messages, selectors or PID evidence.")]
+    public static string InspectPomCleanupFaultWitness(
+        MigrationEngine engine, WorkspacePaths workspace,
+        [Description("Captured C# source directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Exact fully qualified Page Object source type")] string sourceType,
+        [Description("Exact source Page Object method")] string sourceMethod,
+        [Description("Captured exact SourceTreeHash from inspect_pom_sources")] string expectedSourceTreeHash,
+        [Description("Explicit IPage field identifier")] string pageField,
+        [Description("Explicit IBrowserContext field identifier")] string contextField,
+        [Description("Explicit IBrowser field identifier")] string browserField,
+        [Description("Explicit IPlaywright field identifier")] string playwrightField,
+        [Description("Source declaration line; 0 requires unique method")] int sourceLine=0,
+        CancellationToken cancellationToken=default)
+    {
+        var plan=engine.PlanPomCleanupFaultWitness(
+            workspace.ResolveSourceScope(sourceDirectory,cancellationToken),
+            sourceType,sourceMethod,expectedSourceTreeHash,
+            pageField,contextField,browserField,playwrightField,
+            sourceLine,cancellationToken);
+        var f=plan.FixtureLifecycle;
+        var response=new
+        {
+            plan.SchemaVersion,plan.SourceTreeHash,plan.Status,
+            plan.SourceType,plan.SourceMethod,plan.SourceMethodSha256,
+            plan.VerifiedPageReceiver,plan.Blockers,plan.Limitations,
+            plan.RuntimeVerified,plan.CanAutoApply,plan.RequiresReview,
+            plan.Execution,
+            fixture=f==null?null:new{
+                f.FixtureSourcePath,f.FixtureSourceSha256,
+                f.PageConstructorSha256,f.OneTimeSetUpSha256,
+                f.SetUpSha256,f.TearDownSha256,f.OneTimeTearDownSha256,
+                f.ContextFromBrowser,f.PageFromContext,
+                f.PageAndContextConstructorInjected,
+                f.PerTestCleanupInFinally,f.OneTimeCleanupInFinally,
+                f.OneTimeSetUpFailureCleanup,f.SetUpFailureCleanup,
+                f.PrimaryExceptionRethrown,f.CleanupFailuresDoNotReplacePrimary,
+                f.SafeSecondaryDiagnosticCodes,
+                f.DiagnosticSinkFailurePreservesPrimary,f.DiagnosticSurface,
+                f.SourceSinkNotRebound,f.FaultWitnessSourceOnly,
+                f.RealCleanupFailureCertified,f.OsProcessAncestryCertified
+            },
+            catches=plan.CatchCandidates.Select(c=>new{
+                c.CatchSourcePath,c.CatchSourceLine,c.CatchSourceSha256,
+                c.SourceCaughtType,c.TargetCaughtType,c.TargetCatchSha256
+            }),
+            asyncMethods=plan.AsyncMethods.Select(m=>new{
+                m.SourcePath,m.SourceLine,m.SourceSha256,m.SourceSymbol,
+                requiresReview=true
+            }),
+            guarantees=new{
+                capturedSourceOnly=true,sourceMutation=false,
+                runtimeExecuted=false,realCleanupFailureVerified=false,
+                osProcessAncestryVerified=false,leakFreeCertified=false,
+                arbitraryExternalSinkMutationExcluded=false,
+                generatedTargetVisibleOverMcp=false,canAutoApply=false
+            }
+        };
+        var json=JsonSerializer.Serialize(response,JsonOptions);
+        if(json.Length>150_000)
+            throw new InvalidOperationException(
+                "POM_FAULT_WITNESS_TOO_LARGE: choose a single exact source method.");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_safe_cleanup_diagnostics")]
     [Description("Read-only source-backed preview.44 safe diagnostic codes for secondary NUnit setup cleanup errors. Requires exact source tree SHA, PageObject method and four explicit IPage/IBrowserContext/IBrowser/IPlaywright fields. Never returns user source, selectors, exception messages, stack traces, target C#, host process details, or browser claims.")]
     public static string InspectPomSafeCleanupDiagnostics(
