@@ -1016,3 +1016,51 @@ Fault-witness metadata is source-only: it never certifies real CloseAsync/
 Dispose failures, runtime process ancestry, absence of orphan processes,
 or external Console.Error changes. Actual Chromium and sampled process
 ancestry results belong to Core public CI evidence, not MCP output.
+
+
+
+## preview.46-A — non-public TargetClosedException: exact public CLR filter
+
+Playwright .NET 1.63 exposes `TargetClosedException` as a non-public
+type: external C# `catch (Microsoft.Playwright.TargetClosedException)`
+fails compilation with `CS0122`. We **do not** emit this illegal
+catch. The new source-bound opt-in requires the public
+`Microsoft.Playwright.PlaywrightException closed` with BOTH strict
+filter checks:
+
+```csharp
+catch (Microsoft.Playwright.PlaywrightException closed)
+    when (closed.GetType().FullName ==
+              "Microsoft.Playwright.TargetClosedException"
+          && closed.GetType().Assembly ==
+              typeof(Microsoft.Playwright.IPage).Assembly)
+```
+
+The matched catch must still have exactly the existing independently
+guarded fixed cleanup code, the owned `IPage.CloseAsync` and the
+`IBrowserContext.CloseAsync` inside the NUnit `finally` branch.
+Roslyn validates the actual `GetType`/`FullName`/`Assembly` symbols,
+the `IPage` assembly reference and exact constant subtype identity,
+never exception text, a simple broad catch or a guessed runtime type.
+
+Only the captured source contract is attested. MCP returns no user
+source, generated target body or private selectors, and it does not
+assert runtime Windows/Linux behavior. Full real Chrome NUnit evidence
+is independently required from Core CI, with observed Windows positives
+and Linux `not_observed` reported separately, never inferred. The
+tool remains `CanAutoApply=false` and unknown paths are blocked.
+
+
+### preview.46-A merged Core acceptance pin and OS limits
+Both Linux and Windows MCP CI workflows use exact merged Core main
+`166e8e96854c1a6328355dacee3adaff3657cb86` and the `0.1.0-preview.46` versioned NuGet
+Application dependency, never an inter-repository ProjectReference.
+Core #55 passed 24/24 jobs at feature HEAD
+`a5e76c40838654eb9924ec7a669af4f1ba1c49b6`.
+Public NUnit Chrome-for-Testing evidence confirms an actual
+TargetClosed handler outcome on Windows and `not_observed` on Linux
+for the measured exact cleanup code, preserving primary NUnit
+assertion precedence. The public CLR FullName + assembly filter is
+the only supported review-only C# syntax; a direct catch of the
+non-public TargetClosedException fails CS0122. No private ArBilling
+test, auto-apply or release was performed.
