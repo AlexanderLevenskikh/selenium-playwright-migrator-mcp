@@ -9,7 +9,7 @@ namespace Migrator.Mcp;
 public static class MigrationTools
 {
     [McpServerTool(Name = "inspect_pom_one_time_targetclosed_cleanup")]
-    [Description("Read-only preview.47 SHA-bound exact public PlaywrightException TargetClosed CLR/assembly filters in source-owned NUnit OneTimeTearDown for IBrowser.CloseAsync and IPlaywright.Dispose, independent guarded fixed diagnostics and ownership. Unsupported errors blocked, runtime API exceptions never inferred; no source or target code returned.")]
+    [Description("Read-only preview.47 SHA-bound exact public PlaywrightException TargetClosed CLR/assembly filters in source-owned NUnit OneTimeTearDown for IBrowser.CloseAsync and IPlaywright.Dispose, independent guarded fixed diagnostics and ownership. Upstream Playwright 1.63.0 internally swallows Browser.CloseAsync TargetClosed; only syntactic caller guard is attested. Unobserved API exceptions and unknown callbacks blocked; no source/target code.")]
     public static string InspectPomOneTimeTargetClosedCleanup(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Source C# scope relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
@@ -68,6 +68,17 @@ public static class MigrationTools
                 m.SourcePath,m.SourceLine,m.SourceSha256,m.SourceSymbol,
                 requiresManualReview=true
             }),
+            pinnedUpstreamSemantics=new{
+                sourceOnly=true,playwrightVersion="1.63.0",
+                upstreamCommit="6d5c263758e8b50cfc18d3abb384f251b7deb370",
+                browserCloseTargetClosed="already_swallowed_inside_pinned_playwright",
+                playwrightDispose="delegates_to_internal_connection_dispose",
+                publicDisposeThrowIsNotCertified=true,
+                oneTimeTeardownPrecedenceWithActualApiFailure="not_observed",
+                arbitraryExternalCallbackFailures="blocked_not_proven",
+                customerRuntimeVersionVerified=false,
+                note="Only the pinned upstream source and captured fixture shape are attested, not real customer runtime exceptions"
+            },
             scope=new{
                 sourceOnly=true,publicPlaywrightExceptionExactClrSubtypeFilterOnly=true,
                 nonPublicDirectTargetClosedCatchRejected=true,
