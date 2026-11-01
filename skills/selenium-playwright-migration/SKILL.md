@@ -803,3 +803,48 @@ exceptions; OS process evidence covers only observed exact Chrome
 binary and Playwright node-driver PIDs. Do not infer internal
 Playwright leak freedom, general customer-project behavior or
 production auto-application.
+
+
+
+## preview.45-A — source-only cleanup fault witness
+
+Read-only tool \`inspect_pom_cleanup_fault_witness\` requires exact
+SourceTreeHash, Page Object type/method, and four explicit real
+Playwright page/context/browser/playwright field identifiers.
+It reuses preview.44 exact source-backed NUnit exception, typed
+receiver, failure-atomic cleanup, and fixed-code protected diagnostic
+evidence. It adds a fail-closed source-wide Roslyn check that blocks
+any symbol-resolved \`System.Console.SetError\` call in the captured
+C# snapshot. This cannot prove absence of sink replacement from NUnit,
+third-party assemblies or other threads. MCP returns only bounded
+paths, line numbers, source SHA and boolean source-proof facts; it
+never includes source bodies, private selectors, generated target C#,
+exception messages, stack traces, actual runtime PID or OS path evidence.
+Unknown scope, inferred receiver or stale SHA remains blocked with
+no partial candidate; \`CanAutoApply=false\`.
+
+Separate public Core GitHub Actions tests (not MCP) exercise:
+1. A REAL \`Console.Error.WriteLine\` failure from a deliberately
+   injected throwing \`TextWriter\` with the original exception retained
+2. Actual Playwright CloseAsync/Dispose calls, reporting API-thrown
+   types only when observed and otherwise \`not_observed\`
+3. Linux /proc and Windows CIM bounded parent-child process ancestry,
+   tracking process creation identity to avoid PID reuse.
+Synthetic post-close errors cannot count as real API failures;
+absence of surviving observed descendant PIDs is not proof of
+global OS leak freedom. Private ArBilling not_run.
+
+MCP version 0.1.0-preview.45 consumes versioned Core Application NuGet
+using a temporarily pinned Core feature SHA in both OS CI jobs. Re-pin
+to exact merged Core main before MCP merge and rerun both jobs.
+
+### preview.45 merged Core pin
+
+Both Linux and Windows MCP CI workflows now use the exact merged Core main
+`ad1787301f875b0fc5299f2408e6feeae0d02e5d` and versioned Application NuGet `0.1.0-preview.45`.
+Core PR #54 was merged after 22/22 successful jobs on feature HEAD
+`0a7c0a23d5106b0ff3068eed2201a6d2c5ec2bda`.
+Fault-witness metadata is source-only: it never certifies real CloseAsync/
+Dispose failures, runtime process ancestry, absence of orphan processes,
+or external Console.Error changes. Actual Chromium and sampled process
+ancestry results belong to Core public CI evidence, not MCP output.
