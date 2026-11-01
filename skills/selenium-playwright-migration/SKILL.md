@@ -658,3 +658,11 @@ parity requires separate Core CI evidence; same browser context and
 constructor injection are not inferred from type identity. Private
 ArBilling not_run. CI must re-pin both MCP platforms to merged Core main
 before merge.
+
+### preview.41 final Core pin and additional fail-closed case
+
+Both MCP Linux and Windows workflows use exact merged Core main
+`594ccf9cab2c4d871958c0c2eb56594cc628e146` (`SeleniumPlaywrightMigrator.Application` 0.1.0-preview.41).
+A call from a constructor into the selected TestBase chain is not
+captured as a normal method caller and must return `blocked`, zero
+partial candidates. All proposals remain review-only; ArBilling not_run.

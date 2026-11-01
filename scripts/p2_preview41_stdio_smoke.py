@@ -129,6 +129,8 @@ def main():
                 "object Page"))
             negative(OUTER.replace("this.Page=mappedPage;",
                 "this.Page=null!;"))
+            negative(OUTER.replace("this.Page=mappedPage;",
+                "this.Page=mappedPage; ForwardMissing();"))
             negative(OUTER.replace("[Test] public void CatchMissing()",
                 "public void CatchMissing()"))
             negative(OUTER.replace("Is.EqualTo(0)","Is.GreaterThan(0)"))
