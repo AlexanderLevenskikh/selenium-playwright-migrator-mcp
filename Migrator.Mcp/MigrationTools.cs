@@ -9,7 +9,7 @@ namespace Migrator.Mcp;
 public static class MigrationTools
 {
     [McpServerTool(Name = "inspect_pom_action_plan")]
-    [Description("Read-only preview.38 source-proven typed NoSuchElement/Timeout catch and rethrow inventory; catch filters and external CLR exception identity remain unverified; no source or target code exposure for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
+    [Description("Read-only preview.39 exact source-symbol caller chains across Page Objects/TestBase/NUnit; external Selenium exception catches, filters, dynamic/unsupported edges block target candidates; only in-scope static proof, never browser certification for an exact type/method/source hash. Reports typed Selenium/NUnit symbols, source path/line/SHA, effect kinds and target SHA without private source bodies/selectors, never executes C# and never approves a mapping.")]
     public static string InspectPomActionPlan(
         MigrationEngine engine, WorkspacePaths workspace,
         [Description("Narrow source C# directory relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
@@ -81,6 +81,26 @@ public static class MigrationTools
                 catchFilters = "blocked",
                 genericCatch = "blocked",
                 arbitraryActions = "blocked"
+            },
+            externalCatchChains = new {
+                inScopeBlockedCatchSites = report.Blockers.Count(b =>
+                    b.Code is "POM_EXTERNAL_NO_SUCH_ELEMENT_CATCH"
+                        or "POM_EXTERNAL_WEBDRIVER_TIMEOUT_CATCH"
+                        or "POM_EXTERNAL_EXCEPTION_BROAD_CATCH"
+                        or "POM_EXTERNAL_EXCEPTION_FILTER"),
+                inScopeUnresolvedCallSites = report.Blockers.Count(b =>
+                    b.Code is "POM_EXTERNAL_EXCEPTION_LOCAL_FUNCTION"
+                        or "POM_EXTERNAL_EXCEPTION_DYNAMIC_DISPATCH"
+                        or "POM_EXTERNAL_EXCEPTION_GRAPH_LIMIT"
+                        or "POM_EXTERNAL_EXCEPTION_DEPTH_LIMIT"),
+                blocked = report.Blockers.Any(b =>
+                    b.Code.StartsWith("POM_EXTERNAL_", StringComparison.Ordinal)),
+                noFindingsProvesExceptionParity = false,
+                sourceOnly = true,
+                runtimeVerified = false,
+                canAutoApply = false,
+                scope = "captured_utf8_source_tree_exact_Roslyn_symbols_only",
+                beyondScope = "external_assemblies_virtual_interface_delegate_reflection_unverified"
             },
             retry = new {
                 boundedLoops = report.Actions.Count(action => action.Effect == "bounded_retry"),

@@ -742,3 +742,35 @@ Chrome Selenium/Playwright evidence for recovery, rethrow and non-
 swallowed assertion errors. No private ArBilling tests run.
 MCP \`0.1.0-preview.38\` consumes versioned Core Application NuGet
 from exact Core SHA pinned in both OS CI (no ProjectReference).
+
+
+## preview.39 — source-backed external TestBase/NUnit catches
+
+In preview.38 a locally valid NoSuchElementException/Timeout
+rethrow can still alter an **outer** NUnit test or TestBase catch,
+because the Playwright target throws a different CLR type.
+Preview.39 adds exact Roslyn source-symbol caller tracking across
+the captured Page Object, TestBase, and NUnit methods. If a
+caller chain has a relevant Selenium-specific, broad or filtered
+catch, the complete Core action plan is **blocked**. The returned
+blocker includes source path, line and SHA-256 of the caller catch,
+but MCP exposes no source body or target statements.
+
+The MCP \`inspect_pom_action_plan\` tool adds a strictly source-only
+\`externalCatchChains\` summary: number of in-scope catch blocks,
+unresolved call graph paths, and fixed scope limitations. It cannot
+prove the absence of dynamically dispatched or out-of-scope callers.
+\`noFindingsProvesExceptionParity=false\`, \`CanAutoApply=false\`,
+\`RuntimeVerified=false\`; no additional browser/side-effectful
+tool is provided. The entire original source tree remains unchanged,
+stale source SHA is rejected and private selector text is redacted.
+
+Public Linux/Windows stdio cases check typed Page→TestBase→NUnit
+call chains, blocked external filters and rethrows, unrelated
+unblocked cases, no private C# or target leakage. The Core
+same-Chrome real Selenium/Playwright browser counterexample is
+independent evidence of changed NUnit behavior if an external
+handler were dropped. The comparison deliberately does not
+auto-apply or synthesize an exception adapter. NuGet version
+\`0.1.0-preview.39\` pins exact Core SHA on both platforms.
+Private ArBilling remains not_run.

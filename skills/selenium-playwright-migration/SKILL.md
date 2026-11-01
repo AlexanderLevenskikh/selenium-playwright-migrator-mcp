@@ -579,3 +579,32 @@ source-backed counts, fixed limits and review status; it is not
 browser-executed evidence. The trusted Core same-Chrome Linux/Windows
 synthetic benchmark is the test authority, not MCP tool metadata.
 No private source body or selector leaves MCP stdio.
+
+
+## preview.39 — external exception catch chains
+
+Before offering a reviewed Playwright target for Selenium
+\`NoSuchElementException\` or \`WebDriverTimeoutException\`, inspect
+**all in-scope callers**, including inherited TestBase helpers and
+NUnit test methods. The Core projector follows exact Roslyn method
+symbols and blocks source methods whose caller chain catches Selenium
+types, broad exceptions or catch filters. The returned blocker path,
+line and SHA identify precisely which external handler requires a
+separate migration decision. Never treat a locally valid \`throw;\`
+as preserving the original Selenium exception CLR identity.
+
+MCP \`inspect_pom_action_plan\` only reports source-only
+\`externalCatchChains\` counts and deterministic blockers; it does
+not return private selector values, source bodies or generated C#.
+The absence of an in-scope caller blocker is not proof that
+external assemblies, virtual/interface dispatch, delegates,
+reflection or other unobserved flows are safe. Local functions,
+dynamic dispatch and graph limits must fail closed.
+
+For any source catch path depending on the Selenium CLR type,
+DO NOT auto-insert a broad PlaywrightException handler or hidden
+Selenium dependency. Require a manually reviewed contract with
+independent real Selenium-vs-Playwright runtime evidence.
+\`blocked\` has no target statements; otherwise proposals remain
+\`requires_review\` with \`CanAutoApply=false\`. No private
+ArBilling data may be committed to public evidence.
