@@ -617,8 +617,11 @@ outer TestBase/NUnit catch evidence, only after inspect_pom_sources
 captures an exact SourceTreeHash. A proposal exists solely for a
 single direct symbol-bound one-call synchronous forwarding chain,
 one matching Selenium source catch, and an inner locally rethrown
-FindElement.Text/finite WebDriverWait. Empty catch or one immediate
-source-backed Count equality is the only allowed outer recovery.
+FindElement.Text/finite WebDriverWait. Only an **empty external catch** admits a reviewed clause. Typed NUnit
+FindElements.Count recovery is explicitly **blocked**: a projected
+CountAsync needs an async outer NUnit method and source-verified Playwright
+IPage receiver that this clause-only tool does not provide. No partial
+or uncompiled external recovery is approved.
 
 MCP intentionally does NOT return target catch C#, selectors, source
 bodies or private values. The trusted local Core CLI may reveal the

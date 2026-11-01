@@ -21,6 +21,7 @@ using OpenQA.Selenium;
 namespace Fictional.P38;
 [TestFixture]
 public sealed class NUnitExternalTests : TestBase {
+    private readonly IWebDriver webDriver = null!;
     public NUnitExternalTests(ExceptionPage page):base(page) {}
     [Test] public void CatchMissing() {
         try { ForwardMissing(); }
@@ -129,12 +130,21 @@ def main():
                        and not r["runtimeVerified"]
                        and "targetCatchClause" not in str(r),
                        "Unknown catch filter/broad/throw or side effects got a candidate")
+                return r
             orig='catch (NoSuchElementException) {}'
             expect(OUTER.count(orig)==1,"Source control marker not unique")
             neg(OUTER.replace(orig,
                 'catch (NoSuchElementException e) when(e.Message.Length > 0) {}',1))
             neg(OUTER.replace(orig,'catch (System.Exception) {}',1))
             neg(OUTER.replace(orig,'catch (NoSuchElementException) {throw;}',1))
+            count=neg(OUTER.replace(orig,
+                'catch (NoSuchElementException) {'
+                ' Assert.That(webDriver.FindElements(By.Id("private-count-recovery")).Count,'
+                ' Is.EqualTo(0)); }',1))
+            expect(any(b["code"]=="POM_EXTERNAL_CONTRACT_CATCH_BODY_UNSUPPORTED"
+                       for b in count["blockers"])
+                   and "private-count-recovery" not in str(count),
+                   "Typed Count recovery leaked or escaped async/receiver blocker")
             neg(OUTER.replace('try { ForwardMissing(); }',
                 'try { ForwardMissing(); ForwardTimeout(); }',1))
             neg(OUTER.replace('    [Test] public void CatchTimeout() {',
