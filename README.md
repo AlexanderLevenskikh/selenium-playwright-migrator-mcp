@@ -1107,3 +1107,29 @@ its source-only `requires_review`, `CanAutoApply=false` contract or
 the historical preview.40–46 tools. No browser execution or private
 source code appears in MCP results. Exact NuGet pin to final merged
 Core is required before MCP PR merge.
+
+## P1 preview.50-A — source-only Navigation/DI and dependent controls
+
+A new **read-only** `inspect_pom_source_flow_contract` tool accepts an
+explicit source C# scope, exact NUnit fixture type and method, and the
+`SourceTreeHash` returned from `inspect_pom_sources`. It validates a
+narrow, source-attested operation graph from `[SetUp]` through local
+TestBase-scoped Navigation and Page Object alias, then ComboBox value
+flow and confirmation, Loader bounded retry/failure/conditional reload,
+and ordered indexed table `Be`/`Contain` assertions.
+
+The response contains **only source-proven role names, SHA-256 witnesses,
+line numbers, operation counts, fixed limitations and fixed blockers**.
+No customer source body, generated target C#, navigation URL, selector,
+auth, exception text or browser data is returned. A positive source
+graph is `source_verified_requires_review` but `targetStatus=blocked`,
+`RuntimeVerified=false`, `CanAutoApply=false`, and no previous
+`POM_ACTION_UNRESOLVED` or TODO is erased. Unknown or changed C# is
+`blocked` with zero partial witnesses; stale SHA errors before analysis.
+
+This improves safe agent diagnosis, NOT unattended Selenium→Playwright
+conversion. It makes previously opaque source dependencies visible
+without inventing DI, JavaScript, DOM, waits, or side effects. Public
+synthetic C# positive/negative tests and stdio checks run on Linux and
+Windows; private ArBilling source stays local and must never be put in
+GitHub PR bodies, CI or artifacts.
