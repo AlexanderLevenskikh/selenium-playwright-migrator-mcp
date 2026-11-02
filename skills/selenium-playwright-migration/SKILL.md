@@ -944,3 +944,26 @@ by the public method and independently observed in NUnit TRX plus
 original OS evidence. Anything else is `not_observed` or `blocked`.
 No autoapply, no general exception swallow, no invented cleanup
 semantics for another Playwright version or private ArBilling project.
+
+## preview.50-A: source dependency flow before proposing a mapping
+
+After `inspect_pom_sources` on an explicit captured scope, use
+`inspect_pom_source_flow_contract` only for one exact C# NUnit
+fixture and test method with its unchanged `SourceTreeHash`.
+A `source_verified_requires_review` source graph covers five
+local declaration/lexical obligations: setup's Navigation and
+TestBase DI boundary, the ComboBox input/filter/confirmation and
+Open helper, Loader bounded retry/conditional JavaScript reload/failure,
+and the two indexed table assertion terminals.
+It is **not** an executable Playwright candidate.
+
+Never turn source-proven C# into guessed page constructors, URLs,
+selectors, waits, JavaScript or NUnit lifecycle. `targetStatus=blocked`
+and `CanAutoApply=false` always. An unsupported syntax graph must
+return `blocked` without partial witness/target. Do not count
+the source witness as a converted test or as a reduction in
+outstanding TODO. Real Chromium, target MSBuild and NUnit discovery
+must be independently observed and source SHA-bound. Privately
+captured source, locators, URLs, credentials and raw exception
+diagnostics must not appear in public MCP outputs, GitHub Actions
+or repository PR content.
