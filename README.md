@@ -1151,3 +1151,17 @@ without inventing DI, JavaScript, DOM, waits, or side effects. Public
 synthetic C# positive/negative tests and stdio checks run on Linux and
 Windows; private ArBilling source stays local and must never be put in
 GitHub PR bodies, CI or artifacts.
+
+
+### P1: Job Object is host-owned proof only, not migration approval
+
+Real Core P47 Windows historical FAIL remains in issue #59 (the
+surviving Chrome PIDs \`5936\` and \`9024\` were later killed by the
+GitHub runner). Core has a separately gated **synthetic** Windows
+Job Object experiment with an actual live grandchild surviving
+its parent and exiting after the owning Job handle is closed.
+This does not run Playwright inside a Job Object or change the
+original real Chromium 12-second leak assertion. MCP is source-only,
+provides no OS process cleanup, and cannot certify browser process
+ownership; see the bundled Skill's P1 ownership section. No
+auto-application, external exception claim or release is authorized.

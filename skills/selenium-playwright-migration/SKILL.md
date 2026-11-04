@@ -980,3 +980,36 @@ must be independently observed and source SHA-bound. Privately
 captured source, locators, URLs, credentials and raw exception
 diagnostics must not appear in public MCP outputs, GitHub Actions
 or repository PR content.
+
+
+## P1 Windows orphan Chromium: ownership versus host containment
+
+The real Core preview.47 Windows failure on 2026-11-02 saw observed Chrome
+processes \`5936@11/02/2026 05:22:43\` and
+\`9024@11/02/2026 05:22:44\` survive the original 12-second
+unassisted post-driver-loss gate; GitHub Actions then terminated those
+\`chrome\` processes during job cleanup. This is a genuine failed
+observation; it has not been reclassified as an irrelevant zombie or
+solved by the later 55/55 passing observations on pinned Chrome 156.
+
+Source-only MCP results cannot transfer OS process ownership from the
+dead Playwright Node driver to NUnit \`Browser.CloseAsync\` or
+\`IPlaywright.Dispose\`. Do not claim a public cleanup exception was
+observed when it was not. The Core Windows Job Object experiment is an
+**independent synthetic parent/grandchild feasibility control**, not a
+Playwright test or a fix for the original orphan. Real Win32
+\`AssignProcessToJobObject\`, \`IsProcessInJob\` and
+\`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE\` must be validated before any
+host-owned cleanup design is accepted. Nested jobs, disallowed
+breakaway, process-start race and separate owner-handle lifecycle are
+explicit risks. A future candidate must capture the *actual*
+Playwright/Chromium subtree, run the entire original P47 leak
+observation without any host kill, preserve its FAIL when observed,
+and only then attempt independently labeled host cleanup.
+
+Neither a source-backed NUnit catch contract, matching test outcomes,
+55 green diagnostic cycles nor synthetic Job Object control constitutes
+full Windows leak remediation. Issue #59 remains OPEN; Core/MCP PRs
+remain DRAFT until a source-backed real Chromium remediation and the
+full, unchanged Linux/Windows CI have passed. Never upload private
+ArBilling source, selectors, URLs or process command-line arguments.
