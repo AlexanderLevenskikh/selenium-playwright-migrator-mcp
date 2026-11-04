@@ -21,6 +21,19 @@ Use for C# NUnit test suites. Do not claim xUnit source, Python, Java or full be
 10. Do not represent successful generation as successful compilation, nor compilation as behavior preservation. If no actual check was run, report `not_run`.
 11. Summarize transformed tests, unresolved cases and independently observed verification results.
 
+
+### P1: refresh after semantic dependency changes
+
+For a single-file source, an unchanged test file does not make a prior
+`AnalysisId` current: the owning `.csproj`, its parse settings and consumed
+helper source can change the semantic result. After such an edit, call
+`analyze_migration` again and pass its new ID to `preview_migration` and
+verification. If a stale-ID error occurs, do not omit `expectedAnalysisId`
+to bypass it or reuse the previous candidate's successful checks. Identical
+input bytes may reuse the content-addressed ID; timestamps alone are not
+proof of a source change. These checks remain local and read-only, and do
+not establish successful compilation, NUnit execution or browser parity.
+
 ## Evidence labels
 
 `syntax` means an AST match, `recognized` means a parser/adapter finding, and `diagnostic` means an error observed by tooling. None is itself a behavioral proof.
@@ -944,3 +957,59 @@ by the public method and independently observed in NUnit TRX plus
 original OS evidence. Anything else is `not_observed` or `blocked`.
 No autoapply, no general exception swallow, no invented cleanup
 semantics for another Playwright version or private ArBilling project.
+
+## preview.50-A: source dependency flow before proposing a mapping
+
+After `inspect_pom_sources` on an explicit captured scope, use
+`inspect_pom_source_flow_contract` only for one exact C# NUnit
+fixture and test method with its unchanged `SourceTreeHash`.
+A `source_verified_requires_review` source graph covers five
+local declaration/lexical obligations: setup's Navigation and
+TestBase DI boundary, the ComboBox input/filter/confirmation and
+Open helper, Loader bounded retry/conditional JavaScript reload/failure,
+and the two indexed table assertion terminals.
+It is **not** an executable Playwright candidate.
+
+Never turn source-proven C# into guessed page constructors, URLs,
+selectors, waits, JavaScript or NUnit lifecycle. `targetStatus=blocked`
+and `CanAutoApply=false` always. An unsupported syntax graph must
+return `blocked` without partial witness/target. Do not count
+the source witness as a converted test or as a reduction in
+outstanding TODO. Real Chromium, target MSBuild and NUnit discovery
+must be independently observed and source SHA-bound. Privately
+captured source, locators, URLs, credentials and raw exception
+diagnostics must not appear in public MCP outputs, GitHub Actions
+or repository PR content.
+
+
+## P1 Windows orphan Chromium: ownership versus host containment
+
+The real Core preview.47 Windows failure on 2026-11-02 saw observed Chrome
+processes \`5936@11/02/2026 05:22:43\` and
+\`9024@11/02/2026 05:22:44\` survive the original 12-second
+unassisted post-driver-loss gate; GitHub Actions then terminated those
+\`chrome\` processes during job cleanup. This is a genuine failed
+observation; it has not been reclassified as an irrelevant zombie or
+solved by the later 55/55 passing observations on pinned Chrome 156.
+
+Source-only MCP results cannot transfer OS process ownership from the
+dead Playwright Node driver to NUnit \`Browser.CloseAsync\` or
+\`IPlaywright.Dispose\`. Do not claim a public cleanup exception was
+observed when it was not. The Core Windows Job Object experiment is an
+**independent synthetic parent/grandchild feasibility control**, not a
+Playwright test or a fix for the original orphan. Real Win32
+\`AssignProcessToJobObject\`, \`IsProcessInJob\` and
+\`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE\` must be validated before any
+host-owned cleanup design is accepted. Nested jobs, disallowed
+breakaway, process-start race and separate owner-handle lifecycle are
+explicit risks. A future candidate must capture the *actual*
+Playwright/Chromium subtree, run the entire original P47 leak
+observation without any host kill, preserve its FAIL when observed,
+and only then attempt independently labeled host cleanup.
+
+Neither a source-backed NUnit catch contract, matching test outcomes,
+55 green diagnostic cycles nor synthetic Job Object control constitutes
+full Windows leak remediation. Issue #59 remains OPEN; Core/MCP PRs
+remain DRAFT until a source-backed real Chromium remediation and the
+full, unchanged Linux/Windows CI have passed. Never upload private
+ArBilling source, selectors, URLs or process command-line arguments.

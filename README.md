@@ -78,6 +78,24 @@ License: MIT. Preview API and schema contracts may change before `v1.0`.
 
 The MCP protocol smoke exercises generated/edited candidates, semantic and syntax failures, blocked missing references, stale parent, and extra target files.
 
+
+### P1: stale single-file semantic inputs
+
+An `AnalysisId` for a selected `.cs` file is bound to the semantic inputs
+consumed for that analysis, including its owning project and referenced
+source helpers. Changing a sibling helper or the owning `.csproj` requires
+fresh `analyze_migration` before `preview_migration`; the selected test file
+being unchanged is insufficient. Rewriting identical input bytes preserves
+the content-addressed identity. A successful old candidate does not bypass
+this check.
+
+The real stdio regression changes a referenced helper return type and the
+owning project's `DefineConstants` while keeping the selected fixture bytes
+unchanged. It checks rejection of the old `expectedAnalysisId`, usability of
+a fresh ID, and stable IDs after restoring the exact bytes. It runs through
+the existing Linux/Windows packaged-server checks; it makes no browser or
+behavioral-equivalence claim.
+
 ## Recursive source-scope safety
 
 Before calling Core, MCP checks a recursive source directory for symbolic links/reparse points and rejects the scope if any are present (`SOURCE_SYMLINK_REJECTED`). This is intentionally conservative: even an in-workspace symlink is refused until a verified traversal policy is implemented. A single-file path still follows the normal workspace boundary check.
@@ -1107,3 +1125,43 @@ its source-only `requires_review`, `CanAutoApply=false` contract or
 the historical preview.40–46 tools. No browser execution or private
 source code appears in MCP results. Exact NuGet pin to final merged
 Core is required before MCP PR merge.
+
+## P1 preview.50-A — source-only Navigation/DI and dependent controls
+
+A new **read-only** `inspect_pom_source_flow_contract` tool accepts an
+explicit source C# scope, exact NUnit fixture type and method, and the
+`SourceTreeHash` returned from `inspect_pom_sources`. It validates a
+narrow, source-attested operation graph from `[SetUp]` through local
+TestBase-scoped Navigation and Page Object alias, then ComboBox value
+flow and confirmation, Loader bounded retry/failure/conditional reload,
+and ordered indexed table `Be`/`Contain` assertions.
+
+The response contains **only source-proven role names, SHA-256 witnesses,
+line numbers, operation counts, fixed limitations and fixed blockers**.
+No customer source body, generated target C#, navigation URL, selector,
+auth, exception text or browser data is returned. A positive source
+graph is `source_verified_requires_review` but `targetStatus=blocked`,
+`RuntimeVerified=false`, `CanAutoApply=false`, and no previous
+`POM_ACTION_UNRESOLVED` or TODO is erased. Unknown or changed C# is
+`blocked` with zero partial witnesses; stale SHA errors before analysis.
+
+This improves safe agent diagnosis, NOT unattended Selenium→Playwright
+conversion. It makes previously opaque source dependencies visible
+without inventing DI, JavaScript, DOM, waits, or side effects. Public
+synthetic C# positive/negative tests and stdio checks run on Linux and
+Windows; private ArBilling source stays local and must never be put in
+GitHub PR bodies, CI or artifacts.
+
+
+### P1: Job Object is host-owned proof only, not migration approval
+
+Real Core P47 Windows historical FAIL remains in issue #59 (the
+surviving Chrome PIDs \`5936\` and \`9024\` were later killed by the
+GitHub runner). Core has a separately gated **synthetic** Windows
+Job Object experiment with an actual live grandchild surviving
+its parent and exiting after the owning Job handle is closed.
+This does not run Playwright inside a Job Object or change the
+original real Chromium 12-second leak assertion. MCP is source-only,
+provides no OS process cleanup, and cannot certify browser process
+ownership; see the bundled Skill's P1 ownership section. No
+auto-application, external exception claim or release is authorized.
