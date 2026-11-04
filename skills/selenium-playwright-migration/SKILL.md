@@ -21,6 +21,19 @@ Use for C# NUnit test suites. Do not claim xUnit source, Python, Java or full be
 10. Do not represent successful generation as successful compilation, nor compilation as behavior preservation. If no actual check was run, report `not_run`.
 11. Summarize transformed tests, unresolved cases and independently observed verification results.
 
+
+### P1: refresh after semantic dependency changes
+
+For a single-file source, an unchanged test file does not make a prior
+`AnalysisId` current: the owning `.csproj`, its parse settings and consumed
+helper source can change the semantic result. After such an edit, call
+`analyze_migration` again and pass its new ID to `preview_migration` and
+verification. If a stale-ID error occurs, do not omit `expectedAnalysisId`
+to bypass it or reuse the previous candidate's successful checks. Identical
+input bytes may reuse the content-addressed ID; timestamps alone are not
+proof of a source change. These checks remain local and read-only, and do
+not establish successful compilation, NUnit execution or browser parity.
+
 ## Evidence labels
 
 `syntax` means an AST match, `recognized` means a parser/adapter finding, and `diagnostic` means an error observed by tooling. None is itself a behavioral proof.

@@ -78,6 +78,24 @@ License: MIT. Preview API and schema contracts may change before `v1.0`.
 
 The MCP protocol smoke exercises generated/edited candidates, semantic and syntax failures, blocked missing references, stale parent, and extra target files.
 
+
+### P1: stale single-file semantic inputs
+
+An `AnalysisId` for a selected `.cs` file is bound to the semantic inputs
+consumed for that analysis, including its owning project and referenced
+source helpers. Changing a sibling helper or the owning `.csproj` requires
+fresh `analyze_migration` before `preview_migration`; the selected test file
+being unchanged is insufficient. Rewriting identical input bytes preserves
+the content-addressed identity. A successful old candidate does not bypass
+this check.
+
+The real stdio regression changes a referenced helper return type and the
+owning project's `DefineConstants` while keeping the selected fixture bytes
+unchanged. It checks rejection of the old `expectedAnalysisId`, usability of
+a fresh ID, and stable IDs after restoring the exact bytes. It runs through
+the existing Linux/Windows packaged-server checks; it makes no browser or
+behavioral-equivalence claim.
+
 ## Recursive source-scope safety
 
 Before calling Core, MCP checks a recursive source directory for symbolic links/reparse points and rejects the scope if any are present (`SOURCE_SYMLINK_REJECTED`). This is intentionally conservative: even an in-workspace symlink is refused until a verified traversal policy is implemented. A single-file path still follows the normal workspace boundary check.
