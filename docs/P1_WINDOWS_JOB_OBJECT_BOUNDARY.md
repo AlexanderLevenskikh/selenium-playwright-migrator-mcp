@@ -41,7 +41,7 @@ These two new native-live survivors were independently bound by FILETIME;
 neither the earlier synthetic nor one successful real Node/Chrome Job probe
 repairs the source cleanup contract.
 
-Core draft `76c885be55cfde00e26c0048ca18c5d0a33153b1` adds an explicitly separate six-cycle real
+Core draft `84042caf89c11792791f3cc47c107944330c80d3` adds an explicitly separate six-cycle real
 Playwright Node/Chromium host Job experiment. The real NUnit testhost is
 gated before Playwright.CreateAsync; the supervisor verifies actual
 PID/CIM/native FILETIME and IsProcessInJob before Windows TerminateProcess

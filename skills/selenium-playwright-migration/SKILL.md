@@ -1033,7 +1033,7 @@ later pinned Chrome reproductions are green.
 
 ### P1-A real Chrome post-gate Job containment (experimental, not migration)
 
-Core draft `76c885be55cfde00e26c0048ca18c5d0a33153b1` runs a separately owned Windows supervisor on
+Core draft `84042caf89c11792791f3cc47c107944330c80d3` runs a separately owned Windows supervisor on
 the ACTUAL Playwright Node/Chromium tree. Its NUnit testhost is held
 before Playwright.CreateAsync; a real Job assignment and exact native
 FILETIME/IsProcessInJob identity must precede driver loss. It retains
