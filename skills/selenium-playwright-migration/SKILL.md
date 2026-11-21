@@ -1030,3 +1030,26 @@ No MCP tool acquires OS cleanup authority from this experiment; source-flow
 and stale-AnalysisId contracts are unchanged. Preserve the original FAIL
 and original ZIP; never merge or release preview.50 solely because
 later pinned Chrome reproductions are green.
+
+### P1-A real Chrome post-gate Job containment (experimental, not migration)
+
+Core draft `76c885be55cfde00e26c0048ca18c5d0a33153b1` runs a separately owned Windows supervisor on
+the ACTUAL Playwright Node/Chromium tree. Its NUnit testhost is held
+before Playwright.CreateAsync; a real Job assignment and exact native
+FILETIME/IsProcessInJob identity must precede driver loss. It retains
+the original **12-second unassisted P47 failure gate before any host kill**,
+then separately proves whether native-LIVE, pre-attested Chrome survivors
+exit after closing the host's last Job handle. A 300ms post-gate hold must
+show the same processes remain live BEFORE the close; otherwise cleanup
+causality is UNKNOWN. This hold must never extend or replace the original
+gate. Six predeclared real trials stop on the first failure.
+
+Agent must report distinct fields: original P47 result, native membership,
+actual surviving PID/FILETIME, host pre-close hold, host post-close exit
+and provenance of the original exception/TRX. Post-gate cleanup is **never**
+an unassisted PASS. If there are no real survivors, report
+`host_remediation_not_observed`. If there are survivors, keep the gate
+FAIL even if containment is proved. Do not infer a product fix, publish
+private process details, merge/release, autoapply C#, or give MCP Windows
+process-killing tools from these experiments. Historical November 2 and
+November 21 real Windows failures stay authoritative; Core issue #59 OPEN.

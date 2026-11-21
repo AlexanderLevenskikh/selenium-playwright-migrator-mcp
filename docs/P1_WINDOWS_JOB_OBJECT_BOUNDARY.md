@@ -31,3 +31,34 @@ November 2 PID 5936/9024 FAIL remains authoritative. No new production
 process authority, API autoapply, or release is authorized by this probe.
 Repin the MCP consumers only to a subsequently **merged** and fully verified
 Core SHA, then rerun both OS jobs.
+
+## P1-A: observed real Windows orphans, bounded post-gate host mitigation (2026-11-22)
+
+The original unassisted Windows P47 **still fails on real Chrome**:
+November 2 PIDs 5936/9024 (exact roles unknown), and November 21
+PIDs 8596 (crashpad-handler) / 9640 (utility/storage.mojom.StorageService).
+These two new native-live survivors were independently bound by FILETIME;
+neither the earlier synthetic nor one successful real Node/Chrome Job probe
+repairs the source cleanup contract.
+
+Core draft `76c885be55cfde00e26c0048ca18c5d0a33153b1` adds an explicitly separate six-cycle real
+Playwright Node/Chromium host Job experiment. The real NUnit testhost is
+gated before Playwright.CreateAsync; the supervisor verifies actual
+PID/CIM/native FILETIME and IsProcessInJob before Windows TerminateProcess
+of the bound Node driver. **The original 12-second unassisted observation
+runs before any host Job close.** For real survivors only, a separate
+post-gate negative control checks the SAME native process remains LIVE
+while the host retains the Job, and only then closes the last Job handle
+and independently waits for exact FILETIME-matched native termination.
+Any unassisted survivor ALWAYS makes the experiment fail, even if
+post-gate host cleanup succeeds. Absent natural survivors the outcome is
+NOT_OBSERVED, never a repair claim. Six predeclared cycles stop on the
+first failure, not on the first success.
+
+This is CI-only host-owned diagnostics, **not** a released migration runtime,
+not a proof that the November orphan mechanism has been fixed, and not
+process authority granted to MCP or Skill. Nested-job/breakaway and failure
+to bind any PID remain BLOCKED. Preserve original CI/ZIPS, source hashes,
+NUnit primary failures and the complete Linux/Windows CI matrix. Core
+issue #59, Core PR #58 and MCP PR #54 remain OPEN/DRAFT until an actual
+fixed source-backed case and full exact-head green CI authorize merge.
