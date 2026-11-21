@@ -1013,3 +1013,20 @@ full Windows leak remediation. Issue #59 remains OPEN; Core/MCP PRs
 remain DRAFT until a source-backed real Chromium remediation and the
 full, unchanged Linux/Windows CI have passed. Never upload private
 ArBilling source, selectors, URLs or process command-line arguments.
+
+### P1 real Playwright Node/Chromium host Job experiment (pending)
+
+An independent Core PR #58 test now gates the actual NUnit testhost before
+`Playwright.CreateAsync`, tries a Win32 Job assignment, verifies actual
+driver/Chrome PID + CIM/native FILETIME + `IsProcessInJob`, and observes the
+existing 12-second unassisted survivor condition **before** host cleanup.
+This diagnostic does **not** change the original P47 acceptance test.
+If the test has no complete real-browser membership or CI is queued/failed,
+report `blocked` / `not_verified`; do not infer a remediation from the
+older synthetic Python Job Object control. Even if the host later kills
+Chrome, an observed pre-close survivor is a real failed unassisted gate.
+
+No MCP tool acquires OS cleanup authority from this experiment; source-flow
+and stale-AnalysisId contracts are unchanged. Preserve the original FAIL
+and original ZIP; never merge or release preview.50 solely because
+later pinned Chrome reproductions are green.
