@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: levencode-labs/selenium-playwright-migrator-core
-          ref: 90d4c420857433bcfdd68eaa31de52c494f6a112
+          ref: 4f094e89aa06bc8095d72c859a9584a97b0b32af
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -31,10 +31,10 @@ jobs:
         run: |
           mkdir -p artifacts/nuget
           for project in Migrator.Core Migrator.Roslyn Migrator.SeleniumCSharp Migrator.PlaywrightDotNet Migrator.Application; do
-            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget -p:RepositoryCommit="90d4c420857433bcfdd68eaa31de52c494f6a112"
+            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget -p:RepositoryCommit="4f094e89aa06bc8095d72c859a9584a97b0b32af"
           done
       - name: Inspect actual five pinned Core NuGet packages before MCP restore (Linux)
-        run: python3 core/scripts/verify_nuget_metadata.py artifacts/nuget --expected-commit "90d4c420857433bcfdd68eaa31de52c494f6a112"
+        run: python3 core/scripts/verify_nuget_metadata.py artifacts/nuget --expected-commit "4f094e89aa06bc8095d72c859a9584a97b0b32af"
       - name: Restore MCP from packages, not ProjectReference
         run: |
           if grep -q 'ProjectReference' Migrator.Mcp/Migrator.Mcp.csproj; then
@@ -166,7 +166,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: levencode-labs/selenium-playwright-migrator-core
-          ref: 90d4c420857433bcfdd68eaa31de52c494f6a112
+          ref: 4f094e89aa06bc8095d72c859a9584a97b0b32af
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -179,13 +179,13 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path artifacts/nuget | Out-Null
           foreach ($project in @('Migrator.Core', 'Migrator.Roslyn', 'Migrator.SeleniumCSharp', 'Migrator.PlaywrightDotNet', 'Migrator.Application')) {
-            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget -p:RepositoryCommit="90d4c420857433bcfdd68eaa31de52c494f6a112"
+            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget -p:RepositoryCommit="4f094e89aa06bc8095d72c859a9584a97b0b32af"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
       - name: Verify Core package provenance and MCP negative controls (Windows)
         shell: pwsh
         run: |
-          python core/scripts/verify_nuget_metadata.py artifacts/nuget --expected-commit "90d4c420857433bcfdd68eaa31de52c494f6a112"
+          python core/scripts/verify_nuget_metadata.py artifacts/nuget --expected-commit "4f094e89aa06bc8095d72c859a9584a97b0b32af"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/test_verify_mcp_tool_metadata.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
