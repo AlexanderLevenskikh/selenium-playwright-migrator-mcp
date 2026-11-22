@@ -46,3 +46,26 @@ project behavioral acceptance is inferred. `canAutoApply=false`,
 `acceptedForRC=false`, `fullRealProjectBehavioralEquivalence=unknown`.
 P1 Windows native-LIVE Chromium orphan #59 has not been product-fixed; the
 instrumented handler remains unbuilt. **NO FIX CLAIM / NO MERGE / NO RELEASE.**
+
+## Expanded public SampleApp methods (stacked P2/P3 draft)
+
+The exact public desh2001 source commit
+`edacb9feb41a7e21d9b6bf6924f24c11698a4427` also contains
+`SampleAppPage.Login(username,password)`: two literal `By.Name` input
+selectors, a literal Id login Click, and `GetMessage()` via Id text.
+Core's semantic Selenium compile anchor now resolves the existing
+`By.Name` symbol and lets its already-present literal name-attribute
+mapping emit a review-only target. The owned MCP stdio regression checks
+the exact input_sendkeys/input_sendkeys/click lineage, text return, negative
+dynamic Name and alias blockers, stale source hash, no statements and
+no raw selector disclosures. The MCP does **not** execute the public project.
+
+A separate Core-only real Chrome test executes original SHA-bound public
+POM files and Core-projected method C# against localhost for successful and
+invalid login, with missing-Click, swapped-argument and wrong-Name
+mutations; **do not infer PASS until exact final Core CI artifacts pass**.
+An original full NUnit .csproj restore/build/discovery preflight, when
+available, is separately stage-labeled; original external-site NUnit
+SetUp/TearDown and a full generated target project still have no runtime
+equivalence receipt and remain UNKNOWN. No project autoapply, runtime
+certification, merge or release; P1 #59 open (NO FIX CLAIM).

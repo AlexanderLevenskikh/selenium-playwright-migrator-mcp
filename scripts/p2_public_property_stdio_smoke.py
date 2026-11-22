@@ -34,6 +34,20 @@ public sealed class TextInputPage {
         By.Id(System.Environment.GetEnvironmentVariable("SECRET_ID")!));
     public void BadDynamic() => Dynamic.Click();
     public string BadText() => "not-source-evidence";
+    // Exact real public SampleAppPage method effects (not upstream code execution).
+    public void Login(string username, string password) {
+        driver.FindElement(By.Name("UserName")).SendKeys(username);
+        driver.FindElement(By.Name("Password")).SendKeys(password);
+        driver.FindElement(By.Id("login")).Click();
+    }
+    public string GetMessage() =>
+        driver.FindElement(By.Id("loginstatus")).Text;
+    public void BadDynamicName(string name) =>
+        driver.FindElement(By.Name(name)).Click();
+    public void BadNamedAlias() {
+        var alias = "UserName";
+        driver.FindElement(By.Name(alias)).Click();
+    }
 }"""
 
 
@@ -78,6 +92,8 @@ def main(binary):
                 (4, "ClickButton", ("click",)),
                 (5, "GetButtonText", ("rendered_text_return",)),
                 (6, "GoToTextInput", ("click",)),
+                (7, "Login", ("input_sendkeys", "input_sendkeys", "click")),
+                (8, "GetMessage", ("rendered_text_return",)),
             ):
                 plan = inspect(idx, method)
                 expect(plan["status"]=="requires_review" and
@@ -102,10 +118,14 @@ def main(binary):
                        all("targetStatement" not in a for a in actions) and
                        "newButtonName" not in str(plan) and
                        "updatingButton" not in str(plan) and
-                       "Text Input" not in str(plan),
+                       "Text Input" not in str(plan) and
+                       "UserName" not in str(plan) and
+                       "Password" not in str(plan) and
+                       "loginstatus" not in str(plan),
                        method+" leaked target C#/raw selectors over MCP")
-            for idx, method in ((7,"BadWritable"),(8,"BadDynamic"),
-                                (9,"BadText")):
+            for idx, method in ((9,"BadWritable"),(10,"BadDynamic"),
+                                (11,"BadText"),(12,"BadDynamicName"),
+                                (13,"BadNamedAlias")):
                 blocked=inspect(idx,method)
                 expect(blocked["status"]=="blocked" and blocked["blockers"]
                        and blocked["canAutoApply"] is False and
@@ -116,13 +136,13 @@ def main(binary):
             # Change only the source property value; stale hash cannot plan.
             src.write_bytes(src.read_bytes().replace(
                 b'By.Id("newButtonName")', b'By.Id("changed-id")'))
-            stale=call(proc, 10, "inspect_pom_action_plan",
+            stale=call(proc, 14, "inspect_pom_action_plan",
                 {"sourceDirectory":"pom",
                  "sourceType":"PublicLike.TextInputPage",
                  "sourceMethod":"EnterText",
                  "expectedSourceTreeHash":tree})
             expect(stale.get("isError"), "stale captured POM source accepted")
-            print("P2_PUBLIC_PROPERTY_MCP_STDIO_HASH_ONLY_PASSED")
+            print("P2_PUBLIC_SAMPLEAPP_NAME_MCP_STDIO_HASH_ONLY_PASSED")
         finally:
             proc.terminate()
             try: proc.wait(timeout=5)

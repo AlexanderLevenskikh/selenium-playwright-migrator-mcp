@@ -1024,3 +1024,30 @@ require exact AnalysisId/CandidateId/SourceTreeHash/TargetTreeHash, a complete
 project obligation graph, independent browser side effects and negative mutation
 controls before a product acceptance claim. Windows original P47 orphan #59
 remains OPEN/NO FIX CLAIM, and release is NO-GO.
+
+## Public SampleApp POM names and project boundary (P2/P3)
+
+For exact source type and method, first run `inspect_pom_sources` and capture
+the source-tree hash, then `inspect_pom_action_plan` using that exact hash.
+The Roslyn-backed `By.Name("literal")` mapping can report three ordered
+effects for a public `Login(username, password)` method: send username,
+send password, click. A separate `GetMessage()` method may report one
+rendered-text read. Treat every effect as source-only, `requires_review`
+evidence. The MCP hides raw selectors and executable C#; do not reconstruct,
+guess or emit selector strings from these evidence records.
+
+For each candidate, inspect concrete DOM selector scope/uniqueness and both
+credential flows in an explicitly authorized local target. Swapped
+username/password, missing Click and changed Name selectors MUST invalidate
+behavioral equivalence even if an NUnit test passes. Dynamic By.Name arguments,
+aliases and unsupported waits/lifecycle/alerts remain blocked, not partial
+successes. Never convert an old hash or an independent method-level
+Core browser receipt into an AnalysisId/CandidateId runtime acceptance.
+
+The pinned public Selenium-NUnit-Automation source includes original
+DriverManager, NUnit SetUp/TearDown and external-site test cases. The
+separate original source project restore/build/discovery preflight never
+executes those tests and never certifies a generated Playwright NUnit
+solution. Full-project migration is UNKNOWN until the source TestFixture
+lifecycle, all tests/actions/assertions, target solution build and independent
+source/target browser+TRX oracle are established. P1 #59 remains OPEN.
