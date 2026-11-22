@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: levencode-labs/selenium-playwright-migrator-core
-          ref: a5393624497f9fad9bedc17a84605caa9e2df857
+          ref: 6f2155479822f6266ed1f25f2be97a65a17b3ee8
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -150,7 +150,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: levencode-labs/selenium-playwright-migrator-core
-          ref: a5393624497f9fad9bedc17a84605caa9e2df857
+          ref: 6f2155479822f6266ed1f25f2be97a65a17b3ee8
           path: core
       - uses: actions/setup-dotnet@v4
         with:
