@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: levencode-labs/selenium-playwright-migrator-core
-          ref: a0d0f2719fd73fc6c6e9f8dba7491687fc1694be
+          ref: 90d4c420857433bcfdd68eaa31de52c494f6a112
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -31,10 +31,10 @@ jobs:
         run: |
           mkdir -p artifacts/nuget
           for project in Migrator.Core Migrator.Roslyn Migrator.SeleniumCSharp Migrator.PlaywrightDotNet Migrator.Application; do
-            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget -p:RepositoryCommit="a0d0f2719fd73fc6c6e9f8dba7491687fc1694be"
+            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget -p:RepositoryCommit="90d4c420857433bcfdd68eaa31de52c494f6a112"
           done
       - name: Inspect actual five pinned Core NuGet packages before MCP restore (Linux)
-        run: python3 core/scripts/verify_nuget_metadata.py artifacts/nuget --expected-commit "a0d0f2719fd73fc6c6e9f8dba7491687fc1694be"
+        run: python3 core/scripts/verify_nuget_metadata.py artifacts/nuget --expected-commit "90d4c420857433bcfdd68eaa31de52c494f6a112"
       - name: Restore MCP from packages, not ProjectReference
         run: |
           if grep -q 'ProjectReference' Migrator.Mcp/Migrator.Mcp.csproj; then
@@ -48,6 +48,8 @@ jobs:
         run: python3 scripts/mcp_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: P2/P3 project obligation and exact candidate negative real stdio (Linux)
         run: python3 scripts/p2p3_project_graph_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
+      - name: Read-only POM properties and exact LinkText/Text effect graph, real MCP stdio (Linux)
+        run: python3 scripts/p2_public_property_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: preview.29 NUnit execution gates and case-source protocol regression
         run: python3 scripts/nunit_execution_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: preview.30 read-only typed POM action inspection stdio
@@ -164,7 +166,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: levencode-labs/selenium-playwright-migrator-core
-          ref: a0d0f2719fd73fc6c6e9f8dba7491687fc1694be
+          ref: 90d4c420857433bcfdd68eaa31de52c494f6a112
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -177,13 +179,13 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path artifacts/nuget | Out-Null
           foreach ($project in @('Migrator.Core', 'Migrator.Roslyn', 'Migrator.SeleniumCSharp', 'Migrator.PlaywrightDotNet', 'Migrator.Application')) {
-            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget -p:RepositoryCommit="a0d0f2719fd73fc6c6e9f8dba7491687fc1694be"
+            dotnet pack "core/$project/$project.csproj" -c Release -o artifacts/nuget -p:RepositoryCommit="90d4c420857433bcfdd68eaa31de52c494f6a112"
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           }
       - name: Verify Core package provenance and MCP negative controls (Windows)
         shell: pwsh
         run: |
-          python core/scripts/verify_nuget_metadata.py artifacts/nuget --expected-commit "a0d0f2719fd73fc6c6e9f8dba7491687fc1694be"
+          python core/scripts/verify_nuget_metadata.py artifacts/nuget --expected-commit "90d4c420857433bcfdd68eaa31de52c494f6a112"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python scripts/test_verify_mcp_tool_metadata.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -216,6 +218,9 @@ jobs:
       - name: P2/P3 project obligation and exact candidate negative real stdio (Windows)
         shell: pwsh
         run: python scripts/p2p3_project_graph_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
+      - name: Read-only POM properties and exact LinkText/Text effect graph, real MCP stdio (Windows)
+        shell: pwsh
+        run: python scripts/p2_public_property_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
       - name: preview.29 NUnit execution gates and case-source Windows stdio
         shell: pwsh
         run: python scripts/nunit_execution_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe

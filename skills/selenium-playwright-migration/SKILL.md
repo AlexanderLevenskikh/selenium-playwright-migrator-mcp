@@ -976,15 +976,16 @@ external PageObject/proxy dispatch, overridden or inherited lifecycle order,
 selectors, argument transformations, exception mapping and side effects
 remain UNKNOWN unless independently verified.
 
-Three exact-public-SHA real projects in Core are read-only source controls,
-not migrated projects: desh2001/Selenium-NUnit-Automation, jorgedelacruz/selenio
-and re-motion/Framework. No third-party code is executed and no public source
-scan is a browser parity PASS. The separate explicit CI localhost
-Selenium/Playwright oracle records eight positive behaviors, an expected
-NUnit-failing guard mutation and an intentionally NUnit-passing missing
-Click that is rejected by independently compared DOM events. Its
-oracleCandidateSha256 belongs only to the synthetic target evidence, NOT
-to a user verify_artifact CandidateId.
+Three exact-public-SHA projects are captured by Core: desh2001/Selenium-NUnit-Automation,
+jorgedelacruz/selenio and re-motion/Framework. The latter two remain
+SOURCE-ONLY. The selected original public HomePage/TextInputPage from desh2001
+have been run in an isolated self-authored NUnit/Chromium localhost harness
+against a HANDWRITTEN target (#81); their upstream project TestFixture,
+DriverManager and build scripts were NOT executed. This is bounded Page Object
+runtime evidence, NOT full public-project migration parity. The separate
+fictional localhost oracle has eight positive real browser pairs and a
+NUnit-green missing Click rejected by external DOM/effect observation.
+Its oracleCandidateSha256 is not a user verify_artifact CandidateId.
 
 Never combine these stages into accepted. No user project execution,
 auto-apply, leakage of private selector values or permission expansion.
@@ -994,3 +995,32 @@ P1 #59 real Windows native-live orphan remains open and is a release blocker.
 ### Combined SetUpFixture and TestFixture scope remains unsupported
 
 The single-file preview cannot always emit a target candidate when a SetUpFixture and a TestFixture share the source scope. Do NOT report a migrated global hook from successful verify_artifact checks on another fixture. Inspect scope-specific NUnit lifecycle independently; leave external SetUpFixture semantics UNKNOWN until explicit full-project behavioral evidence exists. No automatic acceptance.
+
+## P2/P3 source-projected public POM — strict read-only consumer boundary
+
+Where a Core candidate supports it, `inspect_pom_action_plan` can now report
+source-hash-bound action/effect metadata for a read-only `IWebElement` property
+whose sole getter is a typed source-owned `IWebDriver.FindElement(By.Id(...))`,
+plus exact literal `By.LinkText` and a single `IWebElement.Text` string-return
+method. The Core CLI (outside MCP) can emit a review-only target template after
+explicit `--emit-target`; **MCP never returns C# bodies, selector literals or
+generated target statements**. It reports effect count/order, exact source
+path/line/SHA and target SHA with `requires_review`, `runtimeVerified=false`,
+`canAutoApply=false`. A mutable, virtual, inherited, multi-driver, alias or
+dynamic property or partial link selector MUST block; source mutation requires a
+new SourceTreeHash.
+
+The Core public `pom-plan` generated-target browser oracle (when green on exact
+final SHA) compares the originally pinned desh2001 Page Object methods against
+C# built from **the Core-emitted statements**, not a hand-transcribed target.
+That is a bounded *method slice*, NOT an `migrator-acceptance/v1` CandidateId,
+full external project, NUnit lifecycle, inherited TestClass or SetUpFixture
+equivalence. `GetByRole(Link, Exact)` and `InnerTextAsync` retain DOM/accessibility
+and whitespace gaps, requiring independent verification in the actual context.
+
+NEVER treat MCP `inspect_pom_action_plan` source evidence, a green NUnit run,
+or a reviewed target template as permission to apply changes. Continue to
+require exact AnalysisId/CandidateId/SourceTreeHash/TargetTreeHash, a complete
+project obligation graph, independent browser side effects and negative mutation
+controls before a product acceptance claim. Windows original P47 orphan #59
+remains OPEN/NO FIX CLAIM, and release is NO-GO.
