@@ -123,6 +123,20 @@ using NUnit.Framework;
             expect(generated["runtime"]["status"] == "not_run"
                    and generated["observables"]["status"] == "not_run",
                    "Runtime/observable evidence was invented")
+            # P2: check the exact, newer Core acceptance contract over real
+            # MCP JSON-RPC. No syntax/compile/NUnit green can mean migration accepted.
+            acceptance = generated.get("acceptance")
+            expect(acceptance and acceptance["schemaVersion"] == "migrator-acceptance/v1",
+                   "P2 Core acceptance missing from serialized MCP artifact")
+            expect(acceptance["status"] in ("rejected_incomplete", "blocked_unverified"),
+                   "MCP must never report behavioral acceptance without parity")
+            expect(acceptance["analysisId"] == expected_id
+                   and acceptance["candidateId"] == generated["candidate"]["candidateId"]
+                   and acceptance["targetTreeHash"] == generated["candidate"]["targetTreeHash"],
+                   "MCP acceptance lost exact input/candidate/tree fingerprints")
+            for stage in ("testDiscovery", "runner", "realBrowser", "behavioralEquivalence"):
+                expect(acceptance[stage]["status"] == "not_run",
+                       "MCP invented test/browser/behavior proof: " + stage)
 
             # Single-file source scope permits an edited target directory next to source,
             # without changing the source snapshot on target edits.
@@ -147,6 +161,18 @@ using NUnit.Framework;
             expect(edited["syntax"]["status"] == "passed", "Simple edited C# syntax did not pass")
             expect(edited["compile"]["status"] == "passed", "Self-contained candidate did not compile")
             expect(edited["runtime"]["status"] == "not_run", "Compile incorrectly marked runtime passed")
+            edited_gate = edited.get("acceptance")
+            expect(edited_gate and edited_gate["status"] == "rejected_incomplete",
+                   "Target with removed NUnit method cannot be accepted after compile PASS")
+            expect(edited_gate["candidateId"] == edited["candidate"]["candidateId"]
+                   and edited_gate["candidateId"] != generated["candidate"]["candidateId"],
+                   "Agent-edited acceptance must be exact-candidate bound")
+            expect(edited_gate["missingObligations"] > 0
+                   and any(row["status"] == "missing_target"
+                           for row in edited_gate["lineage"]),
+                   "Missing source test method must appear as lineage debt")
+            expect(edited_gate["behavioralEquivalence"]["status"] == "not_run",
+                   "Compile PASS must not authorize behavioral equivalence")
 
             target_file.write_text("public sealed class Edited { public int Value => UnknownName; }",
                                    encoding="utf-8")
@@ -182,6 +208,99 @@ using NUnit.Framework;
             extra_file.unlink()
             import shutil
             shutil.rmtree(target_root)
+
+            # P2 control-flow consumer: keep every action/assertion name, but
+            # flatten source guards and exception paths in the captured target.
+            # This is a real MCP stdio response from an exact-sha Core package.
+            flow_source = product / "Flow.cs"
+            flow_source.write_text("""
+using NUnit.Framework;
+[TestFixture] public class FlowFixture {
+    [Test] public void GuardedClick() {
+        if (true) { driver.FindElement("#save").Click(); }
+        else { Assert.Fail("blocked"); }
+        try { driver.FindElement("#retry").Click(); }
+        catch (System.InvalidOperationException) { throw; }
+        finally { Assert.That(true, Is.True); }
+    }
+}
+""", encoding="utf-8")
+            flow_analysis = value(call(proc, 110, "analyze_migration", {"source": "Flow.cs"}))
+            flow_preview = value(call(proc, 111, "preview_migration", {
+                "source": "Flow.cs", "expectedAnalysisId": flow_analysis["analysisId"]}))
+            expect(len(flow_preview["files"]) == 1,
+                   "P2 flow fixture must create one target candidate")
+            flow_root = product / "flow-target"
+            flow_root.mkdir()
+            flow_file = flow_root / flow_preview["files"][0]["relativePath"]
+            flow_file.parent.mkdir(parents=True, exist_ok=True)
+            flattened = """
+using NUnit.Framework;
+[TestFixture] public class FlowFixturePlaywright {
+    [Test] public void GuardedClick() {
+        Page.Locator("#save").ClickAsync();
+        Assert.Fail("blocked");
+        Page.Locator("#retry").ClickAsync();
+        Assert.That(true, Is.True);
+    }
+}
+"""
+            structured = """
+using NUnit.Framework;
+[TestFixture] public class FlowFixturePlaywright {
+    [Test] public void GuardedClick() {
+        if (true) { Page.Locator("#save").ClickAsync(); }
+        else { Assert.Fail("blocked"); }
+        try { Page.Locator("#retry").ClickAsync(); }
+        catch (System.InvalidOperationException) { throw; }
+        finally { Assert.That(true, Is.True); }
+    }
+}
+"""
+            flow_options = {
+                "source": "Flow.cs", "expectedAnalysisId": flow_analysis["analysisId"],
+                "candidateId": flow_preview["candidateId"], "targetRoot": "flow-target"}
+            flow_file.write_text(flattened, encoding="utf-8")
+            flow_loss = value(call(proc, 112, "verify_artifact", flow_options))
+            flow_gate = flow_loss["acceptance"]
+            required_flow = {"if_guard", "else_path", "try_scope",
+                             "catch_path", "throw_path", "finally_path"}
+            flow_rows = flow_gate["lineage"]
+            expect(flow_gate["schemaVersion"] == "migrator-acceptance/v1"
+                   and flow_gate["status"] == "rejected_incomplete"
+                   and required_flow <= {row["kind"] for row in flow_rows
+                                      if row["status"] == "missing_target"},
+                   "MCP lost conditional or failure-path debt despite preserved invocations")
+            expect(all(row["status"] == "candidate_unverified"
+                       for row in flow_rows if row["kind"] in
+                       ("action", "locator", "assertion")),
+                   "Source actions/assertions should remain syntactic candidates")
+            expect(flow_gate["candidateId"] == flow_loss["candidate"]["candidateId"]
+                   and flow_gate["sourceTreeHash"] == flow_analysis["sourceTreeHash"]
+                   and flow_gate["targetTreeHash"] == flow_loss["candidate"]["targetTreeHash"]
+                   and flow_gate["behavioralEquivalence"]["status"] == "not_run",
+                   "Control-flow rejection must retain exact identity and not invent behavior")
+
+            flow_file.write_text(structured, encoding="utf-8")
+            flow_structure = value(call(proc, 113, "verify_artifact", flow_options))["acceptance"]
+            expect(flow_structure["status"] != "accepted"
+                   and all(row["status"] == "candidate_unverified"
+                           for row in flow_structure["lineage"]
+                           if row["kind"] in required_flow)
+                   and flow_structure["behavioralEquivalence"]["status"] == "not_run",
+                   "Matching branch shape is not semantic equivalence over MCP")
+            flow_file.write_text(
+                structured.replace("if (true)", "if (false)"), encoding="utf-8")
+            changed_guard = value(call(proc, 114, "verify_artifact", flow_options))["acceptance"]
+            expect(changed_guard["status"] != "accepted"
+                   and changed_guard["behavioralEquivalence"]["status"] == "not_run"
+                   and any(row["kind"] == "if_guard"
+                           and row["status"] == "candidate_unverified"
+                           for row in changed_guard["lineage"]),
+                   "MCP may not promote an inverted guard to behavioral equivalence")
+            import shutil
+            shutil.rmtree(flow_root)
+            flow_source.unlink()
 
             outside = call(proc, 5, "analyze_migration", {"source": "../"})
             expect(outside.get("isError"), "Parent directory traversal was accepted")

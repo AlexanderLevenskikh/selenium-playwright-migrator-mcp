@@ -10,6 +10,9 @@
 
 Standalone **MCP stdio server and agent skill** for Selenium C# NUnit → Playwright .NET migration. It uses the versioned [Migrator Core](https://github.com/levencode-labs/selenium-playwright-migrator-core) NuGet API rather than referencing the engine source projects.
 
+> **RC integration preparation — NO-GO for production.** This candidate builds version-matched Core packages from exact SHA `faaa46f20ead67effe74de0a96867187be8f086a`. It is **not** a published release and never auto-applies edits. Core issue [#59](https://github.com/levencode-labs/selenium-playwright-migrator-core/issues/59) still contains real native-LIVE Chromium orphan failures without a proven product fix. See [User Guide](USERGUIDE.md) · [Руководство](USERGUIDE.ru.md) · [RC consumer gates](docs/RC-CONSUMER.md). Historical preview pins and install instructions below describe earlier milestones; use the exact checkout ref in `.github/workflows/mcp-ci.yml` for this RC branch.
+
+
 Imported from [selenium-playwright-ast-migrator](https://github.com/AlexanderLevenskikh/selenium-playwright-ast-migrator), pinned source commit `a8b102072196f85bf85d785795aef22296c4deca`.
 
 ## MCP tools
