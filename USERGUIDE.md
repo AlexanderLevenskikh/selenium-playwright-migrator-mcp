@@ -30,3 +30,34 @@ The build above requires the exact local version-matched Core packages, as in `.
 CI includes real MCP JSON-RPC checks for missing `SetUpFixture`, inherited NUnit base and multi-hop private helper Click: a flattened target must be `rejected_incomplete`, while structurally corresponding target stays `blocked_unverified`. Pinned Core CI separately runs eight real Selenium/Playwright localhost cases and two negative mutations. The public external projects are only source-inspected (exact Git blob bytes): behavioral parity `UNKNOWN`.
 
 The original Core P47 Windows SIGTERM/12-second gate and recorded native-LIVE failures are not changed by this MCP. No product cleanup fix, automatic apply, customer-project runtime authorization, merge or release is claimed. See [RC consumer gates](docs/RC-CONSUMER.md).
+
+
+## Public NUnit case and MCP evidence — draft #64, 2026-11-22
+
+Against the matching [Core draft #85](https://github.com/levencode-labs/selenium-playwright-migrator-core/pull/85)
+(full source commit pinned in both CI checkouts), MCP real Linux/Windows stdio
+reports only **hash/effect metadata** for the pinned public SampleApp POM:
+ordered username/password inputs then Click, plus a separate text-return
+method. Dynamic Name selectors, aliases and stale source hashes block
+processing. Raw source selectors and generated C# are **not exported** to
+MCP clients; `pom-plan --emit-target` remains a local Core-only opt-in.
+
+The original `desh2001/Selenium-NUnit-Automation` .NET 10 NUnit project
+compiled and discovered 10 source tests. Core independently generated
+an entire Playwright NUnit target with four C# files and a .csproj;
+Linux/Windows target `dotnet build` and **10/10 discovery** passed,
+but the **original and generated full NUnit tests were NOT executed**.
+The Core static `acceptance-inspect` found **125 source obligations, 115
+missing** and returned `rejected_incomplete` on both OS; the generated
+project has POM, DriverManager, lifecycle and assertion TODOs.
+The separate real Selenium↔Core-projected Playwright SampleApp
+localhost Chromium checks passed **only for bounded POM methods**.
+Never promote it to full-project CandidateId/runtime parity.
+
+The MCP Skill must present `rejected_incomplete`, unverified inherited
+NUnit lifecycle, namespace/assembly `SetUpFixture`, missing helper/side
+effects, selectors and runtime stages as hard manual blockers. The two
+other pinned public projects (Selenio and re-motion) remain source-only.
+No target autoapply, source execution, release, P1 #59 fix claim or merge.
+See [consumer detail](docs/P2-P3-CORE-PROJECTED-CONSUMER.md),
+[RC #80](https://github.com/levencode-labs/selenium-playwright-migrator-core/issues/80).

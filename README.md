@@ -10,8 +10,39 @@
 
 Standalone **MCP stdio server and agent skill** for Selenium C# NUnit → Playwright .NET migration. It uses the versioned [Migrator Core](https://github.com/levencode-labs/selenium-playwright-migrator-core) NuGet API rather than referencing the engine source projects.
 
-> **RC integration preparation — NO-GO for production.** This candidate builds version-matched Core packages from exact SHA `faaa46f20ead67effe74de0a96867187be8f086a`. It is **not** a published release and never auto-applies edits. Core issue [#59](https://github.com/levencode-labs/selenium-playwright-migrator-core/issues/59) still contains real native-LIVE Chromium orphan failures without a proven product fix. See [User Guide](USERGUIDE.md) · [Руководство](USERGUIDE.ru.md) · [RC consumer gates](docs/RC-CONSUMER.md). Historical preview pins and install instructions below describe earlier milestones; use the exact checkout ref in `.github/workflows/mcp-ci.yml` for this RC branch.
+> **RC integration preparation — NO-GO for production.** This candidate builds version-matched Core packages from exact SHA `9d2d38a615e2ff8e9b80f9e42f4347b575f08dc3`. It is **not** a published release and never auto-applies edits. Core issue [#59](https://github.com/levencode-labs/selenium-playwright-migrator-core/issues/59) still contains real native-LIVE Chromium orphan failures without a proven product fix. See [User Guide](USERGUIDE.md) · [Руководство](USERGUIDE.ru.md) · [RC consumer gates](docs/RC-CONSUMER.md). Historical preview pins and install instructions below describe earlier milestones; use the exact checkout ref in `.github/workflows/mcp-ci.yml` for this RC branch.
 
+
+
+## Public NUnit case and MCP evidence — draft #64, 2026-11-22
+
+Against the matching [Core draft #85](https://github.com/levencode-labs/selenium-playwright-migrator-core/pull/85)
+(full source commit pinned in both CI checkouts), MCP real Linux/Windows stdio
+reports only **hash/effect metadata** for the pinned public SampleApp POM:
+ordered username/password inputs then Click, plus a separate text-return
+method. Dynamic Name selectors, aliases and stale source hashes block
+processing. Raw source selectors and generated C# are **not exported** to
+MCP clients; `pom-plan --emit-target` remains a local Core-only opt-in.
+
+The original `desh2001/Selenium-NUnit-Automation` .NET 10 NUnit project
+compiled and discovered 10 source tests. Core independently generated
+an entire Playwright NUnit target with four C# files and a .csproj;
+Linux/Windows target `dotnet build` and **10/10 discovery** passed,
+but the **original and generated full NUnit tests were NOT executed**.
+The Core static `acceptance-inspect` found **125 source obligations, 115
+missing** and returned `rejected_incomplete` on both OS; the generated
+project has POM, DriverManager, lifecycle and assertion TODOs.
+The separate real Selenium↔Core-projected Playwright SampleApp
+localhost Chromium checks passed **only for bounded POM methods**.
+Never promote it to full-project CandidateId/runtime parity.
+
+The MCP Skill must present `rejected_incomplete`, unverified inherited
+NUnit lifecycle, namespace/assembly `SetUpFixture`, missing helper/side
+effects, selectors and runtime stages as hard manual blockers. The two
+other pinned public projects (Selenio and re-motion) remain source-only.
+No target autoapply, source execution, release, P1 #59 fix claim or merge.
+See [consumer detail](docs/P2-P3-CORE-PROJECTED-CONSUMER.md),
+[RC #80](https://github.com/levencode-labs/selenium-playwright-migrator-core/issues/80).
 
 Imported from [selenium-playwright-ast-migrator](https://github.com/AlexanderLevenskikh/selenium-playwright-ast-migrator), pinned source commit `a8b102072196f85bf85d785795aef22296c4deca`.
 
