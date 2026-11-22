@@ -6,6 +6,7 @@ import json
 import os
 import pathlib
 import queue
+import shutil
 import threading
 import subprocess
 import sys
@@ -64,6 +65,117 @@ def value(result):
     content = result.get("content", [])
     expect(content and content[0]["type"] == "text", f"Text result missing: {result}")
     return json.loads(content[0]["text"])
+
+
+
+def check_semantic_dependency_identity(proc, workspace):
+    """A single selected file still consumes its owning Roslyn project inputs."""
+    scope = workspace / "semantic-identity"
+    scope.mkdir()
+    fixture = scope / "IdentityTests.cs"
+    helper = scope / "SharedActions.cs"
+    project = scope / "Identity.csproj"
+    fixture.write_text("""
+using NUnit.Framework;
+namespace Fictional.Identity;
+[TestFixture] public class IdentityTests
+{
+    [Test] public void UsesSibling()
+    {
+#if P1_CHANGED
+        SharedActions.Other();
+#else
+        SharedActions.Check();
+#endif
+    }
+}
+""", encoding="utf-8")
+    helper_bytes = b"""namespace Fictional.Identity;
+public static class SharedActions
+{
+    public static void Check() { }
+    public static void Other() { }
+}
+"""
+    project_bytes = b"""<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <DefineConstants>P1_ORIGINAL</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="IdentityTests.cs" />
+    <Compile Include="SharedActions.cs" />
+  </ItemGroup>
+</Project>
+"""
+    helper.write_bytes(helper_bytes)
+    project.write_bytes(project_bytes)
+    fixture_bytes = fixture.read_bytes()
+    source = "semantic-identity/IdentityTests.cs"
+    message_id = 1000
+
+    def rpc(name, arguments):
+        nonlocal message_id
+        message_id += 1
+        return call(proc, message_id, name, arguments)
+
+    def analyze():
+        return value(rpc("analyze_migration", {"source": source}))
+
+    def preview(analysis_id):
+        return rpc("preview_migration", {
+            "source": source, "expectedAnalysisId": analysis_id})
+
+    def assert_stale(original_id, reason):
+        expect(preview(original_id).get("isError") is True,
+               reason + ": preview accepted a stale single-file AnalysisId")
+        fresh = analyze()
+        expect(fresh["analysisId"] != original_id,
+               reason + ": a consumed dependency edit did not change AnalysisId")
+        current = value(preview(fresh["analysisId"]))
+        expect(current["analysisId"] == fresh["analysisId"],
+               reason + ": fresh analysis was not usable by preview")
+        expect(fixture.read_bytes() == fixture_bytes,
+               reason + ": selected test bytes changed during dependency regression")
+
+    try:
+        baseline = analyze()
+        original_id = baseline["analysisId"]
+        original_preview = value(preview(original_id))
+        expect(baseline["declaredTests"] == 1,
+               "Semantic identity fixture did not expose exactly one source test")
+        expect(analyze()["analysisId"] == original_id,
+               "Unchanged single-file semantic input changed AnalysisId")
+        expect(value(preview(original_id))["candidateId"] ==
+               original_preview["candidateId"],
+               "Unchanged semantic input changed candidate identity")
+
+        # Actual referenced helper's return type changes; selected test bytes do not.
+        helper.write_bytes(helper_bytes.replace(
+            b"public static void Check() { }",
+            b"public static System.Threading.Tasks.Task Check() => "
+            b"System.Threading.Tasks.Task.CompletedTask;"))
+        assert_stale(original_id, "Sibling helper return type")
+
+        helper.write_bytes(helper_bytes)
+        expect(analyze()["analysisId"] == original_id,
+               "Restoring identical helper bytes did not restore AnalysisId")
+
+        # The parent project chooses a different parsed branch of the same test file.
+        project.write_bytes(project_bytes.replace(b"P1_ORIGINAL", b"P1_CHANGED"))
+        assert_stale(original_id, "Owning project DefineConstants")
+
+        project.write_bytes(project_bytes)
+        helper.write_bytes(helper_bytes)  # Rewrite identical bytes, changing only metadata.
+        expect(analyze()["analysisId"] == original_id,
+               "Identical dependency bytes must preserve content-addressed AnalysisId")
+        expect(value(preview(original_id))["candidateId"] ==
+               original_preview["candidateId"],
+               "Restored exact semantic inputs did not restore candidate identity")
+        print("MCP_SINGLE_FILE_SEMANTIC_IDENTITY_PASSED", flush=True)
+    finally:
+        shutil.rmtree(scope)
 
 
 def main():
@@ -180,8 +292,9 @@ using NUnit.Framework;
             extra = call(proc, 18, "verify_artifact", options)
             expect(extra.get("isError"), "Unexpected C# target file was accepted")
             extra_file.unlink()
-            import shutil
             shutil.rmtree(target_root)
+
+            check_semantic_dependency_identity(proc, product)
 
             outside = call(proc, 5, "analyze_migration", {"source": "../"})
             expect(outside.get("isError"), "Parent directory traversal was accepted")

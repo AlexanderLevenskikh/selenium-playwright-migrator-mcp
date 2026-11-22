@@ -8,6 +8,42 @@ namespace Migrator.Mcp;
 [McpServerToolType]
 public static class MigrationTools
 {
+    [McpServerTool(Name = "inspect_pom_source_flow_contract")]
+    [Description("Preview.50 SHA-bound SOURCE-ONLY NUnit fixture SetUp/Navigation+TestBase DI, Page Object ComboBox, Loader retry and table Be/Contain call obligations. Never translates selectors/URLs/target code, executes browser or approves a target. Unknown source shape blocked with zero witness fields.")]
+    public static string InspectPomSourceFlowContract(
+        PomFlowSourceInspector inspector, WorkspacePaths workspace,
+        [Description("Captured C# project scope relative to MIGRATOR_WORKSPACE")] string sourceDirectory,
+        [Description("Exact source fixture class, no guessing")] string fixtureType,
+        [Description("Exact source NUnit [Test] method, no guessing")] string sourceMethod,
+        [Description("Exact current SourceTreeHash from inspect_pom_sources")] string expectedSourceTreeHash,
+        CancellationToken cancellationToken = default)
+    {
+        var report=inspector.Inspect(
+            workspace.ResolveSourceScope(sourceDirectory,cancellationToken),
+            fixtureType,sourceMethod,expectedSourceTreeHash,cancellationToken);
+        var result=new
+        {
+            report.SchemaVersion,report.SourceTreeHash,report.Status,
+            report.TargetStatus,report.Blockers,report.Limitations,
+            report.RuntimeVerified,report.CanAutoApply,report.Execution,
+            witnesses=report.Witnesses.Select(w=>new {
+                w.Role,w.Sha256,w.SourceLine,w.SourceOperations
+            }),
+            scope=new {
+                sourceOnly=true,typedSourceSemanticsNotCompiled=true,
+                diFactoryRuntimeNotProven=true,
+                browserAndNUnitRuntimeNotRun=true,domOrSelectorNotGuessed=true,
+                autoApplyForbidden=true,unknownBlockedWithoutPartial=true,
+                targetCodeReturned=false,sourceCodeReturned=false,
+                privateUrlsOrSelectorsReturned=false
+            }
+        };
+        var json=JsonSerializer.Serialize(result,JsonOptions);
+        if(json.Length>150_000)
+            throw new InvalidOperationException("P50_SOURCE_FLOW_RESPONSE_TOO_LARGE");
+        return json;
+    }
+
     [McpServerTool(Name = "inspect_pom_one_time_targetclosed_cleanup")]
     [Description("Read-only preview.47 SHA-bound exact public PlaywrightException TargetClosed CLR/assembly filters in source-owned NUnit OneTimeTearDown for IBrowser.CloseAsync and IPlaywright.Dispose, independent guarded fixed diagnostics and ownership. Upstream Playwright 1.63.0 internally swallows Browser.CloseAsync TargetClosed; only syntactic caller guard is attested. Unobserved API exceptions and unknown callbacks blocked; no source/target code.")]
     public static string InspectPomOneTimeTargetClosedCleanup(

@@ -21,6 +21,19 @@ Use for C# NUnit test suites. Do not claim xUnit source, Python, Java or full be
 10. Do not represent successful generation as successful compilation, nor compilation as behavior preservation. If no actual check was run, report `not_run`.
 11. Summarize transformed tests, unresolved cases and independently observed verification results.
 
+
+### P1: refresh after semantic dependency changes
+
+For a single-file source, an unchanged test file does not make a prior
+`AnalysisId` current: the owning `.csproj`, its parse settings and consumed
+helper source can change the semantic result. After such an edit, call
+`analyze_migration` again and pass its new ID to `preview_migration` and
+verification. If a stale-ID error occurs, do not omit `expectedAnalysisId`
+to bypass it or reuse the previous candidate's successful checks. Identical
+input bytes may reuse the content-addressed ID; timestamps alone are not
+proof of a source change. These checks remain local and read-only, and do
+not establish successful compilation, NUnit execution or browser parity.
+
 ## Evidence labels
 
 `syntax` means an AST match, `recognized` means a parser/adapter finding, and `diagnostic` means an error observed by tooling. None is itself a behavioral proof.
@@ -944,3 +957,131 @@ by the public method and independently observed in NUnit TRX plus
 original OS evidence. Anything else is `not_observed` or `blocked`.
 No autoapply, no general exception swallow, no invented cleanup
 semantics for another Playwright version or private ArBilling project.
+
+## preview.50-A: source dependency flow before proposing a mapping
+
+After `inspect_pom_sources` on an explicit captured scope, use
+`inspect_pom_source_flow_contract` only for one exact C# NUnit
+fixture and test method with its unchanged `SourceTreeHash`.
+A `source_verified_requires_review` source graph covers five
+local declaration/lexical obligations: setup's Navigation and
+TestBase DI boundary, the ComboBox input/filter/confirmation and
+Open helper, Loader bounded retry/conditional JavaScript reload/failure,
+and the two indexed table assertion terminals.
+It is **not** an executable Playwright candidate.
+
+Never turn source-proven C# into guessed page constructors, URLs,
+selectors, waits, JavaScript or NUnit lifecycle. `targetStatus=blocked`
+and `CanAutoApply=false` always. An unsupported syntax graph must
+return `blocked` without partial witness/target. Do not count
+the source witness as a converted test or as a reduction in
+outstanding TODO. Real Chromium, target MSBuild and NUnit discovery
+must be independently observed and source SHA-bound. Privately
+captured source, locators, URLs, credentials and raw exception
+diagnostics must not appear in public MCP outputs, GitHub Actions
+or repository PR content.
+
+
+## P1 Windows orphan Chromium: ownership versus host containment
+
+The real Core preview.47 Windows failure on 2026-11-02 saw observed Chrome
+processes \`5936@11/02/2026 05:22:43\` and
+\`9024@11/02/2026 05:22:44\` survive the original 12-second
+unassisted post-driver-loss gate; GitHub Actions then terminated those
+\`chrome\` processes during job cleanup. This is a genuine failed
+observation; it has not been reclassified as an irrelevant zombie or
+solved by the later 55/55 passing observations on pinned Chrome 156.
+
+Source-only MCP results cannot transfer OS process ownership from the
+dead Playwright Node driver to NUnit \`Browser.CloseAsync\` or
+\`IPlaywright.Dispose\`. Do not claim a public cleanup exception was
+observed when it was not. The Core Windows Job Object experiment is an
+**independent synthetic parent/grandchild feasibility control**, not a
+Playwright test or a fix for the original orphan. Real Win32
+\`AssignProcessToJobObject\`, \`IsProcessInJob\` and
+\`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE\` must be validated before any
+host-owned cleanup design is accepted. Nested jobs, disallowed
+breakaway, process-start race and separate owner-handle lifecycle are
+explicit risks. A future candidate must capture the *actual*
+Playwright/Chromium subtree, run the entire original P47 leak
+observation without any host kill, preserve its FAIL when observed,
+and only then attempt independently labeled host cleanup.
+
+Neither a source-backed NUnit catch contract, matching test outcomes,
+55 green diagnostic cycles nor synthetic Job Object control constitutes
+full Windows leak remediation. Issue #59 remains OPEN; Core/MCP PRs
+remain DRAFT until a source-backed real Chromium remediation and the
+full, unchanged Linux/Windows CI have passed. Never upload private
+ArBilling source, selectors, URLs or process command-line arguments.
+
+### P1 real Playwright Node/Chromium host Job experiment (pending)
+
+An independent Core PR #58 test now gates the actual NUnit testhost before
+`Playwright.CreateAsync`, tries a Win32 Job assignment, verifies actual
+driver/Chrome PID + CIM/native FILETIME + `IsProcessInJob`, and observes the
+existing 12-second unassisted survivor condition **before** host cleanup.
+This diagnostic does **not** change the original P47 acceptance test.
+If the test has no complete real-browser membership or CI is queued/failed,
+report `blocked` / `not_verified`; do not infer a remediation from the
+older synthetic Python Job Object control. Even if the host later kills
+Chrome, an observed pre-close survivor is a real failed unassisted gate.
+
+No MCP tool acquires OS cleanup authority from this experiment; source-flow
+and stale-AnalysisId contracts are unchanged. Preserve the original FAIL
+and original ZIP; never merge or release preview.50 solely because
+later pinned Chrome reproductions are green.
+
+### P1-A real Chrome post-gate Job containment (experimental, not migration)
+
+Core draft `84042caf89c11792791f3cc47c107944330c80d3` runs a separately owned Windows supervisor on
+the ACTUAL Playwright Node/Chromium tree. Its NUnit testhost is held
+before Playwright.CreateAsync; a real Job assignment and exact native
+FILETIME/IsProcessInJob identity must precede driver loss. It retains
+the original **12-second unassisted P47 failure gate before any host kill**,
+then separately proves whether native-LIVE, pre-attested Chrome survivors
+exit after closing the host's last Job handle. A 300ms post-gate hold must
+show the same processes remain live BEFORE the close; otherwise cleanup
+causality is UNKNOWN. This hold must never extend or replace the original
+gate. Six predeclared real trials stop on the first failure.
+
+Agent must report distinct fields: original P47 result, native membership,
+actual surviving PID/FILETIME, host pre-close hold, host post-close exit
+and provenance of the original exception/TRX. Post-gate cleanup is **never**
+an unassisted PASS. If there are no real survivors, report
+`host_remediation_not_observed`. If there are survivors, keep the gate
+FAIL even if containment is proved. Do not infer a product fix, publish
+private process details, merge/release, autoapply C#, or give MCP Windows
+process-killing tools from these experiments. Historical November 2 and
+November 21 real Windows failures stay authoritative; Core issue #59 OPEN.
+
+### P1-A2 original P47 fixture rather than simplified NUnit (2026-11-22)
+
+Use the independent `p1_preview47_source_exact_job_probe.py` only as
+a public source-backed Windows ownership diagnostic. Its compiled fixture
+is reconstructed from the original P47 runtime template and exact
+preview.46 `TearDown` / preview.47 `OneTimeTearDown` bodies; their
+SHA-256 and the original fixture hash are retained. The ONLY test change
+is the pre-`Playwright.CreateAsync` host Job assignment gate.
+Original source NUnit test and 12-second unassisted Windows P47 gate are
+untouched. Stages are bounded and preserve both intentional primary NUnit
+failure and `disconnect_pass` success, without injecting Playwright API
+exceptions. Windows process identity must be PID + exact native FILETIME
+and membership validated before Node loss and again for any post-gate
+survivor. Read separate `unassistedGateBeforeHostClose` and
+`postGateHostCleanup` evidence: NEVER turn a failed 12-second gate
+into success merely because the Job later kills a real Chrome process.
+Six runs without a native-LIVE survivor are `not_observed` and must
+not become a mitigation claim. A proper Win32 owner would require
+independent production design, explicit authorization and real runtime
+regressions. No MCP process termination tools or automatic C# edits
+are authorized, and issue #59 remains OPEN.
+
+Current P1-A2 source-exact host Job diagnostic Core SHA (unmerged): `f3eb1fd63d50aa0c32cb37b21958b4281c826870`.
+
+
+P1-A2 updated independent diagnostic Core pin: `f3eb1fd63d50aa0c32cb37b21958b4281c826870`. The probe now
+observes actual Chrome/Node descendants continuously during and after
+SIGTERM up to NUnit exit and anchors its original 12-second gate before
+TRX parsing. Late discovered processes are never silently excluded or
+promoted into pre-fault Job membership. This does not grant MCP or Skill
+OS process ownership; keep historical P47 FAIL, UNKNOWN and no-merge rules.
