@@ -956,3 +956,10 @@ by the public method and independently observed in NUnit TRX plus
 original OS evidence. Anything else is `not_observed` or `blocked`.
 No autoapply, no general exception swallow, no invented cleanup
 semantics for another Playwright version or private ArBilling project.
+
+
+## P3 — source-owned parameterized POM Count branch migration
+
+The read-only POM plan may now produce candidate if/else branches for immediate Selenium FindElements(...).Count comparisons with an exact int method parameter, including reversed operands, and literal-vs-string parameter equality. Boolean short-circuit and same-class private helpers remain explicit source effects. The receiver must be an unambiguous source-owned IWebDriver field. Multiple driver fields, captured external drivers, dynamic selectors, computed thresholds, cached state and side effects block the method.
+
+Use exact SourceTreeHash and review metadata. Never promote source-only CountAsync snapshots to Playwright auto-waiting ToHaveCountAsync or assume browser timing equivalence. The MCP tool deliberately does not return target statements or private selectors. Core #75 has a separate fictional localhost Selenium/Playwright same-Chrome NUnit/DOM oracle with an intentionally failing inverted branch; that is bounded CI evidence, not production behavioral equivalence. All P3 plans remain requires_review / CanAutoApply=false and no new execution rights are granted. P1 P47/12s and issue #59 remain unchanged.

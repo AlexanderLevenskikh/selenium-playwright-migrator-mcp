@@ -47,6 +47,47 @@ public sealed class SyntheticPage {
     public void UnsafeDynamicUrl() {
         driver.Navigate().GoToUrl(Environment.GetEnvironmentVariable("PRIVATE_URL")!);
     }
+    public void ChooseRows(int minimum,int maximum) {
+        if (driver.FindElements(By.CssSelector(".private-row")).Count >= minimum
+            && maximum > driver.FindElements(By.CssSelector(".private-row")).Count)
+            Accept();
+        else Reject();
+    }
+    public void ReverseRows(int threshold) {
+        if (threshold < driver.FindElements(By.CssSelector(".private-row")).Count)
+            Accept();
+        else Reject();
+    }
+    public void ConfirmLiteral(string decision) {
+        if ("yes" == decision) Accept();
+        else Reject();
+    }
+    private void Accept() { driver.FindElement(By.Id("private-accept")).Click(); }
+    private void Reject() { driver.FindElement(By.Id("private-reject")).Click(); }
+    private readonly string dynamicSelector=".private-row";
+    public void UnsafeDynamicCount(int minimum) {
+        if (driver.FindElements(By.CssSelector(dynamicSelector)).Count >= minimum)
+            Accept(); else Reject();
+    }
+    public void UnsafeForeignCount(IWebDriver external,int minimum) {
+        if (external.FindElements(By.CssSelector(".private-row")).Count >= minimum)
+            Accept(); else Reject();
+    }
+    public void UnsafeComputedThreshold(int minimum) {
+        if (driver.FindElements(By.CssSelector(".private-row")).Count >= minimum+1)
+            Accept(); else Reject();
+    }
+}
+public sealed class AmbiguousPage {
+    private readonly IWebDriver first;
+    private readonly IWebDriver second;
+    public AmbiguousPage(IWebDriver first,IWebDriver second) {
+        this.first=first;this.second=second;
+    }
+    public void Unsafe(int minimum) {
+        if (first.FindElements(By.CssSelector(".private-row")).Count >= minimum)
+            first.FindElement(By.Id("private-accept")).Click();
+    }
 }
 """
 
@@ -131,6 +172,55 @@ def main():
                         and finding["blockers"]
                         and any(x["code"]==code for x in finding["blockers"]),
                         method+" was not fail-closed: "+str(finding["blockers"]))
+            # P3: actual packaged-protocol source metadata, not target text.
+            for ident, method in ((30, "ChooseRows"), (31, "ReverseRows"),
+                                  (32, "ConfirmLiteral")):
+                p3 = inspect(ident, method)
+                require(p3["status"] == "requires_review"
+                        and not p3["canAutoApply"] and not p3["runtimeVerified"]
+                        and p3["actions"]
+                        and any(a["effect"] == "conditional_guard"
+                                for a in p3["actions"])
+                        and all(a["requiresReview"]
+                                and len(a["sourceSha256"]) == 64
+                                and len(a["targetSha256"]) == 64
+                                for a in p3["actions"]),
+                        "P3 source-owned Count/string parameter guard not emitted as review")
+                if method == "ChooseRows":
+                    require(sum(a["effect"] == "private_helper_inline"
+                                for a in p3["actions"]) == 2
+                            and any(a["controlFlowPath"].startswith("if:true@")
+                                    for a in p3["actions"])
+                            and any(a["controlFlowPath"].startswith("if:false@")
+                                    for a in p3["actions"]),
+                            "P3 both guard paths or helper effects disappeared")
+                rendered = str(p3)
+                require("targetStatements" not in p3
+                        and "adapterCandidate" not in p3
+                        and all("targetStatement" not in a
+                                for a in p3["actions"])
+                        and ".private-row" not in rendered
+                        and "private-accept" not in rendered
+                        and "private-reject" not in rendered,
+                        "P3 MCP exposed source selector or executable target body")
+            for ident, method in ((33, "UnsafeDynamicCount"),
+                                  (34, "UnsafeForeignCount"),
+                                  (35, "UnsafeComputedThreshold")):
+                p3_blocked = inspect(ident, method)
+                require(p3_blocked["status"] == "blocked"
+                        and p3_blocked["blockers"]
+                        and "targetStatements" not in p3_blocked
+                        and "adapterCandidate" not in p3_blocked,
+                        "P3 unproven source variable emitted target for " + method)
+            ambiguous = value(call(proc, 36, "inspect_pom_action_plan", {
+                "sourceDirectory": "pom",
+                "sourceType": "Fictional.P31.AmbiguousPage",
+                "sourceMethod": "Unsafe",
+                "expectedSourceTreeHash": tree_hash}))
+            require(ambiguous["status"] == "blocked"
+                    and any(b["code"] == "POM_CONDITIONAL_GUARD_UNRESOLVED"
+                            for b in ambiguous["blockers"]),
+                    "P3 two IWebDriver fields must block inferred receiver")
             require(initial==hashlib.sha256(file.read_bytes()).hexdigest(),
                     "Read-only MCP altered source bytes")
             file.write_text(SOURCE+"\n// changed", encoding="utf-8")

@@ -1,0 +1,5 @@
+# P3 MCP/Skill pinned Count-guard source projection
+
+Parent MCP/Skill #57 head 87ff6b4c97183e9697a1f6f0b8ad4af4fbbabb14. Both Linux/Windows CI checkouts pin exact Core P3 #75 head cf417ade4d0d836dd1866bf1d0e3a1a86720057b (draft, unmerged); the existing structured read-only MCP stdio smoke now also verifies positive parameterized Count vs int and reverse forms, literal-left string comparison, control-flow paths and private helper inlining, then blocks dynamic selectors, foreign driver arguments, arithmetic thresholds and ambiguous owning fields. The MCP consumer retains hash-only evidence, no private selector/C# target statement, no autoapply, no project execution.
+
+This is a compatibility test for the same exact Core revision. Separate source-target real browser and P2 acceptance evidence must be evaluated independently; full 28-job Core and two-job MCP CI remain unchanged. Original Windows P47 and issue #59 are untouched; no root cause/fix or general behavioral equivalence claim, no merge/release.
