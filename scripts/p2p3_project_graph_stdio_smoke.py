@@ -11,13 +11,6 @@ from mcp_stdio_smoke import start_reader, receive, send, call, value, expect
 
 SOURCE = """
 using NUnit.Framework;
-[SetUpFixture] public class GlobalHooks {
-    [OneTimeSetUp] public void Begin() { Registry.Start(); }
-    [OneTimeTearDown] public void End() { Registry.Stop(); }
-}
-public class BaseTests {
-    [SetUp] public void Before() { Registry.Seed(); }
-}
 [TestFixture] public class FixtureTests : BaseTests {
     [Test] public void Runs() { Execute(); }
     private void Execute() { Helper(); }
@@ -76,11 +69,14 @@ def main():
                    "MCP incorrectly accepted lost fixture/helper behavior")
             kinds={(row["kind"],row["status"])
                    for row in acceptance.get("lineage",[])}
-            required={("setup_fixture","missing_target"),
-                      ("fixture_base","missing_target"),
+            # verify_artifact currently requires a bounded single-fixture
+            # preview. A separate SetUpFixture alongside the test has NO
+            # generated candidate and must not be presented as verified.
+            # Existing scoped_setupfixture_smoke runs independently on both OS.
+            required={("fixture_base","missing_target"),
                       ("helper_action","missing_target")}
             expect(required<=kinds,
-                   "MCP did not serialize missing project obligations "+str(kinds))
+                   "MCP did not serialize inherited/helper source debt "+str(kinds))
             expect(acceptance["candidateId"]==proof["candidate"]["candidateId"]
                    and acceptance["sourceTreeHash"]==analysis["sourceTreeHash"]
                    and acceptance["targetTreeHash"]==proof["candidate"]["targetTreeHash"],
