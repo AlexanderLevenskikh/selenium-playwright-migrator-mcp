@@ -65,7 +65,7 @@ fixed source-backed case and full exact-head green CI authorize merge.
 
 ## P1-A2 — source-exact original P47 NUnit fixture host experiment
 
-Core draft `d6fc75560396813e08577833616bc48baf5f7efb` now uses a distinct `p1_preview47_source_exact_job_probe.py`
+Core draft `f3eb1fd63d50aa0c32cb37b21958b4281c826870` now uses a distinct `p1_preview47_source_exact_job_probe.py`
 that obtains the **same** `p2_preview47_one_time_real_chromium.TEMPLATE`
 runtime fixture, the exact `TypedTearDown` from preview.46 and exact
 `OneTimeTearDown` from preview.47. The original source test's `Operation`,
@@ -99,3 +99,17 @@ PID8596/9640 plus later verified descendants) stay preserved and #59 OPEN.
 Full unchanged Core 28-job Linux/Windows CI must be green **and** the
 source-backed defect resolved before merging Core; only then repin the
 MCP consumers to the exact merged Core SHA and require MCP 2/2 green.
+
+
+### P1-A2 sampling correction
+
+The independent host Job diagnostic now continues sampling the original
+Node/Chromium ancestry **after** the real Node-driver SIGTERM until NUnit exits.
+The 12-second unassisted deadline is anchored immediately after the runner
+exit CIM snapshot, *before* TRX parsing or durable reporting, like original P47.
+Late observed descendants are part of the unassisted presence predicate but
+cannot gain false pre-fault Job membership. A real post-gate survivor still
+needs native-live FILETIME verification and separately attributed host Job
+close. Source-exact fixture and original P47 scripts remain unchanged.
+This is a proven diagnostic-coverage correction, NOT a production fix;
+no-survivor trials are UNKNOWN, not mitigation PASS.

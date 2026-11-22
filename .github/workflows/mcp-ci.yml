@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: d6fc75560396813e08577833616bc48baf5f7efb
+          ref: f3eb1fd63d50aa0c32cb37b21958b4281c826870
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -152,7 +152,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: d6fc75560396813e08577833616bc48baf5f7efb
+          ref: f3eb1fd63d50aa0c32cb37b21958b4281c826870
           path: core
       - uses: actions/setup-dotnet@v4
         with:

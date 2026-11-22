@@ -1076,4 +1076,12 @@ independent production design, explicit authorization and real runtime
 regressions. No MCP process termination tools or automatic C# edits
 are authorized, and issue #59 remains OPEN.
 
-Current P1-A2 source-exact host Job diagnostic Core SHA (unmerged): `d6fc75560396813e08577833616bc48baf5f7efb`.
+Current P1-A2 source-exact host Job diagnostic Core SHA (unmerged): `f3eb1fd63d50aa0c32cb37b21958b4281c826870`.
+
+
+P1-A2 updated independent diagnostic Core pin: `f3eb1fd63d50aa0c32cb37b21958b4281c826870`. The probe now
+observes actual Chrome/Node descendants continuously during and after
+SIGTERM up to NUnit exit and anchors its original 12-second gate before
+TRX parsing. Late discovered processes are never silently excluded or
+promoted into pre-fault Job membership. This does not grant MCP or Skill
+OS process ownership; keep historical P47 FAIL, UNKNOWN and no-merge rules.
