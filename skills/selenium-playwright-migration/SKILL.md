@@ -21,6 +21,17 @@ Use for C# NUnit test suites. Do not claim xUnit source, Python, Java or full be
 10. Do not represent successful generation as successful compilation, nor compilation as behavior preservation. If no actual check was run, report `not_run`.
 11. Summarize transformed tests, unresolved cases and independently observed verification results.
 
+## Mandatory P2 acceptance (Core issue #2)
+
+The `verify_artifact` response from the exact pinned P2 Core includes `acceptance` (`migrator-acceptance/v1`). Inspect it **before** any statement that a migration is complete. It is mandatory for both generated and agent-edited candidates, and identifies the exact `analysisId`, `candidateId`, `sourceTreeHash` and `targetTreeHash`.
+
+- If `acceptance.status == rejected_incomplete`, stop: missing test declarations, action/assertion/lifecycle operations, TODOs, missing target files or unproven source mutation **cannot be overridden** by green `dotnet test`, Roslyn compilation or a browser launch. Report individual `lineage` `missing_target` entries and blockers, then repair with source-backed evidence.
+- If `acceptance.status == blocked_unverified`, **do not declare SUCCESS**. Candidate AST name matches are `candidate_unverified`, not semantic equivalence. Independently inspect selectors, POM call graph, data, NUnit lifecycle and business observables.
+- Treat `syntax`, `compile`, `testDiscovery`, `runner`, `realBrowser`, `behavioralEquivalence` as **separate stages**. The latter four are `not_run` in read-only Core/MCP artifact verification; the caller must explicitly authorize and separately bind any actual project build, NUnit/TRX or browser execution to the same target hash.
+- If a server lacks `acceptance` or returns a different schema, report `P2_ACCEPTANCE_CONTRACT_UNAVAILABLE` and remain BLOCKED; never silently fall back to the legacy `compile=passed` criterion. Do not reuse acceptance after a source/config/candidate edit.
+
+This gate is intentionally **not an acceptance oracle** for actual source/target behavior: absent or matched static nodes cannot certify parity. It never runs arbitrary MSBuild, test DLLs, processes or browser automation.
+
 ## Evidence labels
 
 `syntax` means an AST match, `recognized` means a parser/adapter finding, and `diagnostic` means an error observed by tooling. None is itself a behavioral proof.

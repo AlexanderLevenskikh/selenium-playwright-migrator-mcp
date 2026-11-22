@@ -123,6 +123,20 @@ using NUnit.Framework;
             expect(generated["runtime"]["status"] == "not_run"
                    and generated["observables"]["status"] == "not_run",
                    "Runtime/observable evidence was invented")
+            # P2: check the exact, newer Core acceptance contract over real
+            # MCP JSON-RPC. No syntax/compile/NUnit green can mean migration accepted.
+            acceptance = generated.get("acceptance")
+            expect(acceptance and acceptance["schemaVersion"] == "migrator-acceptance/v1",
+                   "P2 Core acceptance missing from serialized MCP artifact")
+            expect(acceptance["status"] in ("rejected_incomplete", "blocked_unverified"),
+                   "MCP must never report behavioral acceptance without parity")
+            expect(acceptance["analysisId"] == expected_id
+                   and acceptance["candidateId"] == generated["candidate"]["candidateId"]
+                   and acceptance["targetTreeHash"] == generated["candidate"]["targetTreeHash"],
+                   "MCP acceptance lost exact input/candidate/tree fingerprints")
+            for stage in ("testDiscovery", "runner", "realBrowser", "behavioralEquivalence"):
+                expect(acceptance[stage]["status"] == "not_run",
+                       "MCP invented test/browser/behavior proof: " + stage)
 
             # Single-file source scope permits an edited target directory next to source,
             # without changing the source snapshot on target edits.
@@ -147,6 +161,18 @@ using NUnit.Framework;
             expect(edited["syntax"]["status"] == "passed", "Simple edited C# syntax did not pass")
             expect(edited["compile"]["status"] == "passed", "Self-contained candidate did not compile")
             expect(edited["runtime"]["status"] == "not_run", "Compile incorrectly marked runtime passed")
+            edited_gate = edited.get("acceptance")
+            expect(edited_gate and edited_gate["status"] == "rejected_incomplete",
+                   "Target with removed NUnit method cannot be accepted after compile PASS")
+            expect(edited_gate["candidateId"] == edited["candidate"]["candidateId"]
+                   and edited_gate["candidateId"] != generated["candidate"]["candidateId"],
+                   "Agent-edited acceptance must be exact-candidate bound")
+            expect(edited_gate["missingObligations"] > 0
+                   and any(row["status"] == "missing_target"
+                           for row in edited_gate["lineage"]),
+                   "Missing source test method must appear as lineage debt")
+            expect(edited_gate["behavioralEquivalence"]["status"] == "not_run",
+                   "Compile PASS must not authorize behavioral equivalence")
 
             target_file.write_text("public sealed class Edited { public int Value => UnknownName; }",
                                    encoding="utf-8")
