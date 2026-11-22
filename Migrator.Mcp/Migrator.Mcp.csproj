@@ -13,7 +13,8 @@
     <Description>MCP stdio server for agent-assisted Selenium C# to Playwright .NET AST migration.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/AlexanderLevenskikh/selenium-playwright-migrator-mcp</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/levencode-labs/selenium-playwright-migrator-mcp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/levencode-labs/selenium-playwright-migrator-mcp</RepositoryUrl>
     <PackageTags>mcp;selenium;playwright;migration;dotnet-tool;agent</PackageTags>
   </PropertyGroup>
   <ItemGroup>
