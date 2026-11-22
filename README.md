@@ -1,3 +1,9 @@
+<div align="center">
+
+<img src="assets/product-hero.jpg" width="1200" alt="Levencode Labs Migrator MCP — agent tools for analyzing and previewing Selenium to Playwright migrations" />
+
+</div>
+
 # Selenium → Playwright Migrator MCP
 
 Standalone **MCP stdio server and agent skill** for Selenium C# NUnit → Playwright .NET migration. It uses the versioned [Migrator Core](https://github.com/AlexanderLevenskikh/selenium-playwright-migrator-core) NuGet API rather than referencing the engine source projects.
