@@ -735,7 +735,7 @@ public static class MigrationTools
 
 
     [McpServerTool(Name = "verify_artifact")]
-    [Description("Verify exact generated or agent-edited C# target bytes. Requires current analysis and parent candidate IDs. Returns independent syntax/compile/runtime/observables statuses; never executes tests, applies edits, or invokes MSBuild.")]
+    [Description("Verify exact generated or agent-edited C# bytes with SHA-bound P2 acceptance. Returns source-target action/assertion/lifecycle lineage and rejected_incomplete or blocked_unverified, plus independent syntax/compile/test-discovery/runner/browser/behavior stages; never declares migration success from green NUnit/compile, executes tests, edits files or invokes MSBuild.")]
     public static string VerifyArtifact(MigrationEngine engine, WorkspacePaths workspace,
         [Description("Source .cs file or directory inside the workspace")] string source,
         [Description("Current analysisId returned by analyze_migration / preview_migration")] string expectedAnalysisId,

@@ -21,6 +21,18 @@ Use for C# NUnit test suites. Do not claim xUnit source, Python, Java or full be
 10. Do not represent successful generation as successful compilation, nor compilation as behavior preservation. If no actual check was run, report `not_run`.
 11. Summarize transformed tests, unresolved cases and independently observed verification results.
 
+## Mandatory P2 acceptance (Core issue #2)
+
+The `verify_artifact` response from the exact pinned P2 Core includes `acceptance` (`migrator-acceptance/v1`). Inspect it **before** any statement that a migration is complete. It is mandatory for both generated and agent-edited candidates, and identifies the exact `analysisId`, `candidateId`, `sourceTreeHash` and `targetTreeHash`.
+
+- If `acceptance.status == rejected_incomplete`, stop: missing test declarations, action/assertion/lifecycle operations, TODOs, missing target files or unproven source mutation **cannot be overridden** by green `dotnet test`, Roslyn compilation or a browser launch. Report individual `lineage` `missing_target` entries and blockers, then repair with source-backed evidence.
+- If `acceptance.status == blocked_unverified`, **do not declare SUCCESS**. Candidate AST name matches are `candidate_unverified`, not semantic equivalence. Independently inspect selectors, POM call graph, data, NUnit lifecycle and business observables.
+- Treat `lineage.kind` values for `if_guard`, `else_path`, `try_scope`, `catch_path`, `throw_path` and other control-flow nodes as obligations. Missing target control flow is `rejected_incomplete` even when all action/assertion names match; matching flow shape is only `candidate_unverified`. Never infer that branch conditions or failure handling are equivalent without independent observed evidence.
+- Treat `syntax`, `compile`, `testDiscovery`, `runner`, `realBrowser`, `behavioralEquivalence` as **separate stages**. The latter four are `not_run` in read-only Core/MCP artifact verification; the caller must explicitly authorize and separately bind any actual project build, NUnit/TRX or browser execution to the same target hash.
+- If a server lacks `acceptance` or returns a different schema, report `P2_ACCEPTANCE_CONTRACT_UNAVAILABLE` and remain BLOCKED; never silently fall back to the legacy `compile=passed` criterion. Do not reuse acceptance after a source/config/candidate edit.
+
+This gate is intentionally **not an acceptance oracle** for actual source/target behavior: absent or matched static nodes cannot certify parity. It never runs arbitrary MSBuild, test DLLs, processes or browser automation.
+
 ## Evidence labels
 
 `syntax` means an AST match, `recognized` means a parser/adapter finding, and `diagnostic` means an error observed by tooling. None is itself a behavioral proof.
@@ -944,3 +956,41 @@ by the public method and independently observed in NUnit TRX plus
 original OS evidence. Anything else is `not_observed` or `blocked`.
 No autoapply, no general exception swallow, no invented cleanup
 semantics for another Playwright version or private ArBilling project.
+
+
+## P3 — source-owned parameterized POM Count branch migration
+
+The read-only POM plan may now produce candidate if/else branches for immediate Selenium FindElements(...).Count comparisons with an exact int method parameter, including reversed operands, and literal-vs-string parameter equality. Boolean short-circuit and same-class private helpers remain explicit source effects. The receiver must be an unambiguous source-owned IWebDriver field. Multiple driver fields, captured external drivers, dynamic selectors, computed thresholds, cached state and side effects block the method.
+
+Use exact SourceTreeHash and review metadata. Never promote source-only CountAsync snapshots to Playwright auto-waiting ToHaveCountAsync or assume browser timing equivalence. The MCP tool deliberately does not return target statements or private selectors. Core #75 has a separate fictional localhost Selenium/Playwright same-Chrome NUnit/DOM oracle with an intentionally failing inverted branch; that is bounded CI evidence, not production behavioral equivalence. All P3 plans remain requires_review / CanAutoApply=false and no new execution rights are granted. P1 P47/12s and issue #59 remain unchanged.
+
+
+## P2/P3 project-level lifecycle and transitive obligation acceptance
+
+Before any completion claim, require exact acceptance AnalysisId, CandidateId,
+SourceTreeHash and TargetTreeHash. Removed NUnit SetUpFixture, an inherited
+fixture base, transitive same-class private helper action/assertion/state
+effect or a failure path is rejected_incomplete. A syntactic candidate is
+candidate_unverified, NEVER runtime parity. The new gate is bounded:
+external PageObject/proxy dispatch, overridden or inherited lifecycle order,
+selectors, argument transformations, exception mapping and side effects
+remain UNKNOWN unless independently verified.
+
+Three exact-public-SHA real projects in Core are read-only source controls,
+not migrated projects: desh2001/Selenium-NUnit-Automation, jorgedelacruz/selenio
+and re-motion/Framework. No third-party code is executed and no public source
+scan is a browser parity PASS. The separate explicit CI localhost
+Selenium/Playwright oracle records eight positive behaviors, an expected
+NUnit-failing guard mutation and an intentionally NUnit-passing missing
+Click that is rejected by independently compared DOM events. Its
+oracleCandidateSha256 belongs only to the synthetic target evidence, NOT
+to a user verify_artifact CandidateId.
+
+Never combine these stages into accepted. No user project execution,
+auto-apply, leakage of private selector values or permission expansion.
+P1 #59 real Windows native-live orphan remains open and is a release blocker.
+
+
+### Combined SetUpFixture and TestFixture scope remains unsupported
+
+The single-file preview cannot always emit a target candidate when a SetUpFixture and a TestFixture share the source scope. Do NOT report a migrated global hook from successful verify_artifact checks on another fixture. Inspect scope-specific NUnit lifecycle independently; leave external SetUpFixture semantics UNKNOWN until explicit full-project behavioral evidence exists. No automatic acceptance.

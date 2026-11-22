@@ -17,8 +17,8 @@ jobs:
       - name: Checkout pinned Core for local NuGet feed
         uses: actions/checkout@v4
         with:
-          repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: 563dea679c0e56cb6f9c593d5431cf0d3632e44a
+          repository: levencode-labs/selenium-playwright-migrator-core
+          ref: d8600b158d6e871d8bf6048b8910b19a1f9481d6
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -40,11 +40,13 @@ jobs:
         run: dotnet build Migrator.Mcp/Migrator.Mcp.csproj --no-restore -c Release
       - name: Real MCP stdio protocol smoke
         run: python3 scripts/mcp_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
+      - name: P2/P3 project obligation and exact candidate negative real stdio (Linux)
+        run: python3 scripts/p2p3_project_graph_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: preview.29 NUnit execution gates and case-source protocol regression
         run: python3 scripts/nunit_execution_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: preview.30 read-only typed POM action inspection stdio
         run: python3 scripts/p2_pom_action_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
-      - name: preview.31 structured POM source-backed MCP stdio
+      - name: preview.31 + P3 parameterized POM Count guard MCP stdio Linux
         run: python3 scripts/p2_structured_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
       - name: preview.32 read-only nested typed helper and bounded retry MCP stdio
         run: python3 scripts/p2_typed_retry_stdio_smoke.py Migrator.Mcp/bin/Release/net10.0/Migrator.Mcp.dll
@@ -149,8 +151,8 @@ jobs:
       - name: Checkout pinned Core for local NuGet feed
         uses: actions/checkout@v4
         with:
-          repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: 563dea679c0e56cb6f9c593d5431cf0d3632e44a
+          repository: levencode-labs/selenium-playwright-migrator-core
+          ref: d8600b158d6e871d8bf6048b8910b19a1f9481d6
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -189,13 +191,16 @@ jobs:
       - name: Protocol smoke against self-contained Windows executable
         shell: pwsh
         run: python scripts/mcp_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
+      - name: P2/P3 project obligation and exact candidate negative real stdio (Windows)
+        shell: pwsh
+        run: python scripts/p2p3_project_graph_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
       - name: preview.29 NUnit execution gates and case-source Windows stdio
         shell: pwsh
         run: python scripts/nunit_execution_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
       - name: preview.30 read-only typed POM action Windows stdio
         shell: pwsh
         run: python scripts/p2_pom_action_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
-      - name: preview.31 structured POM Windows self-contained stdio
+      - name: preview.31 + P3 parameterized POM Count guard MCP stdio Windows
         shell: pwsh
         run: python scripts/p2_structured_stdio_smoke.py artifacts/standalone/win-x64/Migrator.Mcp.exe
       - name: preview.32 read-only typed helper and bounded retry Windows stdio
