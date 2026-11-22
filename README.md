@@ -6,7 +6,9 @@
 
 # Selenium → Playwright Migrator MCP
 
-Standalone **MCP stdio server and agent skill** for Selenium C# NUnit → Playwright .NET migration. It uses the versioned [Migrator Core](https://github.com/AlexanderLevenskikh/selenium-playwright-migrator-core) NuGet API rather than referencing the engine source projects.
+[Levencode Labs](https://github.com/levencode-labs) · [Migrator Core](https://github.com/levencode-labs/selenium-playwright-migrator-core) · [Windows cleanup investigation #59](https://github.com/levencode-labs/selenium-playwright-migrator-core/issues/59)
+
+Standalone **MCP stdio server and agent skill** for Selenium C# NUnit → Playwright .NET migration. It uses the versioned [Migrator Core](https://github.com/levencode-labs/selenium-playwright-migrator-core) NuGet API rather than referencing the engine source projects.
 
 Imported from [selenium-playwright-ast-migrator](https://github.com/AlexanderLevenskikh/selenium-playwright-ast-migrator), pinned source commit `a8b102072196f85bf85d785795aef22296c4deca`.
 
@@ -24,7 +26,7 @@ The server **never applies edits**. No compile/run/behavior claims are made for 
 CI uses Core commit `660a3ecd60b32d2091759ac93f9ea871cf46c309` for the local package feed, verified independently in its own repository. To reproduce the build:
 
 ```bash
-git clone https://github.com/AlexanderLevenskikh/selenium-playwright-migrator-core.git core
+git clone https://github.com/levencode-labs/selenium-playwright-migrator-core.git core
 git -C core checkout 660a3ecd60b32d2091759ac93f9ea871cf46c309
 mkdir -p artifacts/nuget
 for project in Migrator.Core Migrator.Roslyn Migrator.SeleniumCSharp Migrator.PlaywrightDotNet Migrator.Application; do
@@ -92,7 +94,7 @@ The recursive preflight is limited to 40 directory levels and 100,000 entries; c
 
 ## Standalone Linux and Windows executables
 
-On every CI run, the MCP repository also builds a **self-contained, non-trimmed** executable for `linux-x64` and `win-x64`. Both are checked with the same real MCP stdio protocol suite, including edited-candidate verification. Roslyn requires physical runtime reference assemblies, so the ZIP/TAR contains the executable and its co-located runtime DLLs rather than a single-file bundle. Download their archives from the successful [MCP CI Actions run](https://github.com/AlexanderLevenskikh/selenium-playwright-migrator-mcp/actions/workflows/mcp-ci.yml).
+On every CI run, the MCP repository also builds a **self-contained, non-trimmed** executable for `linux-x64` and `win-x64`. Both are checked with the same real MCP stdio protocol suite, including edited-candidate verification. Roslyn requires physical runtime reference assemblies, so the ZIP/TAR contains the executable and its co-located runtime DLLs rather than a single-file bundle. Download their archives from the successful [MCP CI Actions run](https://github.com/levencode-labs/selenium-playwright-migrator-mcp/actions/workflows/mcp-ci.yml).
 
 For Linux (extract the **entire** archive, not just the executable):
 ```bash
