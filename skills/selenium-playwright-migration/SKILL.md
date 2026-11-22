@@ -1053,3 +1053,25 @@ FAIL even if containment is proved. Do not infer a product fix, publish
 private process details, merge/release, autoapply C#, or give MCP Windows
 process-killing tools from these experiments. Historical November 2 and
 November 21 real Windows failures stay authoritative; Core issue #59 OPEN.
+
+### P1-A2 original P47 fixture rather than simplified NUnit (2026-11-22)
+
+Use the independent `p1_preview47_source_exact_job_probe.py` only as
+a public source-backed Windows ownership diagnostic. Its compiled fixture
+is reconstructed from the original P47 runtime template and exact
+preview.46 `TearDown` / preview.47 `OneTimeTearDown` bodies; their
+SHA-256 and the original fixture hash are retained. The ONLY test change
+is the pre-`Playwright.CreateAsync` host Job assignment gate.
+Original source NUnit test and 12-second unassisted Windows P47 gate are
+untouched. Stages are bounded and preserve both intentional primary NUnit
+failure and `disconnect_pass` success, without injecting Playwright API
+exceptions. Windows process identity must be PID + exact native FILETIME
+and membership validated before Node loss and again for any post-gate
+survivor. Read separate `unassistedGateBeforeHostClose` and
+`postGateHostCleanup` evidence: NEVER turn a failed 12-second gate
+into success merely because the Job later kills a real Chrome process.
+Six runs without a native-LIVE survivor are `not_observed` and must
+not become a mitigation claim. A proper Win32 owner would require
+independent production design, explicit authorization and real runtime
+regressions. No MCP process termination tools or automatic C# edits
+are authorized, and issue #59 remains OPEN.

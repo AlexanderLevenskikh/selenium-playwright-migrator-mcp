@@ -62,3 +62,40 @@ to bind any PID remain BLOCKED. Preserve original CI/ZIPS, source hashes,
 NUnit primary failures and the complete Linux/Windows CI matrix. Core
 issue #59, Core PR #58 and MCP PR #54 remain OPEN/DRAFT until an actual
 fixed source-backed case and full exact-head green CI authorize merge.
+
+## P1-A2 — source-exact original P47 NUnit fixture host experiment
+
+Core draft `6c51e8eeaf345918d42fae0555477840b0e6bf68` now uses a distinct `p1_preview47_source_exact_job_probe.py`
+that obtains the **same** `p2_preview47_one_time_real_chromium.TEMPLATE`
+runtime fixture, the exact `TypedTearDown` from preview.46 and exact
+`OneTimeTearDown` from preview.47. The original source test's `Operation`,
+`Page.GotoAsync`, `window.snapshot()`, real driver-loss ready/ack handshake,
+primary NUnit assertion and per-test/context/browser cleanup are not replaced
+by a simplified fixture. Source bytes and hook SHA-256 are recorded. The
+**only** inserted C# code is a temporary host assignment handshake before
+`Playwright.CreateAsync` — removing it must reproduce the original runtime
+fixture byte-for-byte. The original P47 CI fixture and test remain unchanged.
+
+The independent host Job owns the actual NUnit testhost before Playwright
+creates Node/Chromium, verifies original PID/CIM/native FILETIME and
+`IsProcessInJob` for live children, and kills the identity-bound Node by
+the original Windows `os.kill(SIGTERM)` mechanism. Its separate **unchanged
+12-second** unassisted presence gate is recorded BEFORE any host cleanup.
+Only the same native-LIVE, pre-attested Chrome survivors may be used for the
+separate post-gate 300-ms native-live hold and `KILL_ON_JOB_CLOSE` proof;
+the FAIL from the unassisted gate is NEVER changed to PASS. Six immutable
+source-backed stages alternate `disconnect_primary`,
+`disconnect_pass` and `disconnect_primary_repeat`. A failed/blocked
+stage stops immediately. If all six have **no** post-gate native-live Chrome,
+the evidence status is UNKNOWN/NOT_OBSERVED (CI fails closed), not a
+claimed mitigation. Do not rerun failures to select success.
+
+This is still **CI-only host process ownership evidence**, not a
+source-backed runtime cleanup repair and not Playwright behavioral equivalence.
+Neither MCP nor Skill executes tests, assigns Windows Jobs, terminates
+processes or upgrades a read-only `requires_review` finding into autoapply.
+The real historical Chrome survivors (2026-11-02 PID5936/9024 and 2026-11-21
+PID8596/9640 plus later verified descendants) stay preserved and #59 OPEN.
+Full unchanged Core 28-job Linux/Windows CI must be green **and** the
+source-backed defect resolved before merging Core; only then repin the
+MCP consumers to the exact merged Core SHA and require MCP 2/2 green.
