@@ -1075,3 +1075,5 @@ not become a mitigation claim. A proper Win32 owner would require
 independent production design, explicit authorization and real runtime
 regressions. No MCP process termination tools or automatic C# edits
 are authorized, and issue #59 remains OPEN.
+
+Current P1-A2 source-exact host Job diagnostic Core SHA (unmerged): `a58ec3f88a66280dc159e6d9ce8b795d70be5223`.
