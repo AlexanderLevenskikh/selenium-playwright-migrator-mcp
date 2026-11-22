@@ -17,8 +17,8 @@ jobs:
       - name: Checkout pinned Core for local NuGet feed
         uses: actions/checkout@v4
         with:
-          repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: 563dea679c0e56cb6f9c593d5431cf0d3632e44a
+          repository: levencode-labs/selenium-playwright-migrator-core
+          ref: b065d9d4b3d5bc664ec51b0008d40f4412a35410
           path: core
       - uses: actions/setup-dotnet@v4
         with:
@@ -149,8 +149,8 @@ jobs:
       - name: Checkout pinned Core for local NuGet feed
         uses: actions/checkout@v4
         with:
-          repository: AlexanderLevenskikh/selenium-playwright-migrator-core
-          ref: 563dea679c0e56cb6f9c593d5431cf0d3632e44a
+          repository: levencode-labs/selenium-playwright-migrator-core
+          ref: b065d9d4b3d5bc664ec51b0008d40f4412a35410
           path: core
       - uses: actions/setup-dotnet@v4
         with:
