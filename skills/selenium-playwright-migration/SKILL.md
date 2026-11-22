@@ -989,3 +989,8 @@ to a user verify_artifact CandidateId.
 Never combine these stages into accepted. No user project execution,
 auto-apply, leakage of private selector values or permission expansion.
 P1 #59 real Windows native-live orphan remains open and is a release blocker.
+
+
+### Combined SetUpFixture and TestFixture scope remains unsupported
+
+The single-file preview cannot always emit a target candidate when a SetUpFixture and a TestFixture share the source scope. Do NOT report a migrated global hook from successful verify_artifact checks on another fixture. Inspect scope-specific NUnit lifecycle independently; leave external SetUpFixture semantics UNKNOWN until explicit full-project behavioral evidence exists. No automatic acceptance.
