@@ -963,3 +963,29 @@ semantics for another Playwright version or private ArBilling project.
 The read-only POM plan may now produce candidate if/else branches for immediate Selenium FindElements(...).Count comparisons with an exact int method parameter, including reversed operands, and literal-vs-string parameter equality. Boolean short-circuit and same-class private helpers remain explicit source effects. The receiver must be an unambiguous source-owned IWebDriver field. Multiple driver fields, captured external drivers, dynamic selectors, computed thresholds, cached state and side effects block the method.
 
 Use exact SourceTreeHash and review metadata. Never promote source-only CountAsync snapshots to Playwright auto-waiting ToHaveCountAsync or assume browser timing equivalence. The MCP tool deliberately does not return target statements or private selectors. Core #75 has a separate fictional localhost Selenium/Playwright same-Chrome NUnit/DOM oracle with an intentionally failing inverted branch; that is bounded CI evidence, not production behavioral equivalence. All P3 plans remain requires_review / CanAutoApply=false and no new execution rights are granted. P1 P47/12s and issue #59 remain unchanged.
+
+
+## P2/P3 project-level lifecycle and transitive obligation acceptance
+
+Before any completion claim, require exact acceptance AnalysisId, CandidateId,
+SourceTreeHash and TargetTreeHash. Removed NUnit SetUpFixture, an inherited
+fixture base, transitive same-class private helper action/assertion/state
+effect or a failure path is rejected_incomplete. A syntactic candidate is
+candidate_unverified, NEVER runtime parity. The new gate is bounded:
+external PageObject/proxy dispatch, overridden or inherited lifecycle order,
+selectors, argument transformations, exception mapping and side effects
+remain UNKNOWN unless independently verified.
+
+Three exact-public-SHA real projects in Core are read-only source controls,
+not migrated projects: desh2001/Selenium-NUnit-Automation, jorgedelacruz/selenio
+and re-motion/Framework. No third-party code is executed and no public source
+scan is a browser parity PASS. The separate explicit CI localhost
+Selenium/Playwright oracle records eight positive behaviors, an expected
+NUnit-failing guard mutation and an intentionally NUnit-passing missing
+Click that is rejected by independently compared DOM events. Its
+oracleCandidateSha256 belongs only to the synthetic target evidence, NOT
+to a user verify_artifact CandidateId.
+
+Never combine these stages into accepted. No user project execution,
+auto-apply, leakage of private selector values or permission expansion.
+P1 #59 real Windows native-live orphan remains open and is a release blocker.
