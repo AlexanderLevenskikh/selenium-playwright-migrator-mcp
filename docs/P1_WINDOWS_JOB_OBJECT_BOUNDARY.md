@@ -65,7 +65,7 @@ fixed source-backed case and full exact-head green CI authorize merge.
 
 ## P1-A2 — source-exact original P47 NUnit fixture host experiment
 
-Core draft `a58ec3f88a66280dc159e6d9ce8b795d70be5223` now uses a distinct `p1_preview47_source_exact_job_probe.py`
+Core draft `d6fc75560396813e08577833616bc48baf5f7efb` now uses a distinct `p1_preview47_source_exact_job_probe.py`
 that obtains the **same** `p2_preview47_one_time_real_chromium.TEMPLATE`
 runtime fixture, the exact `TypedTearDown` from preview.46 and exact
 `OneTimeTearDown` from preview.47. The original source test's `Operation`,
